@@ -151,136 +151,147 @@ function Login({ onLogin }) {
   }
 
   return (
-    <div className="login-container">
-      <div className="login-card">
-        <h1>QUΔDRA</h1>
-        <p>Conciliación RG90 — Nivel Contable</p>
-        {error && <div className="error-message" style={{color: '#ef4444', background: '#fee2e2', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>{error}</div>}
-        <div className="tabs">
-          <button className={!isSignup ? 'tab-btn active' : 'tab-btn'} onClick={() => setIsSignup(false)}>Iniciar Sesión</button>
-          <button className={isSignup ? 'tab-btn active' : 'tab-btn'} onClick={() => setIsSignup(true)}>Registrarse</button>
-        </div>
-        <form onSubmit={handleSubmit}>
-          {isSignup && (
-            <div className="form-group">
-              <label>Nombre</label>
-              <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" required />
-            </div>
-          )}
-          <div className="form-group">
-            <label>Email</label>
-            <input
-              type="email"
-              value={email}
-              onChange={handleEmailChange}
-              onBlur={() => validateEmail(email)}
-              placeholder="tu@email.com"
-              required
-              style={{borderColor: emailError ? '#ef4444' : '#ddd'}}
-            />
-            {emailError && <small style={{color: '#ef4444'}}>{emailError}</small>}
+    <div className="login-wrapper">
+      <video autoPlay muted loop playsInline className="bg-video bg-video-1">
+        <source src="/videos/bg-video-1.mp4" type="video/mp4" />
+      </video>
+      <video autoPlay muted loop playsInline className="bg-video bg-video-2">
+        <source src="/videos/bg-video-2.mp4" type="video/mp4" />
+      </video>
+      <div className="login-overlay"></div>
+      <div className="login-container">
+        <div className="login-card">
+          <div className="login-header">
+            <h1>QUΔDRA</h1>
+            <p className="tagline">Conciliación RG90 — Nivel Contable</p>
           </div>
-          <div className="form-group">
-            <label>Contraseña</label>
-            <div style={{position: 'relative'}}>
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={handlePasswordChange}
-                placeholder="••••••••"
-                required
-                style={{paddingRight: '40px', width: '100%', boxSizing: 'border-box'}}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px',
-                  color: '#9ca3af',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'color 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#4b5563'}
-                onMouseLeave={(e) => e.target.style.color = '#9ca3af'}
-                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-              >
-                {showPassword ? <HiOutlineEyeOff size={20} /> : <HiOutlineEye size={20} />}
-              </button>
-            </div>
-            {isSignup && password && (
-              <div style={{marginTop: '8px'}}>
-                <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
-                  <small style={{fontSize: '12px'}}>Fortaleza:</small>
-                  <small style={{color: getStrengthColor(), fontWeight: 'bold'}}>{getStrengthText()}</small>
-                </div>
-                <div style={{background: '#e5e7eb', height: '4px', borderRadius: '2px', overflow: 'hidden'}}>
-                  <div style={{
-                    background: getStrengthColor(),
-                    height: '100%',
-                    width: `${(passwordStrength / 5) * 100}%`,
-                    transition: 'all 0.3s ease'
-                  }}></div>
-                </div>
-                <small style={{color: '#666', fontSize: '11px', marginTop: '4px', display: 'block'}}>
-                  Mínimo: 8 caracteres, mayúsculas, números y símbolos especiales
-                </small>
+          {error && <div className="error-message" style={{color: '#ef4444', background: '#fee2e2', padding: '10px', borderRadius: '4px', marginBottom: '15px'}}>{error}</div>}
+          <div className="tabs">
+            <button className={!isSignup ? 'tab-btn active' : 'tab-btn'} onClick={() => setIsSignup(false)}>Iniciar Sesión</button>
+            <button className={isSignup ? 'tab-btn active' : 'tab-btn'} onClick={() => setIsSignup(true)}>Registrarse</button>
+          </div>
+          <form onSubmit={handleSubmit}>
+            {isSignup && (
+              <div className="form-group">
+                <label>Nombre</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre" required />
               </div>
             )}
-          </div>
-          {isSignup && (
-            <button
-              type="button"
-              onClick={() => {
-                const pwd = generateStrongPassword()
-                setPassword(pwd)
-                setPasswordStrength(calculatePasswordStrength(pwd))
-              }}
-              style={{
-                width: '100%',
-                padding: '8px',
-                marginBottom: '10px',
-                background: '#f3f4f6',
-                border: '1px solid #d1d5db',
-                borderRadius: '4px',
-                cursor: 'pointer',
-                fontSize: '13px',
-                color: '#374151'
-              }}
-            >
-              💡 Generar contraseña fuerte
+            <div className="form-group">
+              <label>Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={handleEmailChange}
+                onBlur={() => validateEmail(email)}
+                placeholder="tu@email.com"
+                required
+                style={{borderColor: emailError ? '#ef4444' : '#ddd'}}
+              />
+              {emailError && <small style={{color: '#ef4444'}}>{emailError}</small>}
+            </div>
+            <div className="form-group">
+              <label>Contraseña</label>
+              <div style={{position: 'relative'}}>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="••••••••"
+                  required
+                  style={{paddingRight: '40px', width: '100%', boxSizing: 'border-box'}}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '12px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    color: '#9ca3af',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'color 0.2s ease'
+                  }}
+                  onMouseEnter={(e) => e.target.style.color = '#4b5563'}
+                  onMouseLeave={(e) => e.target.style.color = '#9ca3af'}
+                  title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                >
+                  {showPassword ? <HiOutlineEyeOff size={20} /> : <HiOutlineEye size={20} />}
+                </button>
+              </div>
+              {isSignup && password && (
+                <div style={{marginTop: '8px'}}>
+                  <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '4px'}}>
+                    <small style={{fontSize: '12px'}}>Fortaleza:</small>
+                    <small style={{color: getStrengthColor(), fontWeight: 'bold'}}>{getStrengthText()}</small>
+                  </div>
+                  <div style={{background: '#e5e7eb', height: '4px', borderRadius: '2px', overflow: 'hidden'}}>
+                    <div style={{
+                      background: getStrengthColor(),
+                      height: '100%',
+                      width: `${(passwordStrength / 5) * 100}%`,
+                      transition: 'all 0.3s ease'
+                    }}></div>
+                  </div>
+                  <small style={{color: '#666', fontSize: '11px', marginTop: '4px', display: 'block'}}>
+                    Mínimo: 8 caracteres, mayúsculas, números y símbolos especiales
+                  </small>
+                </div>
+              )}
+            </div>
+            {isSignup && (
+              <button
+                type="button"
+                onClick={() => {
+                  const pwd = generateStrongPassword()
+                  setPassword(pwd)
+                  setPasswordStrength(calculatePasswordStrength(pwd))
+                }}
+                style={{
+                  width: '100%',
+                  padding: '8px',
+                  marginBottom: '10px',
+                  background: '#f3f4f6',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  color: '#374151'
+                }}
+              >
+                💡 Generar contraseña fuerte
+              </button>
+            )}
+            <button type="submit" className="btn btn-primary" style={{width:'100%'}} disabled={loading || (isSignup && passwordStrength < 3) || !!emailError}>
+              {loading ? 'Procesando...' : isSignup ? 'Registrarse' : 'Ingresar'}
             </button>
-          )}
-          <button type="submit" className="btn btn-primary" style={{width:'100%'}} disabled={loading || (isSignup && passwordStrength < 3) || !!emailError}>
-            {loading ? 'Procesando...' : isSignup ? 'Registrarse' : 'Ingresar'}
-          </button>
-        </form>
+          </form>
 
-        {!isSignup && (
-          <div style={{marginTop: '15px', textAlign: 'center'}}>
-            <button
-              onClick={() => setScreen('forgot')}
-              style={{
-                background: 'none',
-                border: 'none',
-                color: '#3b82f6',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontSize: '14px'
-              }}
-            >
-              ¿Olvidaste tu contraseña?
-            </button>
-          </div>
-        )}
+          {!isSignup && (
+            <div style={{marginTop: '15px', textAlign: 'center'}}>
+              <button
+                onClick={() => setScreen('forgot')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#3b82f6',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  fontSize: '14px'
+                }}
+              >
+                ¿Olvidaste tu contraseña?
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )
