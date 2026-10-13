@@ -36,28 +36,186 @@ const verifyToken = (req, res, next) => {
   }
 };
 
+// ==================== VALIDACIONES DE AUTENTICACIÓN ====================
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePassword = (password) => {
+  if (password.length < 8) return false;
+  if (!/[A-Z]/.test(password)) return false;
+  if (!/[a-z]/.test(password)) return false;
+  if (!/\d/.test(password)) return false;
+  if (!/[@$!%*?&]/.test(password)) return false;
+  return true;
+};
+
+// Para testing: simulamos envío de email mostrando enlace en consola
+const sendPasswordResetEmail = (email, resetToken, resetLink) => {
+  console.log(`\n📧 EMAIL SIMULADO ENVIADO A: ${email}`);
+  console.log(`🔗 ENLACE DE RESET: ${resetLink}`);
+  console.log(`🔐 TOKEN: ${resetToken}\n`);
+  // En producción, aquí se integraría SendGrid, Mailgun, etc.
+};
+
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { email, password, name } = req.body;
+
+    if (!email || !password || !name) {
+      return res.status(400).json({ error: 'Email, contraseña y nombre son requeridos' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    if (!validatePassword(password)) {
+      return res.status(400).json({ error: 'Contraseña débil. Debe tener mínimo 8 caracteres, mayúsculas, minúsculas, números y símbolos especiales' });
+    }
+
+    if (name.trim().length < 2) {
+      return res.status(400).json({ error: 'El nombre debe tener al menos 2 caracteres' });
+    }
+
+    // Verificar si el email ya existe
+    const { data: existingUser } = await supabase.from('users').select().eq('email', email).single();
+    if (existingUser) {
+      return res.status(400).json({ error: 'Este email ya está registrado' });
+    }
+
     const password_hash = await bcrypt.hash(password, 10);
-    const { data, error } = await supabase.from('users').insert([{ email, password_hash, name }]).select();
-    if (error) return res.status(400).json({ error: error.message });
+    const { data, error } = await supabase.from('users').insert([{ email, password_hash, name: name.trim() }]).select();
+
+    if (error) {
+      if (error.code === '23505') {
+        return res.status(400).json({ error: 'Este email ya está registrado' });
+      }
+      return res.status(400).json({ error: error.message });
+    }
+
     const token = jwt.sign({ id: data[0].id, email: data[0].email }, process.env.JWT_SECRET, { expiresIn: '30d' });
-    // No devolver password_hash al cliente
     res.json({ token, user: { id: data[0].id, email: data[0].email, name: data[0].name } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email y contraseña son requeridos' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
     const { data, error } = await supabase.from('users').select().eq('email', email).single();
-    if (error || !data) return res.status(401).json({ error: 'Credenciales inválidas' });
+    if (error || !data) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
     const valid = await bcrypt.compare(password, data.password_hash);
-    if (!valid) return res.status(401).json({ error: 'Credenciales inválidas' });
+    if (!valid) {
+      return res.status(401).json({ error: 'Credenciales inválidas' });
+    }
+
     const token = jwt.sign({ id: data.id, email: data.email }, process.env.JWT_SECRET, { expiresIn: '30d' });
     res.json({ token, user: { id: data.id, email: data.email, name: data.name } });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
+// ==================== FORGOT PASSWORD ====================
+app.post('/api/auth/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'El email es requerido' });
+    }
+
+    if (!validateEmail(email)) {
+      return res.status(400).json({ error: 'Email inválido' });
+    }
+
+    // Verificar que el email existe
+    const { data: user } = await supabase.from('users').select().eq('email', email).single();
+    if (!user) {
+      // Por seguridad, no revelamos si el email existe o no
+      return res.json({ message: 'Si el email existe, recibirás un enlace de recuperación' });
+    }
+
+    // Generar token JWT corta duración (15 minutos)
+    const resetToken = jwt.sign(
+      { id: user.id, email: user.email, type: 'password-reset' },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    // Frontend URL para el enlace (en desarrollo localhost, en producción el dominio real)
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetLink = `${frontendUrl}?token=${resetToken}`;
+
+    // Enviar email (simulado en consola para testing)
+    sendPasswordResetEmail(email, resetToken, resetLink);
+
+    res.json({ message: 'Enlace de recuperación enviado' });
+  } catch (e) {
+    console.error('Error en forgot-password:', e);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
+// ==================== RESET PASSWORD ====================
+app.post('/api/auth/reset-password', async (req, res) => {
+  try {
+    const { token, newPassword } = req.body;
+
+    if (!token || !newPassword) {
+      return res.status(400).json({ error: 'Token y contraseña son requeridos' });
+    }
+
+    // Verificar token
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(400).json({ error: 'El enlace de recuperación ha expirado' });
+    }
+
+    if (decoded.type !== 'password-reset') {
+      return res.status(400).json({ error: 'Token inválido' });
+    }
+
+    // Validar la nueva contraseña
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({ error: 'Contraseña débil. Debe tener mínimo 8 caracteres, mayúsculas, minúsculas, números y símbolos especiales' });
+    }
+
+    // Hashear nueva contraseña
+    const password_hash = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar contraseña en BD
+    const { error } = await supabase
+      .from('users')
+      .update({ password_hash })
+      .eq('id', decoded.id);
+
+    if (error) {
+      return res.status(400).json({ error: 'Error al actualizar contraseña' });
+    }
+
+    res.json({ message: 'Contraseña actualizada. Por favor inicia sesión con tu nueva contraseña' });
+  } catch (e) {
+    console.error('Error en reset-password:', e);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
 });
 
 // ==================== UTILIDADES DE LECTURA ====================
