@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import History from './History'
+import ChangePassword from './ChangePassword'
 
 function Dashboard({ user, onLogout }) {
   const [rg90File, setRg90File] = useState(null)
@@ -11,6 +12,7 @@ function Dashboard({ user, onLogout }) {
   const [sessionId, setSessionId] = useState(null)
   const [view, setView] = useState('upload')
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
+  const [showChangePassword, setShowChangePassword] = useState(false)
 
   const readFile = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -88,9 +90,32 @@ function Dashboard({ user, onLogout }) {
             <button className={view === 'history' ? 'nav-btn active' : 'nav-btn'} onClick={() => setView('history')}>📋 Historial</button>
           </div>
           <span>Hola, {user?.name || user?.email}</span>
+          <button
+            onClick={() => setShowChangePassword(true)}
+            style={{
+              background: '#f59e0b',
+              color: 'white',
+              border: 'none',
+              padding: '8px 12px',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              marginRight: '8px'
+            }}
+            title="Cambiar contraseña"
+          >
+            🔐 Seguridad
+          </button>
           <button onClick={onLogout} className="logout-btn">Cerrar sesión</button>
         </div>
       </nav>
+
+      {showChangePassword && (
+        <ChangePassword
+          onClose={() => setShowChangePassword(false)}
+          onSuccess={() => setShowChangePassword(false)}
+        />
+      )}
 
       <div className="container">
         {view === 'upload' && (

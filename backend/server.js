@@ -218,6 +218,60 @@ app.post('/api/auth/reset-password', async (req, res) => {
   }
 });
 
+// ==================== CHANGE PASSWORD (AUTHENTICATED) ====================
+app.post('/api/auth/change-password', verifyToken, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    const userId = req.user.id;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Contraseña actual y nueva son requeridas' });
+    }
+
+    // Obtener usuario actual
+    const { data: user } = await supabase.from('users').select().eq('id', userId).single();
+    if (!user) {
+      return res.status(404).json({ error: 'Usuario no encontrado' });
+    }
+
+    // Verificar que la contraseña actual es correcta
+    const valid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!valid) {
+      return res.status(401).json({ error: 'La contraseña actual es incorrecta' });
+    }
+
+    // No permitir que la nueva contraseña sea igual a la actual
+    const sameAsOld = await bcrypt.compare(newPassword, user.password_hash);
+    if (sameAsOld) {
+      return res.status(400).json({ error: 'La nueva contraseña no puede ser igual a la actual' });
+    }
+
+    // Validar la nueva contraseña
+    if (!validatePassword(newPassword)) {
+      return res.status(400).json({ error: 'Contraseña débil. Debe tener mínimo 8 caracteres, mayúsculas, minúsculas, números y símbolos especiales' });
+    }
+
+    // Hashear nueva contraseña
+    const password_hash = await bcrypt.hash(newPassword, 10);
+
+    // Actualizar contraseña en BD
+    const { error } = await supabase
+      .from('users')
+      .update({ password_hash })
+      .eq('id', userId);
+
+    if (error) {
+      return res.status(400).json({ error: 'Error al actualizar contraseña' });
+    }
+
+    console.log(`🔐 Contraseña actualizada para usuario: ${user.email}`);
+    res.json({ message: 'Contraseña actualizada exitosamente' });
+  } catch (e) {
+    console.error('Error en change-password:', e);
+    res.status(500).json({ error: 'Error en el servidor' });
+  }
+});
+
 // ==================== UTILIDADES DE LECTURA ====================
 const fail = (msg) => Object.assign(new Error(msg), { status: 400 });
 
