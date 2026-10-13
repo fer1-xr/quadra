@@ -3,14 +3,12 @@ import axios from 'axios'
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi'
 
 function ChangePassword({ onClose, onSuccess }) {
-  const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   const [loading, setLoading] = useState(false)
   const [passwordStrength, setPasswordStrength] = useState(0)
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
   const [showNewPassword, setShowNewPassword] = useState(false)
 
   const calculatePasswordStrength = (pass) => {
@@ -51,11 +49,6 @@ function ChangePassword({ onClose, onSuccess }) {
     setError('')
     setSuccess('')
 
-    if (!currentPassword) {
-      setError('La contraseña actual es requerida')
-      return
-    }
-
     if (!newPassword) {
       setError('La nueva contraseña es requerida')
       return
@@ -71,18 +64,12 @@ function ChangePassword({ onClose, onSuccess }) {
       return
     }
 
-    if (currentPassword === newPassword) {
-      setError('La nueva contraseña no puede ser igual a la actual')
-      return
-    }
-
     setLoading(true)
     try {
       const token = localStorage.getItem('quaedra_token')
       const response = await axios.post(
         '/api/auth/change-password',
         {
-          currentPassword,
           newPassword
         },
         {
@@ -90,7 +77,6 @@ function ChangePassword({ onClose, onSuccess }) {
         }
       )
       setSuccess('✅ Contraseña actualizada exitosamente!')
-      setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
       setPasswordStrength(0)
@@ -155,49 +141,6 @@ function ChangePassword({ onClose, onSuccess }) {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div style={{marginBottom: '15px'}}>
-            <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500'}}>
-              Contraseña Actual
-            </label>
-            <div style={{position: 'relative'}}>
-              <input
-                type={showCurrentPassword ? 'text' : 'password'}
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                placeholder="••••••••"
-                required
-                style={{
-                  width: '100%',
-                  padding: '10px',
-                  paddingRight: '40px',
-                  border: '1px solid #ddd',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  boxSizing: 'border-box'
-                }}
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#9ca3af',
-                  transition: 'color 0.2s ease'
-                }}
-                onMouseEnter={(e) => e.target.style.color = '#4b5563'}
-                onMouseLeave={(e) => e.target.style.color = '#9ca3af'}
-              >
-                {showCurrentPassword ? <HiOutlineEyeOff size={18} /> : <HiOutlineEye size={18} />}
-              </button>
-            </div>
-          </div>
-
           <div style={{marginBottom: '15px'}}>
             <label style={{display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500'}}>
               Nueva Contraseña
