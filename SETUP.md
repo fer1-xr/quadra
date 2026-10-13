@@ -1,40 +1,33 @@
 # 🎬 QUΔDRA Frontend - Setup Guide
 
-## Video Background Files
+## Instalación Rápida
 
-Los videos de fondo no están incluidos en el repositorio debido a limitaciones de tamaño en GitHub. 
-
-### Descargar videos manualmente
-
-Descarga estos dos videos de Pexels y colócalos en `frontend/public/videos/`:
-
-#### Video 1: Cataratas (54.87 MB)
-```
-https://www.pexels.com/es-es/download/video/36808131/
-→ Guardar como: frontend/public/videos/bg-video-1.mp4
-```
-
-#### Video 2: Cascadas (136.95 MB)
-```
-https://www.pexels.com/es-es/download/video/33054007/
-→ Guardar como: frontend/public/videos/bg-video-2.mp4
-```
-
-### Estructura esperada
-```
-frontend/
-└── public/
-    └── videos/
-        ├── bg-video-1.mp4  (54.87 MB)
-        └── bg-video-2.mp4  (136.95 MB)
-```
-
-## Instalación del Frontend
+Los videos de fondo se descargan automáticamente durante la instalación:
 
 ```bash
 cd frontend
 npm install
 npm run dev
+```
+
+¡Eso es todo! El script `postinstall` descargará automáticamente los dos videos de Pexels.
+
+### Descargar videos manualmente
+
+Si prefieres descargar los videos manualmente, ejecuta:
+
+```bash
+npm run setup
+```
+
+O descarga directamente desde Pexels:
+- Video 1: https://www.pexels.com/es-es/download/video/36808131/
+- Video 2: https://www.pexels.com/es-es/download/video/33054007/
+
+Guarda los archivos como:
+```
+frontend/public/videos/bg-video-1.mp4
+frontend/public/videos/bg-video-2.mp4
 ```
 
 ## Características
