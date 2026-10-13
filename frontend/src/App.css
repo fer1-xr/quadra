@@ -274,7 +274,7 @@ body {
   color: #7a8f9f;
   font-size: 13px;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', sans-serif;
 }
 
 .tab-btn:hover:not(.active) {
@@ -341,9 +341,9 @@ body {
   color: white;
   position: relative;
   overflow: hidden;
-  font-family: 'Playfair Display', serif;
+  font-family: 'Inter', sans-serif;
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0px;
 }
 
 .btn-primary::before {
