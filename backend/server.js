@@ -6,8 +6,10 @@ import ExcelJS from 'exceljs';
 import XLSX from 'xlsx';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import sgMail from '@sendgrid/mail';
 
 dotenv.config();
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
 
 const app = express();
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -51,12 +53,30 @@ const validatePassword = (password) => {
   return true;
 };
 
-// Para testing: simulamos envío de email mostrando enlace en consola
-const sendPasswordResetEmail = (email, resetToken, resetLink) => {
-  console.log(`\n📧 EMAIL SIMULADO ENVIADO A: ${email}`);
-  console.log(`🔗 ENLACE DE RESET: ${resetLink}`);
-  console.log(`🔐 TOKEN: ${resetToken}\n`);
-  // En producción, aquí se integraría SendGrid, Mailgun, etc.
+const sendPasswordResetEmail = async (email, resetToken, resetLink) => {
+  if (!process.env.SENDGRID_API_KEY) {
+    console.log(`\n📧 EMAIL SIMULADO (SIN SENDGRID): ${email}`);
+    console.log(`🔗 ENLACE: ${resetLink}`);
+    return;
+  }
+  try {
+    await sgMail.send({
+      to: email,
+      from: process.env.SENDGRID_FROM_EMAIL || 'noreply@quadra.com',
+      subject: 'Recupera tu contraseña de QUΔDRA',
+      html: `
+        <h2>Recupera tu contraseña</h2>
+        <p>Haz clic en el siguiente enlace para establecer una nueva contraseña:</p>
+        <p><a href="${resetLink}" style="background: #1f2937; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; display: inline-block;">Recuperar Contraseña</a></p>
+        <p>O copia este enlace en tu navegador: ${resetLink}</p>
+        <p style="color: #666; font-size: 12px;">Este enlace expira en 15 minutos.</p>
+      `
+    });
+    console.log(`✅ Email de recuperación enviado a ${email}`);
+  } catch (err) {
+    console.error('Error al enviar email:', err);
+    throw new Error('Error al enviar email de recuperación');
+  }
 };
 
 app.post('/api/auth/signup', async (req, res) => {
@@ -159,11 +179,15 @@ app.post('/api/auth/forgot-password', async (req, res) => {
     );
 
     // Frontend URL para el enlace (en desarrollo localhost, en producción el dominio real)
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = process.env.FRONTEND_URL?.split(',')[0]?.trim() || 'http://localhost:5173';
     const resetLink = `${frontendUrl}?token=${resetToken}`;
 
-    // Enviar email (simulado en consola para testing)
-    sendPasswordResetEmail(email, resetToken, resetLink);
+    try {
+      await sendPasswordResetEmail(email, resetToken, resetLink);
+    } catch (emailErr) {
+      console.error('Error al enviar email:', emailErr);
+      return res.status(500).json({ error: 'Error al enviar email de recuperación' });
+    }
 
     res.json({ message: 'Enlace de recuperación enviado' });
   } catch (e) {
