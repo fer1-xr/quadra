@@ -17,6 +17,8 @@ function Login({ onLogin }) {
   const [showPassword, setShowPassword] = useState(false)
   const [screen, setScreen] = useState('login') // 'login', 'forgot', 'reset'
   const [resetToken, setResetToken] = useState(null)
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0)
+  const videos = ['/videos/bg-video-1.mp4', '/videos/bg-video-2.mp4', '/videos/bg-video-3.mp4']
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -27,6 +29,13 @@ function Login({ onLogin }) {
       window.history.replaceState({}, document.title, window.location.pathname)
     }
   }, [])
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setActiveVideoIndex(prev => (prev + 1) % videos.length)
+    }, 15000)
+    return () => clearInterval(interval)
+  }, [videos.length])
 
   const validateEmail = (value) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -152,11 +161,8 @@ function Login({ onLogin }) {
 
   return (
     <div className="login-wrapper">
-      <video autoPlay muted loop playsInline className="bg-video bg-video-1">
-        <source src="/videos/bg-video-1.mp4" type="video/mp4" />
-      </video>
-      <video autoPlay muted loop playsInline className="bg-video bg-video-2">
-        <source src="/videos/bg-video-2.mp4" type="video/mp4" />
+      <video autoPlay muted playsInline className="bg-video" key={activeVideoIndex}>
+        <source src={videos[activeVideoIndex]} type="video/mp4" />
       </video>
       <div className="login-overlay"></div>
       <div className="login-container">
