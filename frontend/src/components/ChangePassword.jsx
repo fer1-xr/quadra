@@ -243,8 +243,7 @@ function ChangePassword({ onClose, onSuccess }) {
                 cursor: 'pointer',
                 fontSize: '14px',
                 fontWeight: '500',
-                opacity: loading || passwordStrength < 3 || !newPassword || !confirmPassword ? 0.6 : 1,
-                pointerEvents: loading || passwordStrength < 3 || !newPassword || !confirmPassword ? 'none' : 'auto'
+                opacity: loading || passwordStrength < 3 || !newPassword || !confirmPassword ? 0.6 : 1
               }}
               disabled={loading || passwordStrength < 3 || !newPassword || !confirmPassword}
             >
