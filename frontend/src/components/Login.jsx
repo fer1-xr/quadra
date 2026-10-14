@@ -19,8 +19,8 @@ function Login({ onLogin }) {
   const [resetToken, setResetToken] = useState(null)
   const [activeVideoIndex, setActiveVideoIndex] = useState(0)
   const videos = [
-    'https://videos.pexels.com/video-files/36808131/36808131-hd_1280_720_24fps.mp4',
-    'https://videos.pexels.com/video-files/33054007/33054007-hd_1920_1080_24fps.mp4'
+    'https://cdn.pixabay.com/vimeo/505127577/505127577-hd.mp4',
+    'https://cdn.pixabay.com/vimeo/433781/433781-hd.mp4'
   ]
 
   useEffect(() => {
