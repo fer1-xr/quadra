@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": {
+      "rootDirectory": "frontend",
+      "buildCommand": "npm run build",
+      "outputDirectory": "dist"
+    }
+  }
+}
