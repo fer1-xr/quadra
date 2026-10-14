@@ -18,7 +18,10 @@ function Login({ onLogin }) {
   const [screen, setScreen] = useState('login') // 'login', 'forgot', 'reset'
   const [resetToken, setResetToken] = useState(null)
   const [activeVideoIndex, setActiveVideoIndex] = useState(0)
-  const videos = ['/videos/bg-video-1.mp4', '/videos/bg-video-2.mp4']
+  const videos = [
+    'https://videos.pexels.com/video-files/36808131/36808131-hd_1280_720_24fps.mp4',
+    'https://videos.pexels.com/video-files/33054007/33054007-hd_1920_1080_24fps.mp4'
+  ]
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
