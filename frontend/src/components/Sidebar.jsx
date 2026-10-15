@@ -10,7 +10,8 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
     { id: 'rg90', label: 'Conciliación RG90', icon: '📊' },
     { id: 'bancaria', label: 'Conciliación Bancaria', icon: '🏦' },
     { id: 'liquidacion', label: 'Liquidación Salarial', icon: '💰' },
-    { id: 'activofijo', label: 'Activo Fijo', icon: '🏢' }
+    { id: 'activofijo', label: 'Activo Fijo', icon: '🏢' },
+    { id: 'flujo', label: 'Flujo de Caja', icon: '💵' }
   ]
 
   const handleNavigate = (viewId) => {

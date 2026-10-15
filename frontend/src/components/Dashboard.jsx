@@ -93,6 +93,9 @@ function Dashboard({ user, onLogout }) {
       case 'activofijo':
         setView('activofijo')
         break
+      case 'flujo':
+        setView('flujo')
+        break
       case 'buscar':
         setView('buscar')
         break
@@ -163,6 +166,12 @@ function Dashboard({ user, onLogout }) {
                     <div className="card-icon">🏢</div>
                     <h3>Calculadora Activo Fijo</h3>
                     <p>Gestiona y calcula depreciación de activos</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card" onClick={() => handleNavigate('flujo')}>
+                    <div className="card-icon">💵</div>
+                    <h3>Flujo de Caja</h3>
+                    <p>Proyecta y analiza tu flujo de efectivo</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                 </div>
@@ -337,6 +346,40 @@ function Dashboard({ user, onLogout }) {
                   </div>
                 </div>
                 <button className="btn btn-primary">Calcular Depreciación</button>
+              </div>
+            )}
+
+            {view === 'flujo' && (
+              <div className="card">
+                <h2>💵 Flujo de Caja</h2>
+                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Proyecta y analiza tu flujo de efectivo mensual</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Mes/Período</label>
+                    <input type="text" placeholder="Ej: Enero 2026" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Ingresos Totales</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Egresos Totales</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Saldo Anterior</label>
+                    <input type="number" placeholder="Saldo" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Inversiones</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Financiamientos</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                </div>
+                <button className="btn btn-primary">Calcular Flujo de Caja</button>
               </div>
             )}
 
