@@ -23,10 +23,6 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-        <div className="sidebar-header">
-          <h2 className="sidebar-logo">QUΔDRA</h2>
-        </div>
-
         <nav className="sidebar-menu">
           {menuItems.map(item => (
             <button
