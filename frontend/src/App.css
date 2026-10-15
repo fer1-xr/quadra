@@ -27,29 +27,57 @@ body {
 
 /* ========== NAVBAR ========== */
 .navbar {
-  background: var(--primary);
+  background: linear-gradient(135deg, var(--primary) 0%, #0f1620 100%);
   color: white;
-  padding: 12px 30px;
+  padding: 0 30px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.25),
+    0 0 1px rgba(212, 175, 55, 0.1) inset;
   height: 65px;
+  position: relative;
+  border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+}
+
+.navbar::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
 }
 
 .navbar h1 {
   font-size: 28px;
   font-weight: 700;
-  letter-spacing: 2px;
+  letter-spacing: 3px;
   color: var(--accent);
+  font-family: 'Playfair Display', serif;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+  z-index: 1;
+}
+
+.navbar h1:hover {
+  text-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+  letter-spacing: 4px;
 }
 
 .nav-right {
   display: flex;
   align-items: center;
-  gap: 20px;
-  color: rgba(255, 255, 255, 0.9);
+  gap: 30px;
+  color: rgba(255, 255, 255, 0.95);
   font-size: 14px;
+  position: relative;
+  z-index: 1;
+  font-weight: 500;
+  letter-spacing: 0.5px;
 }
 
 /* ========== CONTAINER ========== */
@@ -1277,13 +1305,13 @@ body {
   }
 
   .navbar {
-    padding: 12px 20px;
+    padding: 0 20px;
     height: 60px;
   }
 
   .navbar h1 {
     font-size: 24px;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
   }
 
   .nav-right {

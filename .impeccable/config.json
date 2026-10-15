@@ -7,7 +7,16 @@
         "rule": "overused-font",
         "value": "inter",
         "createdAt": "2026-10-15T01:57:14.291Z",
-        "reason": "design-system: Inter is the specified primary font in QUADRA's DESIGN.md"
+        "reason": "Intentional design system choice - Inter is the primary font in DESIGN.md system"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/Demo.jsx"
+        ],
+        "createdAt": "2026-10-15T02:10:14.570Z",
+        "reason": "Temporary demo file - accent border consistent with Quadra design system"
       }
     ]
   }
