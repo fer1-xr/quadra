@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUADRA - Soluciones Empresariales Innovadoras</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            background-color: #f8f9fa;
+        }
+
+        /* HEADER Y NAVEGACIÓN */
+        header {
+            background: #2a2622;
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+
+        nav {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #fff;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-family: 'Playfair Display', serif;
+        }
+
+        .logo-ra {
+            color: #E8634A;
+            position: relative;
+        }
+
+        .logo-ra::before {
+            content: '▲';
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #E8634A;
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 40px;
+        }
+
+        .nav-links a {
+            color: #fff;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            position: relative;
+            font-size: 14px;
+        }
+
+        .nav-links a:hover {
+            color: #E8634A;
+        }
+
+        .nav-links a:focus-visible {
+            outline: 2px solid #E8634A;
+            outline-offset: 4px;
+            border-radius: 2px;
+        }
+
+        .cta-button {
+            background-color: transparent;
+            color: #fff;
+            padding: 10px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1.5px solid #fff;
+            font-size: 14px;
+        }
+
+        .cta-button:hover {
+            background-color: #E8634A;
+            color: #fff;
+            border-color: #E8634A;
+        }
+
+        .cta-button:focus-visible {
+            outline: 2px solid #E8634A;
+            outline-offset: 2px;
+        }
+
+        /* HERO SECTION */
+        .hero {
+            background: linear-gradient(135deg, #3d3530 0%, #2a2622 100%);
+            color: #fff;
+            padding: 120px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 140, 107, 0.15) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: 0;
+        }
+
+        .hero-content {
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 52px;
+            margin-bottom: 20px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .hero h1 span {
+            color: #E8634A;
+        }
+
+        .hero p {
+            font-size: 20px;
+            margin-bottom: 40px;
+            color: #e8e8e8;
+            line-height: 1.6;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background-color: #E8634A;
+            color: #fff;
+            padding: 15px 45px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            border: 2px solid #E8634A;
+        }
+
+        .btn-primary:hover {
+            background-color: transparent;
+            color: #E8634A;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            color: #E8634A;
+            padding: 15px 45px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 16px;
+            border: 2px solid #E8634A;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background-color: #E8634A;
+            color: #fff;
+        }
+
+        /* SECCIONES GENERALES */
+        section {
+            padding: 80px 30px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 42px;
+            margin-bottom: 50px;
+            color: #1a2332;
+            font-weight: 700;
+        }
+
+        .section-title span {
+            color: #E8634A;
+        }
+
+        /* ABOUT SECTION */
+        #about {
+            background-color: #fff;
+        }
+
+        .about-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .about-text h3 {
+            font-size: 28px;
+            color: #1a2332;
+            margin-bottom: 20px;
+        }
+
+        .about-text p {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 30px;
+        }
+
+        .features-list li {
+            padding: 12px 0;
+            color: #666;
+            display: flex;
+            align-items: center;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            color: #E8634A;
+            font-weight: bold;
+            font-size: 20px;
+            margin-right: 15px;
+        }
+
+        .about-image {
+            background: linear-gradient(135deg, #3d3530 0%, #2a2622 100%);
+            border-radius: 10px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+
+        /* PRICING SECTION */
+        #pricing {
+            background-color: #f8f9fa;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .pricing-card {
+            background: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid #f0f0f0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: #E8634A;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .pricing-card h3 {
+            font-size: 24px;
+            color: #1a2332;
+            margin-bottom: 15px;
+        }
+
+        .pricing-card .price {
+            font-size: 48px;
+            color: #E8634A;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .pricing-card .period {
+            color: #999;
+            font-size: 14px;
+            margin-bottom: 30px;
+        }
+
+        .pricing-features {
+            list-style: none;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .pricing-features li {
+            padding: 10px 0;
+            color: #666;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .pricing-features li:last-child {
+            border-bottom: none;
+        }
+
+        .pricing-card .btn-primary {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* SERVICES SECTION */
+        #services {
+            background-color: #fff;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 40px;
+            margin-top: 50px;
+        }
+
+        .service-card {
+            text-align: center;
+            padding: 30px;
+        }
+
+        .service-icon {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #E8634A 0%, #FF6B4B 100%);
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: #fff;
+        }
+
+        .service-card h3 {
+            font-size: 22px;
+            color: #1a2332;
+            margin-bottom: 15px;
+        }
+
+        .service-card p {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        /* CONTACT SECTION */
+        #contact {
+            background: linear-gradient(135deg, #3d3530 0%, #2a2622 100%);
+            color: #fff;
+        }
+
+        .contact-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 50px;
+            margin-top: 50px;
+        }
+
+        .contact-item h3 {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #E8634A;
+        }
+
+        .contact-item p {
+            color: #d0d0d0;
+            line-height: 1.8;
+        }
+
+        /* FOOTER */
+        footer {
+            background-color: #1a1714;
+            color: #f0f0f0;
+            padding: 60px 30px 30px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+            text-align: left;
+        }
+
+        .footer-section h4 {
+            color: #fff;
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-section ul li a {
+            color: #b0bec5;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section ul li a:hover {
+            color: #E8634A;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 30px;
+            margin-top: 40px;
+            color: #999;
+        }
+
+        .social-links {
+            margin-top: 20px;
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-links a {
+            width: 40px;
+            height: 40px;
+            background: #3d3530;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #E8634A;
+            text-decoration: none;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .social-links a:hover {
+            background: #E8634A;
+            color: #fff;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 20px;
+                font-size: 14px;
+            }
+
+            .hero h1 {
+                font-size: 36px;
+            }
+
+            .hero p {
+                font-size: 16px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary, .btn-secondary {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+
+            .section-title {
+                font-size: 32px;
+            }
+
+            .footer-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <div class="logo">QUAD<span class="logo-ra">RA</span></div>
+            <ul class="nav-links">
+                <li><a href="#inicio">Inicio</a></li>
+                <li><a href="#services">Servicios</a></li>
+                <li><a href="#about">Acerca de</a></li>
+                <li><a href="#pricing">Precios</a></li>
+                <li><a href="#contact">Contacto</a></li>
+                <li><a href="#" class="cta-button">Solicitar Demo</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section id="inicio" class="hero">
+        <div class="hero-content">
+            <h1>Soluciones Empresariales <span>Innovadoras</span></h1>
+            <p>Transformamos tu negocio con tecnología de punta y estrategias personalizadas. Crece con QUADRA y alcanza nuevas alturas.</p>
+            <div class="hero-buttons">
+                <a href="#contact" class="btn-primary">Empezar Ahora</a>
+                <a href="#services" class="btn-secondary">Conocer Más</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- SERVICES SECTION -->
+    <section id="services">
+        <div class="container">
+            <h2 class="section-title">Nuestros <span>Servicios</span></h2>
+            <div class="services-grid">
+                <div class="service-card">
+                    <div class="service-icon">⚙️</div>
+                    <h3>Consultoría Empresarial</h3>
+                    <p>Asesoramiento experto para optimizar tus procesos y aumentar tu rentabilidad. Soluciones personalizadas según tus necesidades.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">💻</div>
+                    <h3>Desarrollo Tecnológico</h3>
+                    <p>Plataformas digitales y software a medida. Tecnología moderna que impulsa tu crecimiento y eficiencia operacional.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">📊</div>
+                    <h3>Análisis de Datos</h3>
+                    <p>Inteligencia empresarial y análisis profundos. Toma decisiones informadas basadas en datos reales de tu negocio.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🎯</div>
+                    <h3>Estrategia Digital</h3>
+                    <p>Posicionamiento online y marketing digital. Aumenta tu presencia y atrae más clientes a través del mundo digital.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">🔒</div>
+                    <h3>Seguridad Empresarial</h3>
+                    <p>Protección integral de datos y ciberseguridad. Mantén tu información segura con nuestras soluciones avanzadas.</p>
+                </div>
+                <div class="service-card">
+                    <div class="service-icon">👥</div>
+                    <h3>Capacitación Profesional</h3>
+                    <p>Programas de entrenamiento especializado. Desarrollo de talento para que tu equipo esté siempre actualizado.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ABOUT SECTION -->
+    <section id="about">
+        <div class="container">
+            <h2 class="section-title">Acerca de <span>QUADRA</span></h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <h3>Quiénes Somos</h3>
+                    <p>QUADRA es una empresa líder en soluciones empresariales e innovación tecnológica. Con más de 10 años de experiencia, hemos ayudado a cientos de empresas a transformarse digitalmente y alcanzar sus objetivos.</p>
+                    <p>Nuestro equipo está compuesto por expertos en diferentes áreas: tecnología, consultoría, marketing y gestión empresarial. Trabajamos con dedicación para entender tus desafíos y ofrecer soluciones efectivas.</p>
+                    <h3 style="margin-top: 30px;">Por Qué Elegirnos</h3>
+                    <ul class="features-list">
+                        <li>Experiencia de más de 10 años en el mercado</li>
+                        <li>Equipo de profesionales certificados</li>
+                        <li>Soluciones personalizadas y escalables</li>
+                        <li>Soporte 24/7 para todos nuestros clientes</li>
+                        <li>Garantía de satisfacción del cliente</li>
+                        <li>Innovación continua en nuestros servicios</li>
+                    </ul>
+                </div>
+                <div class="about-image">
+                    <div style="text-align: center;">
+                        <div style="font-size: 60px; margin-bottom: 20px;">🚀</div>
+                        <p>Innovación y Excelencia</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- PRICING SECTION -->
+    <section id="pricing">
+        <div class="container">
+            <h2 class="section-title">Nuestros <span>Planes</span></h2>
+            <div class="pricing-grid">
+                <div class="pricing-card">
+                    <h3>Startup</h3>
+                    <div class="price">$299</div>
+                    <div class="period">por mes</div>
+                    <ul class="pricing-features">
+                        <li>Análisis básico de negocio</li>
+                        <li>Hasta 2 proyectos</li>
+                        <li>Soporte por email</li>
+                        <li>Reportes mensuales</li>
+                    </ul>
+                    <a href="#" class="btn-primary">Seleccionar Plan</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Profesional</h3>
+                    <div class="price">$599</div>
+                    <div class="period">por mes</div>
+                    <ul class="pricing-features">
+                        <li>Análisis avanzado</li>
+                        <li>Hasta 5 proyectos</li>
+                        <li>Soporte prioritario</li>
+                        <li>Reportes semanales</li>
+                        <li>Asesoramiento dedicado</li>
+                    </ul>
+                    <a href="#" class="btn-primary">Seleccionar Plan</a>
+                </div>
+                <div class="pricing-card">
+                    <h3>Empresa</h3>
+                    <div class="price">Personalizado</div>
+                    <div class="period">contacta con nosotros</div>
+                    <ul class="pricing-features">
+                        <li>Solución completamente personalizada</li>
+                        <li>Proyectos ilimitados</li>
+                        <li>Soporte 24/7 dedicado</li>
+                        <li>Reportes en tiempo real</li>
+                        <li>Equipo especializado</li>
+                    </ul>
+                    <a href="#contact" class="btn-primary">Contáctanos</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact">
+        <div class="container">
+            <h2 class="section-title">Ponte en <span>Contacto</span></h2>
+            <div class="contact-grid">
+                <div class="contact-item">
+                    <h3>📍 Ubicación</h3>
+                    <p>Calle Principal 123<br>Piso 5, Oficina 501<br>Madrid, España 28001</p>
+                </div>
+                <div class="contact-item">
+                    <h3>📧 Email</h3>
+                    <p><a href="mailto:info@quadra.com" style="color: #00d4ff;">info@quadra.com</a><br><a href="mailto:soporte@quadra.com" style="color: #00d4ff;">soporte@quadra.com</a></p>
+                </div>
+                <div class="contact-item">
+                    <h3>📱 Teléfono</h3>
+                    <p><a href="tel:+34912345678" style="color: #00d4ff;">+34 (91) 234-5678</a><br>Lunes a Viernes: 9:00 - 18:00</p>
+                </div>
+                <div class="contact-item">
+                    <h3>🌐 Redes Sociales</h3>
+                    <p>Síguenos en nuestras redes para las últimas actualizaciones y noticias</p>
+                    <div class="social-links">
+                        <a href="#">f</a>
+                        <a href="#">𝕏</a>
+                        <a href="#">in</a>
+                        <a href="#">📷</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-grid">
+                <div class="footer-section">
+                    <h4>QUADRA</h4>
+                    <p>Soluciones empresariales innovadoras para tu negocio.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Servicios</h4>
+                    <ul>
+                        <li><a href="#">Consultoría</a></li>
+                        <li><a href="#">Desarrollo</a></li>
+                        <li><a href="#">Análisis</a></li>
+                        <li><a href="#">Estrategia</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Empresa</h4>
+                    <ul>
+                        <li><a href="#">Acerca de</a></li>
+                        <li><a href="#">Equipo</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Carreras</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Política de Privacidad</a></li>
+                        <li><a href="#">Términos de Servicio</a></li>
+                        <li><a href="#">Cookie Policy</a></li>
+                        <li><a href="#">Aviso Legal</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 QUADRA. Todos los derechos reservados. Hecho con ❤️</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

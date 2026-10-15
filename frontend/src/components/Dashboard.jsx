@@ -3,6 +3,7 @@ import axios from 'axios'
 import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
+import LiquidacionSalarial from './LiquidacionSalarial'
 import '../styles/Sidebar.css'
 
 function Dashboard({ user, onLogout }) {
@@ -134,44 +135,71 @@ function Dashboard({ user, onLogout }) {
             {view === 'inicio' && (
               <div className="dashboard-view">
                 <div className="dashboard-header">
-                  <h1>🏠 Bienvenido a QUADRA</h1>
-                  <p>Sistema integral de contabilidad y gestión financiera</p>
+                  <h1>Bienvenido a QUADRA</h1>
+                  <p>Plataforma integral de conciliación y gestión contable</p>
                 </div>
                 <div className="services-grid">
-                  <div className="service-card" onClick={() => handleNavigate('rg90')}>
-                    <div className="card-icon">📊</div>
+                  <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"></polyline>
+                        <polyline points="12 12 20 7.5"></polyline>
+                        <polyline points="12 12 12 21"></polyline>
+                        <polyline points="12 12 4 7.5"></polyline>
+                      </svg>
+                    </div>
                     <h3>Conciliación RG90</h3>
-                    <p>Compara tu reporte RG90 con el libro de compras</p>
+                    <p>Compara tu reporte RG90 con el libro de compras según normativa central</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card" onClick={() => handleNavigate('bancaria')}>
-                    <div className="card-icon">🏦</div>
+                  <div className="service-card service-card--bancaria" onClick={() => handleNavigate('bancaria')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                      </svg>
+                    </div>
                     <h3>Conciliación Bancaria</h3>
-                    <p>Reconcilia tus movimientos bancarios con contabilidad</p>
+                    <p>Reconcilia movimientos bancarios con registros contables</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card" onClick={() => handleNavigate('buscar')}>
-                    <div className="card-icon">📄</div>
+                  <div className="service-card service-card--documentos" onClick={() => handleNavigate('buscar')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
+                      </svg>
+                    </div>
                     <h3>Importar Documentos</h3>
-                    <p>Importa PDF e imágenes a libro compras/ventas</p>
+                    <p>OCR y procesamiento de PDF e imágenes de comprobantes</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card" onClick={() => handleNavigate('liquidacion')}>
-                    <div className="card-icon">💰</div>
+                  <div className="service-card service-card--liquidacion" onClick={() => handleNavigate('liquidacion')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+                      </svg>
+                    </div>
                     <h3>Liquidación Salarial</h3>
-                    <p>Calcula e importa liquidaciones de nómina</p>
+                    <p>Cálculo y gestión de nóminas con descuentos e impuestos</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card" onClick={() => handleNavigate('activofijo')}>
-                    <div className="card-icon">🏢</div>
+                  <div className="service-card service-card--activos" onClick={() => handleNavigate('activofijo')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>
+                      </svg>
+                    </div>
                     <h3>Calculadora Activo Fijo</h3>
-                    <p>Gestiona y calcula depreciación de activos</p>
+                    <p>Depreciación, amortización y valuación de activos</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card" onClick={() => handleNavigate('flujo')}>
-                    <div className="card-icon">💵</div>
+                  <div className="service-card service-card--flujo" onClick={() => handleNavigate('flujo')}>
+                    <div className="card-icon">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 2.2"></path>
+                      </svg>
+                    </div>
                     <h3>Flujo de Caja</h3>
-                    <p>Proyecta y analiza tu flujo de efectivo</p>
+                    <p>Proyecciones y análisis de liquidez y efectivo</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                 </div>
@@ -298,29 +326,7 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'liquidacion' && (
-              <div className="card">
-                <h2>💰 Calculadora de Liquidación Salarial</h2>
-                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Calcula y gestiona liquidaciones de nómina</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Salario Mensual</label>
-                    <input type="number" placeholder="Ingrese salario" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Días Trabajados</label>
-                    <input type="number" placeholder="Días" min="0" max="31" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Bonificación</label>
-                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Descuentos</label>
-                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                </div>
-                <button className="btn btn-primary">Calcular Liquidación</button>
-              </div>
+              <LiquidacionSalarial />
             )}
 
             {view === 'activofijo' && (
