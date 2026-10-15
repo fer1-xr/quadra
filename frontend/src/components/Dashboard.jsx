@@ -150,11 +150,10 @@ function Dashboard({ user, onLogout }) {
                   <div className="service-card service-card--bancaria" onClick={() => handleNavigate('bancaria')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M2 8h20V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v2z"></path>
-                        <rect x="2" y="8" width="20" height="10" rx="2"></rect>
-                        <circle cx="6" cy="13" r="1.5" fill="currentColor"></circle>
-                        <circle cx="12" cy="13" r="1.5" fill="currentColor"></circle>
-                        <circle cx="18" cy="13" r="1.5" fill="currentColor"></circle>
+                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
+                        <path d="M2 10h20"></path>
+                        <rect x="5" y="16" width="3" height="2" rx="0.5"></rect>
+                        <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
                       </svg>
                     </div>
                     <h3>Conciliación Bancaria</h3>
@@ -182,11 +181,10 @@ function Dashboard({ user, onLogout }) {
                   <div className="service-card service-card--activos" onClick={() => handleNavigate('activofijo')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="7" width="8" height="10" rx="1"></rect>
-                        <path d="M13 7v10h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1h-8z"></path>
-                        <path d="M7 17v3"></path>
-                        <path d="M17 17v3"></path>
-                        <path d="M3 7h18"></path>
+                        <rect x="3" y="8" width="18" height="11" rx="1"></rect>
+                        <circle cx="6" cy="19" r="1.5" fill="currentColor"></circle>
+                        <circle cx="18" cy="19" r="1.5" fill="currentColor"></circle>
+                        <path d="M8 8L4 4M16 8l4-4"></path>
                       </svg>
                     </div>
                     <h3>Calculadora Activo Fijo</h3>
@@ -196,10 +194,9 @@ function Dashboard({ user, onLogout }) {
                   <div className="service-card service-card--flujo" onClick={() => handleNavigate('flujo')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="5" width="6" height="8" rx="1"></rect>
-                        <rect x="11" y="9" width="6" height="8" rx="1"></rect>
-                        <path d="M9 9h2M17 13h2M6 13v2M14 17v2"></path>
-                        <path d="M3 13h18"></path>
+                        <circle cx="12" cy="12" r="9"></circle>
+                        <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.3"></circle>
+                        <path d="M12 7v10M7 12h10"></path>
                       </svg>
                     </div>
                     <h3>Flujo de Caja</h3>
