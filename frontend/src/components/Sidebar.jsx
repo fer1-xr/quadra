@@ -1,15 +1,46 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import '../styles/Sidebar.css'
 
 function Sidebar({ currentView, onNavigate, user, onLogout }) {
   const [isHovered, setIsHovered] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
+
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('quadra-theme')
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+    const darkMode = savedTheme ? savedTheme === 'dark' : prefersDark
+    setIsDarkMode(darkMode)
+    applyTheme(darkMode)
+  }, [])
+
+  const applyTheme = (dark) => {
+    const html = document.documentElement
+    if (dark) {
+      html.style.backgroundColor = '#0a0e1a'
+      html.style.color = '#ffffff'
+      document.body.style.backgroundColor = '#0a0e1a'
+      document.body.style.color = '#ffffff'
+    } else {
+      html.style.backgroundColor = '#ffffff'
+      html.style.color = '#333333'
+      document.body.style.backgroundColor = '#ffffff'
+      document.body.style.color = '#333333'
+    }
+    localStorage.setItem('quadra-theme', dark ? 'dark' : 'light')
+  }
+
+  const toggleTheme = () => {
+    const newDarkMode = !isDarkMode
+    setIsDarkMode(newDarkMode)
+    applyTheme(newDarkMode)
+  }
 
   const menuItems = [
     { id: 'inicio', label: 'INICIO', icon: '🏠' },
-    { id: 'buscar', label: 'Buscar', icon: '📄', isSvg: true, svg: (
+    { id: 'buscar', label: 'Buscar', icon: '🔍', isSvg: true, svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
-        <polyline points="13 2 13 9 20 9"></polyline>
+        <circle cx="11" cy="11" r="8"></circle>
+        <path d="m21 21-4.35-4.35"></path>
       </svg>
     )},
     { id: 'rg90', label: 'Conciliación RG90', icon: '📊', isImage: true, image: '/rg90-logo.png' },
@@ -74,6 +105,32 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
         </nav>
 
         <div className="sidebar-footer">
+          <button
+            className="menu-item theme-toggle-item"
+            onClick={toggleTheme}
+            title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
+          >
+            <span className="menu-icon">
+              {isDarkMode ? (
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+              ) : (
+                <svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+              )}
+            </span>
+            <span className="menu-label">{isDarkMode ? 'Claro' : 'Oscuro'}</span>
+          </button>
           <button className="menu-item account-item" onClick={() => handleNavigate('cuenta')} title="Mi cuenta">
             <span className="menu-icon">👤</span>
             <span className="menu-label">Mi cuenta</span>
