@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import '../styles/Sidebar.css'
 
 function Sidebar({ currentView, onNavigate, user, onLogout }) {
-  const [isOpen, setIsOpen] = useState(true)
+  const [isHovered, setIsHovered] = useState(false)
 
   const menuItems = [
     { id: 'inicio', label: 'INICIO', icon: '🏠' },
@@ -18,12 +18,11 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
   }
 
   return (
-    <>
-      <button className="sidebar-toggle" onClick={() => setIsOpen(!isOpen)} aria-label="Toggle sidebar">
-        {isOpen ? '✕' : '☰'}
-      </button>
-
-      <aside className={`sidebar ${isOpen ? 'open' : 'closed'}`}>
+    <aside
+      className={`sidebar ${isHovered ? 'expanded' : 'collapsed'}`}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
         <div className="sidebar-header">
           <h2 className="sidebar-logo">QUΔDRA</h2>
         </div>
@@ -53,7 +52,6 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
           </button>
         </div>
       </aside>
-    </>
   )
 }
 
