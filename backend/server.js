@@ -1059,13 +1059,17 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
     const lineHeight = 15;
     const margin = 40;
 
+    // Cargar fuentes una sola vez
+    const fontNormal = await pdfDoc.embedFont('Helvetica');
+    const fontBold = await pdfDoc.embedFont('Helvetica-Bold');
+
     // Función para escribir texto
     const drawText = (text, x = margin, size = fontSize, bold = false) => {
       page.drawText(text, {
         x,
         y,
         size,
-        font: bold ? await pdfDoc.embedFont('Helvetica-Bold') : await pdfDoc.embedFont('Helvetica'),
+        font: bold ? fontBold : fontNormal,
         color: rgb(0.2, 0.2, 0.2)
       });
       y -= lineHeight;
@@ -1081,7 +1085,7 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
       x: margin,
       y,
       size: 16,
-      font: await pdfDoc.embedFont('Helvetica-Bold'),
+      font: fontBold,
       color: rgb(0.18, 0.24, 0.31)
     });
     y -= lineHeight * 1.5;
@@ -1111,14 +1115,14 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
 
     devengos.forEach(([concepto, monto]) => {
       const text = `${concepto}`;
-      page.drawText(text, { x: margin + 10, y, size: 10, font: await pdfDoc.embedFont('Helvetica'), color: rgb(0.3, 0.3, 0.3) });
-      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: await pdfDoc.embedFont('Helvetica'), color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(text, { x: margin + 10, y, size: 10, font: fontNormal, color: rgb(0.3, 0.3, 0.3) });
+      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: fontNormal, color: rgb(0.2, 0.2, 0.2) });
       y -= lineHeight;
     });
 
     y -= 5;
-    page.drawText('TOTAL DEVENGADO', { x: margin, y, size: 11, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.2, 0.2, 0.2) });
-    page.drawText(`₲ ${datos.totalDevengado.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.2, 0.2, 0.2) });
+    page.drawText('TOTAL DEVENGADO', { x: margin, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+    page.drawText(`₲ ${datos.totalDevengado.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
     y -= lineHeight * 1.2;
 
     drawLine();
@@ -1135,22 +1139,22 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
 
     descuentos.forEach(([concepto, monto]) => {
       const text = `${concepto}`;
-      page.drawText(text, { x: margin + 10, y, size: 10, font: await pdfDoc.embedFont('Helvetica'), color: rgb(0.3, 0.3, 0.3) });
-      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: await pdfDoc.embedFont('Helvetica'), color: rgb(0.2, 0.2, 0.2) });
+      page.drawText(text, { x: margin + 10, y, size: 10, font: fontNormal, color: rgb(0.3, 0.3, 0.3) });
+      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: fontNormal, color: rgb(0.2, 0.2, 0.2) });
       y -= lineHeight;
     });
 
     y -= 5;
-    page.drawText('TOTAL DESCUENTOS', { x: margin, y, size: 11, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.2, 0.2, 0.2) });
-    page.drawText(`₲ ${datos.totalDescuentos.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.2, 0.2, 0.2) });
+    page.drawText('TOTAL DESCUENTOS', { x: margin, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
+    page.drawText(`₲ ${datos.totalDescuentos.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
     y -= lineHeight * 1.5;
 
     drawLine();
 
     // Neto
     y -= 5;
-    page.drawText('NETO A PAGAR', { x: margin, y, size: 13, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.39, 0.68, 0.38) });
-    page.drawText(`₲ ${datos.neto.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 13, font: await pdfDoc.embedFont('Helvetica-Bold'), color: rgb(0.39, 0.68, 0.38) });
+    page.drawText('NETO A PAGAR', { x: margin, y, size: 13, font: fontBold, color: rgb(0.39, 0.68, 0.38) });
+    page.drawText(`₲ ${datos.neto.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 13, font: fontBold, color: rgb(0.39, 0.68, 0.38) });
     y -= lineHeight * 2;
 
     drawLine();
@@ -1166,7 +1170,7 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
     ];
 
     leyes.forEach(ley => {
-      page.drawText(ley, { x: margin + 10, y, size: 8, font: await pdfDoc.embedFont('Helvetica'), color: rgb(0.4, 0.4, 0.4) });
+      page.drawText(ley, { x: margin + 10, y, size: 8, font: fontNormal, color: rgb(0.4, 0.4, 0.4) });
       y -= lineHeight * 0.8;
     });
 
