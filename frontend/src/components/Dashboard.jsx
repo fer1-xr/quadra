@@ -140,13 +140,8 @@ function Dashboard({ user, onLogout }) {
                 </div>
                 <div className="services-grid">
                   <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
-                    <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <polyline points="12 3 20 7.5 20 16.5 12 21 4 16.5 4 7.5 12 3"></polyline>
-                        <polyline points="12 12 20 7.5"></polyline>
-                        <polyline points="12 12 12 21"></polyline>
-                        <polyline points="12 12 4 7.5"></polyline>
-                      </svg>
+                    <div className="card-icon card-icon--img">
+                      <img src="/rg90-logo.png" alt="RG90" />
                     </div>
                     <h3>Conciliación RG90</h3>
                     <p>Compara tu reporte RG90 con el libro de compras según normativa central</p>
@@ -155,7 +150,10 @@ function Dashboard({ user, onLogout }) {
                   <div className="service-card service-card--bancaria" onClick={() => handleNavigate('bancaria')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        <path d="M3 11h18M3 11v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7M3 11L6 7h12l3 4"></path>
+                        <rect x="6" y="11" width="2" height="7"></rect>
+                        <rect x="16" y="11" width="2" height="7"></rect>
+                        <path d="M9 15h6"></path>
                       </svg>
                     </div>
                     <h3>Conciliación Bancaria</h3>
@@ -173,10 +171,8 @@ function Dashboard({ user, onLogout }) {
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                   <div className="service-card service-card--liquidacion" onClick={() => handleNavigate('liquidacion')}>
-                    <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-                      </svg>
+                    <div className="card-icon card-icon--img">
+                      <img src="/ips-logo.png" alt="IPS" />
                     </div>
                     <h3>Liquidación Salarial</h3>
                     <p>Cálculo y gestión de nóminas con descuentos e impuestos</p>
@@ -186,6 +182,8 @@ function Dashboard({ user, onLogout }) {
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        <rect x="11" y="14" width="2" height="2"></rect>
+                        <rect x="15" y="14" width="2" height="2"></rect>
                       </svg>
                     </div>
                     <h3>Calculadora Activo Fijo</h3>
@@ -195,7 +193,8 @@ function Dashboard({ user, onLogout }) {
                   <div className="service-card service-card--flujo" onClick={() => handleNavigate('flujo')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 2.2"></path>
+                        <path d="M12 1v22M17 5H9c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2z"></path>
+                        <rect x="10" y="9" width="4" height="4"></rect>
                       </svg>
                     </div>
                     <h3>Flujo de Caja</h3>
