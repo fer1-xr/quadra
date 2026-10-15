@@ -17,16 +17,38 @@ function Demo() {
 
   const applyTheme = (dark) => {
     const html = document.documentElement
+    const root = document.querySelector(':root')
+
     if (dark) {
+      // Modo oscuro
+      html.setAttribute('data-theme', 'dark')
       html.style.backgroundColor = '#0a0e1a'
       html.style.color = '#ffffff'
       document.body.style.backgroundColor = '#0a0e1a'
       document.body.style.color = '#ffffff'
+
+      // Actualizar variables CSS para modo oscuro
+      if (root) {
+        root.style.setProperty('--bg-page', '#0a0e1a')
+        root.style.setProperty('--text-primary', '#ffffff')
+        root.style.setProperty('--card-bg', '#1a2535')
+        root.style.setProperty('--card-border', 'rgba(212, 175, 55, 0.15)')
+      }
     } else {
+      // Modo claro
+      html.setAttribute('data-theme', 'light')
       html.style.backgroundColor = '#ffffff'
       html.style.color = '#333333'
       document.body.style.backgroundColor = '#ffffff'
       document.body.style.color = '#333333'
+
+      // Actualizar variables CSS para modo claro
+      if (root) {
+        root.style.setProperty('--bg-page', '#ffffff')
+        root.style.setProperty('--text-primary', '#333333')
+        root.style.setProperty('--card-bg', '#ffffff')
+        root.style.setProperty('--card-border', '#DDD')
+      }
     }
     localStorage.setItem('quadra-theme', dark ? 'dark' : 'light')
   }
