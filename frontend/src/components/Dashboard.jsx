@@ -87,14 +87,14 @@ function Dashboard({ user, onLogout }) {
       case 'bancaria':
         setView('bancaria')
         break
-      case 'calculadora':
-        setView('calculadora')
+      case 'liquidacion':
+        setView('liquidacion')
         break
-      case 'reportes':
-        setView('reportes')
+      case 'activofijo':
+        setView('activofijo')
         break
-      case 'documentacion':
-        setView('documentacion')
+      case 'buscar':
+        setView('buscar')
         break
       case 'cuenta':
         setView('cuenta')
@@ -129,26 +129,41 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'inicio' && (
-              <div className="card">
-                <h2>🏠 Bienvenido a QUADRA</h2>
-                <p style={{ fontSize: '16px', color: '#666', marginBottom: '20px' }}>
-                  Sistema de conciliación de reportes contables y bancarios
-                </p>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                  <div style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd' }}>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '10px' }}>📊 Conciliación RG90</h3>
-                    <p style={{ color: '#666', marginBottom: '15px' }}>Compara tu reporte RG90 con el libro de compras</p>
-                    <button className="btn btn-primary" onClick={() => handleNavigate('rg90')}>Ir a RG90</button>
+              <div className="dashboard-view">
+                <div className="dashboard-header">
+                  <h1>🏠 Bienvenido a QUADRA</h1>
+                  <p>Sistema integral de contabilidad y gestión financiera</p>
+                </div>
+                <div className="services-grid">
+                  <div className="service-card" onClick={() => handleNavigate('rg90')}>
+                    <div className="card-icon">📊</div>
+                    <h3>Conciliación RG90</h3>
+                    <p>Compara tu reporte RG90 con el libro de compras</p>
+                    <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd' }}>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '10px' }}>🏦 Conciliación Bancaria</h3>
-                    <p style={{ color: '#666', marginBottom: '15px' }}>Reconcilia tus movimientos bancarios</p>
-                    <button className="btn btn-primary" onClick={() => handleNavigate('bancaria')}>Ir a Bancaria</button>
+                  <div className="service-card" onClick={() => handleNavigate('bancaria')}>
+                    <div className="card-icon">🏦</div>
+                    <h3>Conciliación Bancaria</h3>
+                    <p>Reconcilia tus movimientos bancarios con contabilidad</p>
+                    <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div style={{ padding: '20px', background: '#f9f9f9', borderRadius: '8px', border: '1px solid #ddd' }}>
-                    <h3 style={{ color: 'var(--primary)', marginBottom: '10px' }}>🧮 Calculadora Venta AF</h3>
-                    <p style={{ color: '#666', marginBottom: '15px' }}>Calcula ventas a activo fijo</p>
-                    <button className="btn btn-primary" onClick={() => handleNavigate('calculadora')}>Ir a Calculadora</button>
+                  <div className="service-card" onClick={() => handleNavigate('buscar')}>
+                    <div className="card-icon">📄</div>
+                    <h3>Importar Documentos</h3>
+                    <p>Importa PDF e imágenes a libro compras/ventas</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card" onClick={() => handleNavigate('liquidacion')}>
+                    <div className="card-icon">💰</div>
+                    <h3>Liquidación Salarial</h3>
+                    <p>Calcula e importa liquidaciones de nómina</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card" onClick={() => handleNavigate('activofijo')}>
+                    <div className="card-icon">🏢</div>
+                    <h3>Calculadora Activo Fijo</h3>
+                    <p>Gestiona y calcula depreciación de activos</p>
+                    <button className="btn btn-primary">Acceder →</button>
                   </div>
                 </div>
               </div>
@@ -255,6 +270,73 @@ function Dashboard({ user, onLogout }) {
                     <li>Preguntas frecuentes</li>
                   </ul>
                 </div>
+              </div>
+            )}
+
+            {view === 'buscar' && (
+              <div className="card">
+                <h2>📄 Importar Documentos</h2>
+                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Importa archivos PDF e imágenes a libro compras/ventas</p>
+                <div className="file-input">
+                  <div className="file-input-group">
+                    <label>Seleccionar archivo (PDF, JPG, PNG)</label>
+                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
+                    <div className="file-hint">Máximo 10MB por archivo</div>
+                  </div>
+                </div>
+                <button className="btn btn-primary" style={{ marginTop: '20px' }}>Procesar Documento</button>
+              </div>
+            )}
+
+            {view === 'liquidacion' && (
+              <div className="card">
+                <h2>💰 Calculadora de Liquidación Salarial</h2>
+                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Calcula y gestiona liquidaciones de nómina</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Salario Mensual</label>
+                    <input type="number" placeholder="Ingrese salario" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Días Trabajados</label>
+                    <input type="number" placeholder="Días" min="0" max="31" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Bonificación</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Descuentos</label>
+                    <input type="number" placeholder="Monto" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                </div>
+                <button className="btn btn-primary">Calcular Liquidación</button>
+              </div>
+            )}
+
+            {view === 'activofijo' && (
+              <div className="card">
+                <h2>🏢 Calculadora de Activo Fijo</h2>
+                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Gestiona la depreciación y valuación de activos fijos</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Descripción del Activo</label>
+                    <input type="text" placeholder="Ej: Máquina, Equipo, etc" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Valor Inicial</label>
+                    <input type="number" placeholder="Valor inicial" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Vida Útil (años)</label>
+                    <input type="number" placeholder="Años" min="1" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Valor Residual</label>
+                    <input type="number" placeholder="Valor residual" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
+                  </div>
+                </div>
+                <button className="btn btn-primary">Calcular Depreciación</button>
               </div>
             )}
 

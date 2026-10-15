@@ -6,11 +6,11 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
 
   const menuItems = [
     { id: 'inicio', label: 'INICIO', icon: '🏠' },
+    { id: 'buscar', label: 'Buscar', icon: '🔍' },
     { id: 'rg90', label: 'Conciliación RG90', icon: '📊' },
     { id: 'bancaria', label: 'Conciliación Bancaria', icon: '🏦' },
-    { id: 'calculadora', label: 'Calculadora Venta AF', icon: '🧮' },
-    { id: 'reportes', label: 'Reportes', icon: '📈' },
-    { id: 'documentacion', label: 'Documentación', icon: '📚' }
+    { id: 'liquidacion', label: 'Liquidación Salarial', icon: '💰' },
+    { id: 'activofijo', label: 'Activo Fijo', icon: '🏢' }
   ]
 
   const handleNavigate = (viewId) => {
