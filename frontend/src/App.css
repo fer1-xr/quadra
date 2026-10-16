@@ -1151,7 +1151,7 @@ body {
 }
 
 .dashboard-header h1 {
-  color: var(--primary);
+  color: var(--text-primary);
   font-size: 42px;
   margin-bottom: 12px;
   font-weight: 700;
@@ -1160,11 +1160,12 @@ body {
 }
 
 .dashboard-header p {
-  color: #7a8f9f;
+  color: var(--text-primary);
   font-size: 16px;
   margin: 0;
   font-weight: 500;
   letter-spacing: 0.5px;
+  opacity: 0.9;
 }
 
 /* ========== SERVICES GRID ========== */
