@@ -108,30 +108,63 @@ class InvoiceExtractor {
     logger.info('Extrayendo campos con Claude API...');
 
     try {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        throw new Error('ANTHROPIC_API_KEY no configurada');
+      }
+
       const client = new Anthropic({
-        apiKey: process.env.ANTHROPIC_API_KEY,
+        apiKey,
       });
 
+      const prompt = `Extrae TODOS los datos de esta factura paraguaya en formato JSON RG90.
+
+TEXTO OCR DE LA FACTURA:
+${text}
+
+Retorna SOLO JSON válido con esta estructura exacta:
+{
+  "informante": {
+    "ruc": "número sin puntos",
+    "nombre": "razón social"
+  },
+  "informado": {
+    "ruc": "número sin puntos",
+    "tipoIdentificacion": "RUC",
+    "nombre": "razón social proveedor"
+  },
+  "comprobante": {
+    "tipoRegistro": "Compra",
+    "tipoComprobante": "Factura",
+    "fechaEmision": "YYYY-MM-DD",
+    "periodoEmision": "YYYYMM",
+    "timbrado": "números",
+    "numero": "001-001-0000001",
+    "condicionOperacion": "Contado",
+    "monedaExtranjera": false
+  },
+  "financiero": {
+    "montoGravado10": número,
+    "iva10": número,
+    "montoGravado5": número,
+    "iva5": número,
+    "montoNoGravado": número,
+    "totalComprobante": número
+  },
+  "tributario": {
+    "imputaIva": true
+  }
+}
+
+Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
+
       const message = await client.messages.create({
-        model: 'claude-opus-4-1-20250805',
-        max_tokens: 1024,
-        thinking: {
-          type: 'enabled',
-          budget_tokens: 500,
-        },
-        system: `Eres un experto en extracción de datos de facturas paraguayas (formato RG90).
-Extrae TODOS los datos disponibles del texto OCR de la factura.
-Si un campo no está presente, déjalo vacío o con valor null.
-Sé muy preciso con números, fechas y códigos.`,
+        model: 'claude-opus-4-1-20250108',
+        max_tokens: 2048,
         messages: [
           {
             role: 'user',
-            content: `Extrae datos de esta factura en formato JSON exacto.
-
-TEXTO OCR:
-${text}
-
-Responde SOLO con JSON válido, sin explicaciones:`,
+            content: prompt,
           },
         ],
       });
@@ -142,17 +175,29 @@ Responde SOLO con JSON válido, sin explicaciones:`,
         .map((block) => block.text)
         .join('');
 
-      // Parsear JSON
+      logger.info(`Respuesta de Claude: ${responseText.substring(0, 200)}...`);
+
+      // Parsear JSON - buscar objeto completo
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
+        logger.error(`No se encontró JSON en respuesta: ${responseText}`);
         throw new Error('No se encontró JSON válido en respuesta de Claude');
       }
 
       const extracted = JSON.parse(jsonMatch[0]);
-      logger.info('✓ Datos extraídos con Claude');
+      logger.info('✓ Datos extraídos con Claude correctamente');
+
+      // Validar estructura mínima
+      if (!extracted.informante) extracted.informante = {};
+      if (!extracted.informado) extracted.informado = {};
+      if (!extracted.comprobante) extracted.comprobante = {};
+      if (!extracted.financiero) extracted.financiero = {};
+      if (!extracted.tributario) extracted.tributario = {};
+
       return extracted;
     } catch (error) {
-      logger.warn(`No se pudo usar Claude: ${error.message}, retornando objeto vacío`);
+      logger.error(`Error con Claude API: ${error.message}`);
+      // Retornar estructura vacía para que continúe el flujo
       return {
         informante: {},
         informado: {},
