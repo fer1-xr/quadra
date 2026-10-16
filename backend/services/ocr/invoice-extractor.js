@@ -66,7 +66,7 @@ class InvoiceExtractor {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
 
       // Convertir imagen a base64
       const base64Image = imageBuffer.toString('base64');
