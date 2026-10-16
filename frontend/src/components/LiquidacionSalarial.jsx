@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import '../styles/LiquidacionSalarial.css'
 
+const API_BASE_URL = 'http://localhost:3000'
+
 function LiquidacionSalarial() {
   const [formData, setFormData] = useState({
     // Datos del empleado
@@ -149,7 +151,7 @@ function LiquidacionSalarial() {
     try {
       setLoading(true)
       const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post('/api/liquidacion/excel', resultado, {
+      const response = await axios.post(`${API_BASE_URL}/api/liquidacion/excel`, resultado, {
         responseType: 'blob',
         headers: { Authorization: `Bearer ${token}` }
       })
@@ -175,7 +177,7 @@ function LiquidacionSalarial() {
     try {
       setLoading(true)
       const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post('/api/liquidacion/pdf', resultado, {
+      const response = await axios.post(`${API_BASE_URL}/api/liquidacion/pdf`, resultado, {
         responseType: 'blob',
         headers: { Authorization: `Bearer ${token}` }
       })

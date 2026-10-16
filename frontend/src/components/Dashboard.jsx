@@ -6,6 +6,8 @@ import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
 import '../styles/Sidebar.css'
 
+const API_BASE_URL = 'http://localhost:3000'
+
 function Dashboard({ user, onLogout }) {
   const [rg90File, setRg90File] = useState(null)
   const [libroFile, setLibroFile] = useState(null)
@@ -38,7 +40,7 @@ function Dashboard({ user, onLogout }) {
       const rg90Data = await readFile(rg90File)
       const libroData = await readFile(libroFile)
       const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post('/api/reconciliation',
+      const response = await axios.post(`${API_BASE_URL}/api/reconciliation`,
         { rg90Data, libroData },
         { headers: { Authorization: `Bearer ${token}` } }
       )

@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 
+const API_BASE_URL = 'http://localhost:3000'
+
 function ChangePassword({ onClose, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -32,8 +34,8 @@ function ChangePassword({ onClose, onSuccess }) {
     setLoading(true)
     try {
       const token = localStorage.getItem('quaedra_token')
-      await axios.post('/api/change-password',
-        { currentPassword, newPassword },
+      await axios.post(`${API_BASE_URL}/api/auth/change-password`,
+        { newPassword },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setSuccess('Contraseña cambiad correctamente')
