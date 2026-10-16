@@ -1,6 +1,4 @@
-import Tesseract from 'tesseract.js';
 import * as pdfParse from 'pdf-parse';
-import sharp from 'sharp';
 import Anthropic from '@anthropic-ai/sdk';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
@@ -16,63 +14,36 @@ class InvoiceExtractor {
   }
 
   /**
-   * Extrae texto de imagen usando Tesseract
+   * Determina el tipo MIME basado en la extensión
    */
-  async extractTextFromImage(imageBuffer) {
-    try {
-      logger.info('Iniciando OCR con Tesseract...');
-
-      const result = await Tesseract.recognize(
-        imageBuffer,
-        'spa', // Español
-        {
-          logger: (m) => {
-            if (m.status === 'recognizing text') {
-              logger.info(`OCR Progress: ${Math.round(m.progress * 100)}%`);
-            }
-          },
-        }
-      );
-
-      return {
-        text: result.data.text,
-        confidence: result.data.confidence,
-        language: result.data.psm,
-      };
-    } catch (error) {
-      logger.error(`Error en OCR: ${error.message}`);
-      throw new Error(`Falló el OCR: ${error.message}`);
-    }
+  getMimeType(filename) {
+    const ext = filename.toLowerCase().split('.').pop();
+    const mimes = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+      webp: 'image/webp',
+    };
+    return mimes[ext] || 'image/png';
   }
 
   /**
-   * Procesa un PDF y extrae imágenes/texto
+   * Procesa un PDF - intenta extraer como imagen para Vision
    */
   async extractFromPDF(pdfBuffer) {
     try {
       logger.info('Procesando PDF...');
 
       const pdfData = await pdfParse(pdfBuffer);
-      const text = pdfData.text || '';
-
       logger.info(`PDF procesado: ${pdfData.numpages} páginas`);
 
-      // Si el PDF tiene texto extractable, usarlo
-      if (text.trim().length > 50) {
-        return {
-          text,
-          source: 'pdf-text',
-          pages: pdfData.numpages,
-        };
-      }
-
-      // Sino, convertir a imagen y hacer OCR
-      // (Requiere más procesamiento, aquí simplificado)
+      // Para PDFs escaneados, retornar el buffer para procesamiento como imagen
+      // En este caso simplificado, retornamos el resultado
       return {
-        text,
-        source: 'pdf-text-minimal',
+        buffer: pdfBuffer,
+        source: 'pdf',
         pages: pdfData.numpages,
-        warning: 'PDF con poco texto. Recomendado convertir a imagen primero.',
       };
     } catch (error) {
       logger.error(`Error procesando PDF: ${error.message}`);
@@ -81,31 +52,11 @@ class InvoiceExtractor {
   }
 
   /**
-   * Preprocesa imagen para mejorar OCR
+   * Extrae campos usando Claude Vision directamente de la imagen
+   * Sin OCR previo - Claude Vision lee la imagen directamente
    */
-  async preprocessImage(imageBuffer) {
-    try {
-      logger.info('Preprocesando imagen...');
-
-      const processed = await sharp(imageBuffer)
-        .grayscale() // Convertir a escala de grises
-        .normalize() // Normalizar contraste
-        .sharpen() // Aumentar nitidez
-        .toBuffer();
-
-      logger.info('Imagen preprocesada exitosamente');
-      return processed;
-    } catch (error) {
-      logger.warn(`No se pudo preprocesar imagen: ${error.message}, usando original`);
-      return imageBuffer;
-    }
-  }
-
-  /**
-   * Extrae campos usando Claude API con structured output
-   */
-  async extractFieldsWithClaude(text) {
-    logger.info('Extrayendo campos con Claude API...');
+  async extractFieldsWithClaudeVision(imageBuffer, filename) {
+    logger.info('Extrayendo datos con Claude Vision (sin OCR previo)...');
 
     try {
       const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -113,16 +64,37 @@ class InvoiceExtractor {
         throw new Error('ANTHROPIC_API_KEY no configurada');
       }
 
-      const client = new Anthropic({
-        apiKey,
-      });
+      const client = new Anthropic({ apiKey });
 
-      const prompt = `Extrae TODOS los datos de esta factura paraguaya en formato JSON RG90.
+      // Convertir imagen a base64
+      const base64Image = imageBuffer.toString('base64');
+      const mimeType = this.getMimeType(filename);
 
-TEXTO OCR DE LA FACTURA:
-${text}
+      logger.info(`📸 Enviando imagen a Claude Vision (${mimeType})...`);
 
-Retorna SOLO JSON válido con esta estructura exacta:
+      // SOLUCIÓN CORRECTA: Enviar imagen directamente a Claude Vision
+      // No hacer OCR primero - Claude Vision lee la imagen directamente
+      const message = await client.messages.create({
+        model: 'claude-opus-5-5',
+        max_tokens: 2048,
+        messages: [
+          {
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: {
+                  type: 'base64',
+                  media_type: mimeType,
+                  data: base64Image,
+                },
+              },
+              {
+                type: 'text',
+                text: `Lee esta factura paraguaya y extrae TODOS los datos en formato JSON RG90.
+
+Extrae EXACTAMENTE lo que ves, incluso si falta información. Retorna SOLO JSON válido:
+
 {
   "informante": {
     "ruc": "número sin puntos",
@@ -156,15 +128,9 @@ Retorna SOLO JSON válido con esta estructura exacta:
   }
 }
 
-Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
-
-      const message = await client.messages.create({
-        model: 'claude-opus-4-1-20250108',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: prompt,
+Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
+              },
+            ],
           },
         ],
       });
@@ -175,17 +141,17 @@ Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
         .map((block) => block.text)
         .join('');
 
-      logger.info(`Respuesta de Claude: ${responseText.substring(0, 200)}...`);
+      logger.info(`✓ Respuesta recibida de Claude Vision`);
 
-      // Parsear JSON - buscar objeto completo
+      // Parsear JSON
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
       if (!jsonMatch) {
-        logger.error(`No se encontró JSON en respuesta: ${responseText}`);
-        throw new Error('No se encontró JSON válido en respuesta de Claude');
+        logger.error(`No se encontró JSON en respuesta: ${responseText.substring(0, 200)}`);
+        throw new Error('No se encontró JSON válido');
       }
 
       const extracted = JSON.parse(jsonMatch[0]);
-      logger.info('✓ Datos extraídos con Claude correctamente');
+      logger.info('✓ Datos extraídos exitosamente con Claude Vision');
 
       // Validar estructura mínima
       if (!extracted.informante) extracted.informante = {};
@@ -196,8 +162,7 @@ Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
 
       return extracted;
     } catch (error) {
-      logger.error(`Error con Claude API: ${error.message}`);
-      // Retornar estructura vacía para que continúe el flujo
+      logger.error(`Error con Claude Vision: ${error.message}`);
       return {
         informante: {},
         informado: {},
@@ -215,22 +180,23 @@ Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
     try {
       logger.info(`Procesando archivo: ${filename}`);
 
-      let ocrResult;
       const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(filename);
       const isPDF = /\.pdf$/i.test(filename);
 
-      // 1. Extraer texto según tipo de archivo
-      if (isImage) {
-        const preprocessed = await this.preprocessImage(fileBuffer);
-        ocrResult = await this.extractTextFromImage(preprocessed);
-      } else if (isPDF) {
-        ocrResult = await this.extractFromPDF(fileBuffer);
-      } else {
+      let bufferToProcess = fileBuffer;
+
+      // 1. Para PDFs, procesar como está (en el futuro se podría convertir a imagen)
+      if (isPDF) {
+        logger.info('PDF detectado - procesando...');
+      } else if (!isImage) {
         throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
       }
 
-      // 2. Extraer campos del texto usando Claude
-      const extractedFields = await this.extractFieldsWithClaude(ocrResult.text);
+      // 2. SOLUCIÓN CORRECTA: Usar Claude Vision directamente sin OCR previo
+      const extractedFields = await this.extractFieldsWithClaudeVision(
+        bufferToProcess,
+        filename
+      );
 
       // 3. Validar contra schema RG90
       const validationResult = validateRG90Data(extractedFields);
@@ -253,17 +219,14 @@ Usa null para campos no encontrados. SÍ A TODO DATO, AUNQUE SEA PARCIAL.`;
         confidence: {
           overall: parseFloat((confidence * 100).toFixed(2)),
           fields: {
-            informante: extractedFields.informante ? 90 : 0,
-            informado: extractedFields.informado ? 85 : 0,
-            comprobante: extractedFields.comprobante ? 80 : 0,
-            financiero: extractedFields.financiero ? 95 : 0,
+            informante: extractedFields.informante?.ruc ? 90 : 0,
+            informado: extractedFields.informado?.ruc ? 85 : 0,
+            comprobante: extractedFields.comprobante?.numero ? 80 : 0,
+            financiero: extractedFields.financiero?.totalComprobante ? 95 : 0,
           },
         },
         missingFields,
-        ocrStats: {
-          ocrConfidence: ocrResult.confidence,
-          textLength: ocrResult.text.length,
-        },
+        method: 'Claude Vision (Direct Image Analysis)',
       };
 
       logger.info(`✓ Procesamiento completado: ${response.confidence.overall}% confianza`);
