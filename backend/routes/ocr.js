@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import { getInvoiceExtractor } from '../services/ocr/invoice-extractor.js';
-import { RG90Exporter } from '../services/ocr/rg90-exporter.js';
+import { LibroComprasExporter } from '../services/ocr/libro-compras-exporter.js';
 import { upload, cleanupTempFiles } from '../middleware/upload-handler.js';
 
 const router = express.Router();
@@ -118,8 +118,8 @@ router.post('/export', async (req, res) => {
     switch (format.toLowerCase()) {
       case 'excel':
       case 'xlsx': {
-        const workbook = await RG90Exporter.exportToExcel(invoices);
-        filename = `RG90_${timestamp}.xlsx`;
+        const workbook = await LibroComprasExporter.exportToExcel(invoices);
+        filename = `LIBRO_COMPRAS_${timestamp}.xlsx`;
 
         // Guardar en memoria y retornar como buffer
         const buffer = await workbook.xlsx.writeBuffer();
