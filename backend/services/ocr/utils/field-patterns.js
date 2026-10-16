@@ -1,92 +1,123 @@
 // Patrones regex para extracción de campos de facturas paraguayas
 
 export const fieldPatterns = {
-  // RUC: formato 123456789 o 123.456.789
+  // RUC: formato 123456789 o 123.456.789-D
   ruc: {
     patterns: [
-      /RUC[:\s]+([0-9]{4,9})/gi,
-      /RUC[:\s]*([0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3})/gi,
-      /(?:RUC|Ruc)[:\s]?([0-9\.\-]{5,15})/gi,
+      /(\d{1,9})[\.\s\-]?(\d)?(?:\s|$|[^\d])/,
+      /RUC[:\s]*([0-9\.\-]{5,15})/gi,
+      /([0-9]{4,9})(?:\s|$|-\d|\.)/,
     ],
-    cleanup: (text) => text.replace(/[\.\-\s]/g, '').substring(0, 9),
+    cleanup: (text) => text.replace(/[\.\-\s]/g, '').replace(/[^\d]/g, '').substring(0, 9),
   },
 
-  // Fecha: DD/MM/YYYY, DD-MM-YYYY, o YYYY-MM-DD
+  // Fecha: múltiples formatos
   fecha: {
     patterns: [
-      /(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/,
-      /Fecha[:\s]+(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/gi,
-      /Emisión[:\s]+(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/gi,
+      /([0-9]{1,2})\s+(?:de\s+)?(?:Enero|Febrero|Marzo|Abril|Mayo|Junio|Julio|Agosto|Setiembre|Septiembre|Octubre|Noviembre|Diciembre|ENE|FEB|MAR|ABR|MAY|JUN|JUL|AGO|SET|SEP|OCT|NOV|DIC)/gi,
+      /(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/,
+      /(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/,
     ],
     cleanup: (text) => {
-      const match = text.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})/);
+      // Intentar DD/MM/YYYY o similar
+      let match = text.match(/(\d{1,2})[\/-](\d{1,2})[\/-](\d{2,4})/);
       if (match) {
-        const [, day, month, year] = match;
+        let [, day, month, year] = match;
+        if (year.length === 2) year = '20' + year;
         return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      // Intentar YYYY/MM/DD
+      match = text.match(/(\d{4})[\/-](\d{1,2})[\/-](\d{1,2})/);
+      if (match) {
+        const [, year, month, day] = match;
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+      }
+      // Extraer números y asumir DD/MM
+      const nums = text.match(/\d+/g);
+      if (nums && nums.length >= 2) {
+        const day = nums[0].padStart(2, '0');
+        const month = nums[1].padStart(2, '0');
+        const year = new Date().getFullYear();
+        return `${year}-${month}-${day}`;
       }
       return null;
     },
   },
 
-  // Número de comprobante: 001-001-0000001
+  // Número de comprobante: 001-001 o 001-001-0000001
   numeroComprobante: {
     patterns: [
-      /(?:Comprobante|Factura|Nº)[:\s]*([0-9]{3,4}[\-\s]?[0-9]{3,4}[\-\s]?[0-9]{6,8})/gi,
-      /([0-9]{3})[\s\-]?([0-9]{3})[\s\-]?([0-9]{6,8})/g,
+      /(\d{3})[\s\-](\d{3})[\s\-]?(\d{6,8})?/,
+      /(\d{3}[\s\-]\d{3})/,
+      /[Nn]º[\s]*(\d{3}[\s\-]\d{3})/,
     ],
-    cleanup: (text) => text.replace(/[\s]/g, '-'),
+    cleanup: (text) => {
+      const parts = text.replace(/[\s]/g, '-').split('-');
+      if (parts.length >= 2) {
+        return parts.slice(0, 3).join('-');
+      }
+      return text.replace(/[\s]/g, '-');
+    },
   },
 
   // Timbrado: número de 3-8 dígitos
   timbrado: {
     patterns: [
-      /Timbrado[:\s]*([0-9]{3,8})/gi,
-      /(?:T|Timb\.?)[:\s]*([0-9]{3,8})/gi,
+      /(?:Timbrado|Timb|T)[:\s]*([0-9]{3,10})/gi,
+      /(?:Timbrado:?)\s+([0-9]{6,10})/gi,
+      /([0-9]{6,10})(?:\s|$)/,
     ],
-    cleanup: (text) => text.replace(/[\D]/g, '').substring(0, 8),
+    cleanup: (text) => text.replace(/[\D]/g, '').substring(0, 10),
   },
 
   // Montos: números con o sin separadores
   monto: {
     patterns: [
-      /[\$Gs]?\s?([0-9]{1,20}(?:[.,][0-9]{2})?)/,
-      /(?:Total|Subtotal|Monto|Importe)[:\s]*[\$Gs]?\s?([0-9]{1,20}(?:[.,][0-9]{2})?)/gi,
+      /(?:TOTAL|Total|MONTO|Monto)[:\s]*[\$Gs]*\s*([0-9]{1,20}(?:[.,][0-9]{2})?)/gi,
+      /[\$Gs]\s*([0-9]{1,20}(?:[.,][0-9]{2})?)/,
+      /([0-9]{3,20}(?:[.,][0-9]{2})?)/,
     ],
     cleanup: (text) => {
-      const cleaned = text.replace(/[\$Gs\s]/g, '').replace(/[.,]/, '.');
-      return parseFloat(cleaned).toString();
+      const cleaned = text.replace(/[\$Gs\s,.]/g, '').replace(/[.,]/, '.');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? '0' : num.toString();
     },
   },
 
   // IVA: porcentaje o monto
   iva: {
     patterns: [
-      /IVA[:\s]*[\$Gs]?\s?([0-9]{1,20}(?:[.,][0-9]{2})?)/gi,
-      /I\.V\.A[:\s]*[\$Gs]?\s?([0-9]{1,20}(?:[.,][0-9]{2})?)/gi,
+      /IVA\s*(?:10%?|5%?)?[:\s]*[\$Gs]*\s*([0-9]{1,20}(?:[.,][0-9]{2})?)/gi,
+      /([0-9]{1,20}(?:[.,][0-9]{2})?)\s*(?:Gs|Guaraní)/i,
     ],
     cleanup: (text) => {
-      const cleaned = text.replace(/[\$Gs\s]/g, '').replace(/[.,]/, '.');
-      return parseFloat(cleaned).toString();
+      const cleaned = text.replace(/[\$Gs\s,.%]/g, '').replace(/[.,]/, '.');
+      const num = parseFloat(cleaned);
+      return isNaN(num) ? '0' : num.toString();
     },
   },
 
-  // Razón social / Nombre: línea de texto
+  // Razón social / Nombre
   nombre: {
     patterns: [
-      /(?:Razón Social|Empresa|Vendedor|Proveedor)[:\s]*([^\n]{5,100})/gi,
-      /^([^\n]{5,100})$/m, // línea con texto
+      /(?:EMPRESA|RAZÓN SOCIAL|Empresa|Proveedor)[:\s]*([A-Z][^\n]{3,100})/gi,
+      /([A-Z][A-Z\s\-\&]{5,100})/,
     ],
-    cleanup: (text) => text.trim().substring(0, 100),
+    cleanup: (text) => text.trim().substring(0, 100).toUpperCase(),
   },
 
   // Periodo YYYYMM
   periodo: {
     patterns: [
-      /(?:Período|Mes|Período del Informe)[:\s]*([0-9]{6})/gi,
-      /(?:Período|Mes)[:\s]*([0-9]{2})[\/-]([0-9]{4})/gi,
+      /([0-9]{6})/,
+      /([0-9]{2})[\/-]([0-9]{4})/,
     ],
     cleanup: (text) => {
-      const match = text.match(/([0-9]{2})[\/-]([0-9]{4})/);
+      let match = text.match(/([0-9]{6})/);
+      if (match && /^20[0-9]{4}$/.test(match[1])) {
+        return match[1];
+      }
+      match = text.match(/([0-9]{2})[\/-]([0-9]{4})/);
       if (match) {
         return `${match[2]}${match[1]}`;
       }
@@ -97,7 +128,8 @@ export const fieldPatterns = {
   // Tipo de comprobante
   tipoComprobante: {
     patterns: [
-      /(?:Tipo|Comprobante)[:\s]*(Factura|Recibo|Nota de Crédito|Nota de Débito|Tiquete|NC|ND)/gi,
+      /(?:FACTURA|Factura|RECIBO|Recibo)/gi,
+      /(Factura|NC|ND|Tiquete)/gi,
     ],
     cleanup: (text) => {
       const types = {
@@ -125,20 +157,40 @@ export function extractField(text, fieldPattern) {
   }
 
   for (const pattern of fieldPattern.patterns) {
-    const match = text.match(pattern);
-    if (match) {
-      try {
-        const extracted = match[1] || match[0];
-        const cleaned = fieldPattern.cleanup ? fieldPattern.cleanup(extracted) : extracted;
-        return {
-          value: cleaned,
-          confidence: 0.85,
-          found: true,
-          raw: extracted,
-        };
-      } catch (e) {
-        console.error(`Error al procesar patrón: ${e.message}`);
+    try {
+      const match = text.match(pattern);
+      if (match && match.length > 0) {
+        // Obtener el mejor grupo capturado (preferir el primero no vacío)
+        let extracted = null;
+        for (let i = 1; i < match.length; i++) {
+          if (match[i] && match[i].trim()) {
+            extracted = match[i];
+            break;
+          }
+        }
+
+        // Si no hay grupos capturados, usar el match completo
+        if (!extracted) {
+          extracted = match[0];
+        }
+
+        // Aplicar limpieza
+        const cleaned = fieldPattern.cleanup
+          ? fieldPattern.cleanup(extracted)
+          : extracted;
+
+        // Validar que el resultado no esté vacío
+        if (cleaned && cleaned.toString().trim()) {
+          return {
+            value: cleaned,
+            confidence: 0.85,
+            found: true,
+            raw: extracted,
+          };
+        }
       }
+    } catch (e) {
+      console.error(`Error al procesar patrón: ${e.message}`);
     }
   }
 

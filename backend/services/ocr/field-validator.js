@@ -104,13 +104,15 @@ export function validateRG90Data(data) {
     const result = RG90Schema.safeParse(cleanedData);
 
     if (!result.success) {
-      result.error.errors.forEach((err) => {
-        errors.push({
-          field: err.path.join('.'),
-          message: err.message,
-          code: err.code,
+      if (result.error && result.error.errors) {
+        result.error.errors.forEach((err) => {
+          errors.push({
+            field: err.path.join('.') || 'general',
+            message: err.message,
+            code: err.code,
+          });
         });
-      });
+      }
     } else {
       cleanedData = result.data;
     }
