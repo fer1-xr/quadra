@@ -61,7 +61,7 @@ function Dashboard({ user, onLogout }) {
     if (!sessionId) return
     try {
       const token = localStorage.getItem('quaedra_token')
-      const response = await axios.get(`/api/export/${sessionId}`, {
+      const response = await axios.get(`${API_BASE_URL}/api/export/${sessionId}`, {
         responseType: 'blob',
         headers: { Authorization: `Bearer ${token}` }
       })

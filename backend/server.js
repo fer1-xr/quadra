@@ -7,6 +7,8 @@ import XLSX from 'xlsx';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import sgMail from '@sendgrid/mail';
+import ocrRoutes from './routes/ocr.js';
+import { uploadErrorHandler } from './middleware/upload-handler.js';
 
 dotenv.config();
 sgMail.setApiKey(process.env.SENDGRID_API_KEY || '');
@@ -507,14 +509,20 @@ const fmtComp = (v) => {
   return d.length === 13 ? `${d.slice(0, 3)}-${d.slice(3, 6)}-${d.slice(6)}` : raw;
 };
 
-const normName = (s) => clean(s)
-  .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
-  .toUpperCase()
-  .replace(/\./g, '')
-  .replace(/SOCIEDAD DE RESPONSABILIDAD LIMITADA/g, 'SRL')
-  .replace(/SOCIEDAD ANONIMA/g, 'SA')
-  .replace(/[^A-Z0-9]+/g, ' ')
-  .trim();
+const normNameCache = new Map();
+const normName = (s) => {
+  if (normNameCache.has(s)) return normNameCache.get(s);
+  const norm = clean(s)
+    .normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .replace(/\./g, '')
+    .replace(/SOCIEDAD DE RESPONSABILIDAD LIMITADA/g, 'SRL')
+    .replace(/SOCIEDAD ANONIMA/g, 'SA')
+    .replace(/[^A-Z0-9]+/g, ' ')
+    .trim();
+  normNameCache.set(s, norm);
+  return norm;
+};
 
 const sameName = (a, b) => {
   const na = normName(a);
@@ -588,6 +596,7 @@ const buildRow = (lib, rg) => {
 };
 
 const reconcile = (rg90Data, libroData) => {
+  normNameCache.clear();
   const rg90Sheets = loadSheets(rg90Data);
   const libroSheets = loadSheets(libroData);
 
@@ -615,7 +624,6 @@ const reconcile = (rg90Data, libroData) => {
   const lc = libroCols(lbHead.headers);
   const avisos = [];
 
-  // ---- RG90 -> mapa por llave RUC_Comprobante ----
   const rg90Map = new Map();
   let informanteRG90 = '';
   for (let i = rgHead.index + 1; i < rg90Rows.length; i++) {
@@ -626,23 +634,15 @@ const reconcile = (rg90Data, libroData) => {
     if (!ruc || !compKey) continue;
     if (!informanteRG90) informanteRG90 = splitRuc(row[rc.informante]).ruc;
     const entry = {
-      ruc,
-      rucFmt: fmtRuc(ruc, dv),
-      razon: clean(row[rc.razon]),
-      comp: fmtComp(row[rc.comp]),
-      tipo: clean(row[rc.tipo]),
-      total: toNum(row[rc.total]),
-      iva10: toNum(row[rc.iva10]),
-      iva5: toNum(row[rc.iva5]),
-      exenta: toNum(row[rc.exenta]),
-      processed: false
+      ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[rc.razon]), comp: fmtComp(row[rc.comp]),
+      tipo: clean(row[rc.tipo]), total: toNum(row[rc.total]), iva10: toNum(row[rc.iva10]),
+      iva5: toNum(row[rc.iva5]), exenta: toNum(row[rc.exenta]), processed: false
     };
     const key = ruc + '_' + compKey;
     if (!rg90Map.has(key)) rg90Map.set(key, []);
     rg90Map.get(key).push(entry);
   }
 
-  // ---- Libro -> cruce contra el RG90 ----
   const discrepancies = [];
   let omitidasSinRuc = 0;
   for (let i = lbHead.index + 1; i < libroRows.length; i++) {
@@ -652,17 +652,11 @@ const reconcile = (rg90Data, libroData) => {
     const compDig = compDigits(row[lc.comp]);
     if (!ruc || !compDig) {
       if (compDig.length >= 9) omitidasSinRuc++;
-      continue; // filas de título, totales o pie de página
+      continue;
     }
     const lib = {
-      ruc,
-      rucFmt: fmtRuc(ruc, dv),
-      razon: clean(row[lc.razon]),
-      comp: fmtComp(row[lc.comp]),
-      total: toNum(row[lc.total]),
-      iva10: toNum(row[lc.iva10]),
-      iva5: toNum(row[lc.iva5]),
-      exenta: toNum(row[lc.exenta])
+      ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[lc.razon]), comp: fmtComp(row[lc.comp]),
+      total: toNum(row[lc.total]), iva10: toNum(row[lc.iva10]), iva5: toNum(row[lc.iva5]), exenta: toNum(row[lc.exenta])
     };
     const list = rg90Map.get(ruc + '_' + compDig);
     const rg = list ? (list.find((e) => !e.processed) || list[0]) : null;
@@ -670,12 +664,10 @@ const reconcile = (rg90Data, libroData) => {
     discrepancies.push(buildRow(lib, rg));
   }
 
-  // ---- RG90 sin pareja en el Libro ----
   for (const list of rg90Map.values()) {
     for (const e of list) if (!e.processed) discrepancies.push(buildRow(null, e));
   }
 
-  // ---- Metadatos y avisos ----
   const { contribuyente: contribLibro, periodo } = extractMeta(libroRows, lbHead.index);
   const contribuyente = contribLibro || (informanteRG90 ? `RUC ${informanteRG90}` : '');
   const rucContribLibro = (contribLibro.match(/(\d[\d.]*)\s*-\s*\d/) || [])[1]?.replace(/\D/g, '');
@@ -1183,6 +1175,10 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+// ==================== OCR ROUTES ====================
+app.use('/api/ocr', ocrRoutes);
+app.use(uploadErrorHandler);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));
 
