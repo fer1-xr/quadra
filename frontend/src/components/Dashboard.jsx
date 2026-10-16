@@ -121,6 +121,10 @@ function Dashboard({ user, onLogout }) {
         <h1>QUΔDRA</h1>
         <div className="nav-right">
           <span>Hola, {user?.name || user?.email}</span>
+          <div className="reconciliation-counter">
+            <span className="counter-label">Conciliaciones disponibles:</span>
+            <span className="counter-value">8/10</span>
+          </div>
         </div>
       </nav>
 
