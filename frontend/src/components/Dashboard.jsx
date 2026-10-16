@@ -4,6 +4,7 @@ import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
+import ImportarDocumentos from './ImportarDocumentos'
 import '../styles/Sidebar.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -101,8 +102,8 @@ function Dashboard({ user, onLogout }) {
       case 'flujo':
         setView('flujo')
         break
-      case 'buscar':
-        setView('buscar')
+      case 'importar-documentos':
+        setView('importar-documentos')
         break
       case 'cuenta':
         setView('cuenta')
@@ -168,7 +169,7 @@ function Dashboard({ user, onLogout }) {
                     <p>Reconcilia movimientos bancarios con registros contables</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
-                  <div className="service-card service-card--documentos" onClick={() => handleNavigate('buscar')}>
+                  <div className="service-card service-card--documentos" onClick={() => handleNavigate('importar-documentos')}>
                     <div className="card-icon">
                       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
@@ -319,19 +320,8 @@ function Dashboard({ user, onLogout }) {
               </div>
             )}
 
-            {view === 'buscar' && (
-              <div className="card">
-                <h2>📄 Importar Documentos</h2>
-                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Importa archivos PDF e imágenes a libro compras/ventas</p>
-                <div className="file-input">
-                  <div className="file-input-group">
-                    <label>Seleccionar archivo (PDF, JPG, PNG)</label>
-                    <input type="file" accept=".pdf,.jpg,.jpeg,.png" />
-                    <div className="file-hint">Máximo 10MB por archivo</div>
-                  </div>
-                </div>
-                <button className="btn btn-primary" style={{ marginTop: '20px' }}>Procesar Documento</button>
-              </div>
+            {view === 'importar-documentos' && (
+              <ImportarDocumentos />
             )}
 
             {view === 'liquidacion' && (

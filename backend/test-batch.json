@@ -1,0 +1,98 @@
+[
+  {
+    "informante": {
+      "ruc": "123456789",
+      "nombre": "QUADRA SISTEMAS CONTABLES S.A."
+    },
+    "informado": {
+      "ruc": "987654321",
+      "tipoIdentificacion": "RUC",
+      "nombre": "PROVEEDOR TECH PARAGUAY"
+    },
+    "comprobante": {
+      "tipoRegistro": "Compra",
+      "tipoComprobante": "Factura",
+      "fechaEmision": "2026-10-15",
+      "periodoEmision": "202610",
+      "timbrado": "123456",
+      "numero": "001-001-0000001",
+      "condicionOperacion": "Contado",
+      "monedaExtranjera": false
+    },
+    "financiero": {
+      "montoGravado10": 1000000,
+      "iva10": 100000,
+      "montoGravado5": 500000,
+      "iva5": 25000,
+      "montoNoGravado": 250000,
+      "totalComprobante": 1875000
+    },
+    "tributario": {
+      "imputaIva": true
+    }
+  },
+  {
+    "informante": {
+      "ruc": "123456789",
+      "nombre": "QUADRA SISTEMAS CONTABLES S.A."
+    },
+    "informado": {
+      "ruc": "111111111",
+      "tipoIdentificacion": "RUC",
+      "nombre": "IMPORTACIONES ELECTRÓNICAS S.A."
+    },
+    "comprobante": {
+      "tipoRegistro": "Compra",
+      "tipoComprobante": "Factura",
+      "fechaEmision": "2026-10-14",
+      "periodoEmision": "202610",
+      "timbrado": "789012",
+      "numero": "002-001-0000045",
+      "condicionOperacion": "Crédito",
+      "monedaExtranjera": false
+    },
+    "financiero": {
+      "montoGravado10": 2000000,
+      "iva10": 200000,
+      "montoGravado5": 0,
+      "iva5": 0,
+      "montoNoGravado": 500000,
+      "totalComprobante": 2700000
+    },
+    "tributario": {
+      "imputaIva": true
+    }
+  },
+  {
+    "informante": {
+      "ruc": "123456789",
+      "nombre": "QUADRA SISTEMAS CONTABLES S.A."
+    },
+    "informado": {
+      "ruc": "222222222",
+      "tipoIdentificacion": "RUC",
+      "nombre": "DISTRIBUIDOR NACIONAL DE INSUMOS"
+    },
+    "comprobante": {
+      "tipoRegistro": "Compra",
+      "tipoComprobante": "Factura",
+      "fechaEmision": "2026-10-13",
+      "periodoEmision": "202610",
+      "timbrado": "345678",
+      "numero": "001-002-0000089",
+      "condicionOperacion": "Mixto",
+      "monedaExtranjera": false
+    },
+    "financiero": {
+      "montoGravado10": 500000,
+      "iva10": 50000,
+      "montoGravado5": 1000000,
+      "iva5": 50000,
+      "montoNoGravado": 100000,
+      "totalComprobante": 1700000
+    },
+    "tributario": {
+      "imputaIva": true
+    }
+  }
+]

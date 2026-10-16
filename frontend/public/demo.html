@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUADRA - Demostración de Mejoras Visuales</title>
+    <style>
+        :root {
+            --primary: #1B2A4A;
+            --accent: #D4AF37;
+            --success: #27AE60;
+            --error: #E74C3C;
+            --border: #DDD;
+            --bg-light: #F9F9F9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+            background: #ffffff;
+            color: #333;
+        }
+
+        .dashboard {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            background: linear-gradient(135deg, var(--primary) 0%, #0f1620 100%);
+            color: white;
+            padding: 0 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow:
+                0 4px 16px rgba(0,0,0,0.25),
+                0 0 1px rgba(212, 175, 55, 0.1) inset;
+            height: 65px;
+            position: relative;
+            border-bottom: 2px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .navbar::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.3), transparent);
+        }
+
+        .navbar h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+            font-family: 'Playfair Display', serif;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        .navbar h1:hover {
+            text-shadow: 0 4px 16px rgba(212, 175, 55, 0.4);
+            letter-spacing: 4px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 14px;
+            position: relative;
+            z-index: 1;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 80px;
+            height: calc(100vh - 65px);
+            background: linear-gradient(180deg, var(--primary) 0%, #0f1620 100%);
+            color: white;
+            position: fixed;
+            left: 0;
+            top: 65px;
+            display: flex;
+            flex-direction: column;
+            box-shadow:
+                4px 0 16px rgba(0, 0, 0, 0.25),
+                -1px 0 0 rgba(212, 175, 55, 0.1) inset;
+            transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            z-index: 999;
+            overflow: hidden;
+            border-right: 1px solid rgba(212, 175, 55, 0.15);
+        }
+
+        .sidebar:hover {
+            width: 280px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            padding: 24px 12px;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .sidebar-menu::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.75);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            position: relative;
+            overflow: visible;
+        }
+
+        .menu-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: var(--accent);
+            border-radius: 0 3px 3px 0;
+            transition: height 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .menu-item:hover {
+            background: rgba(212, 175, 55, 0.12);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .menu-item:hover::before {
+            height: 24px;
+        }
+
+        .menu-label {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            opacity: 0;
+            width: 0;
+            transition: opacity 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            font-weight: 500;
+            letter-spacing: 0.2px;
+        }
+
+        .sidebar:hover .menu-label {
+            opacity: 1;
+            width: auto;
+        }
+
+        .menu-icon {
+            font-size: 16px;
+            min-width: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* MAIN CONTENT */
+        .main-content {
+            flex: 1;
+            margin-left: 80px;
+            transition: margin-left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+            padding: 40px;
+        }
+
+        .sidebar:hover ~ .main-content {
+            margin-left: 280px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            max-width: 800px;
+        }
+
+        .card h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            font-size: 28px;
+        }
+
+        .card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .features-list li {
+            padding: 12px 0;
+            padding-left: 30px;
+            position: relative;
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .features-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--accent);
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 0 20px;
+            }
+
+            .navbar h1 {
+                font-size: 24px;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <!-- NAVBAR -->
+        <nav class="navbar">
+            <h1>QUΔDRA</h1>
+            <div class="nav-right">
+                <span>Hola, Usuario Demo</span>
+            </div>
+        </nav>
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+            <nav class="sidebar-menu">
+                <button class="menu-item" style="background: rgba(212, 175, 55, 0.2); color: var(--accent);">
+                    <span class="menu-icon">🏠</span>
+                    <span class="menu-label">INICIO</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">🔍</span>
+                    <span class="menu-label">Buscar</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">Conciliación RG90</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">🏦</span>
+                    <span class="menu-label">Conciliación Bancaria</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">💰</span>
+                    <span class="menu-label">Liquidación Salarial</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">🏢</span>
+                    <span class="menu-label">Activo Fijo</span>
+                </button>
+                <button class="menu-item">
+                    <span class="menu-icon">💵</span>
+                    <span class="menu-label">Flujo de Caja</span>
+                </button>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            <div class="card">
+                <h2>✨ Mejoras Visuales - QUADRA</h2>
+
+                <p>Se han implementado <span class="highlight">mejoras profesionales</span> en la presentación del navbar superior y la barra lateral izquierda:</p>
+
+                <h3 style="color: var(--primary); margin: 30px 0 15px; font-size: 18px;">Navbar Mejorado</h3>
+                <ul class="features-list">
+                    <li><span class="highlight">Gradiente elegante:</span> Transición suave de azul marino a oscuro</li>
+                    <li><span class="highlight">Tipografía refinada:</span> Logo en Playfair Display con efecto hover</li>
+                    <li><span class="highlight">Sombra profunda:</span> Efecto 3D mejorado (0 4px 16px)</li>
+                    <li><span class="highlight">Borde decorativo:</span> Línea de gradiente dorada en la base</li>
+                    <li><span class="highlight">Text shadow:</span> Mejor legibilidad del logo con efecto sutil</li>
+                </ul>
+
+                <h3 style="color: var(--primary); margin: 30px 0 15px; font-size: 18px;">Sidebar Mejorado</h3>
+                <ul class="features-list">
+                    <li><span class="highlight">Gradiente vertical:</span> Efecto degradado profesional</li>
+                    <li><span class="highlight">Indicador visual lateral:</span> Barra dorada que crece en hover/active</li>
+                    <li><span class="highlight">Transiciones suaves:</span> Curva Bézier cúbica para animaciones elegantes</li>
+                    <li><span class="highlight">Efecto slide:</span> Items se deslizan 4px al pasar el mouse</li>
+                    <li><span class="highlight">Separadores visuales:</span> Líneas de gradiente que dividen secciones</li>
+                    <li><span class="highlight">Mejor spacing:</span> Padding mejorado y bordes redondeados</li>
+                </ul>
+
+                <p style="margin-top: 30px; padding: 20px; background: rgba(212, 175, 55, 0.08); border-radius: 8px; border-left: 4px solid var(--accent);">
+                    <strong>💡 Prueba:</strong> Pasa el mouse sobre el sidebar (izquierda) para ver el efecto de expansión y los indicadores visuales mejorados.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

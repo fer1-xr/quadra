@@ -1,0 +1,165 @@
+{
+  "informante": {
+    "ruc": {
+      "type": "string",
+      "pattern": "^[0-9]{4,9}$",
+      "required": true,
+      "label": "RUC del Informante"
+    },
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100,
+      "label": "Nombre o Razón Social del Informante"
+    }
+  },
+  "informado": {
+    "ruc": {
+      "type": "string",
+      "pattern": "^[0-9]{4,9}$",
+      "required": true,
+      "label": "RUC / Nº de Identificación del Informado"
+    },
+    "tipoIdentificacion": {
+      "type": "string",
+      "enum": ["RUC", "Cédula", "Pasaporte", "Otro"],
+      "required": true,
+      "label": "Tipo de Identificación del Informado"
+    },
+    "nombre": {
+      "type": "string",
+      "required": true,
+      "maxLength": 100,
+      "label": "Nombre o Razón Social del Informado"
+    }
+  },
+  "comprobante": {
+    "tipoRegistro": {
+      "type": "string",
+      "enum": ["Compra", "Venta"],
+      "required": true,
+      "label": "Tipo de Registro"
+    },
+    "tipoComprobante": {
+      "type": "string",
+      "enum": ["Factura", "NC", "ND", "Tiquete"],
+      "required": true,
+      "label": "Tipo de Comprobante"
+    },
+    "fechaEmision": {
+      "type": "date",
+      "format": "YYYY-MM-DD",
+      "required": true,
+      "label": "Fecha de Emisión"
+    },
+    "periodoEmision": {
+      "type": "string",
+      "pattern": "^[0-9]{6}$",
+      "required": true,
+      "label": "Período de Emisión (YYYYMM)"
+    },
+    "timbrado": {
+      "type": "string",
+      "pattern": "^[0-9]{3,8}$",
+      "required": true,
+      "label": "Timbrado del Comprobante"
+    },
+    "numero": {
+      "type": "string",
+      "pattern": "^[0-9]{1,20}$",
+      "required": true,
+      "label": "Número de Comprobante"
+    },
+    "cdc": {
+      "type": "string",
+      "pattern": "^[0-9A-Z]{43}$",
+      "required": false,
+      "label": "CDC (Código de Código)"
+    },
+    "condicionOperacion": {
+      "type": "string",
+      "enum": ["Contado", "Crédito", "Mixto"],
+      "required": true,
+      "label": "Condición de la Operación"
+    },
+    "monedaExtranjera": {
+      "type": "boolean",
+      "required": true,
+      "label": "Operación en Moneda Extranjera"
+    }
+  },
+  "financiero": {
+    "montoGravado10": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "Monto Gravado 10%"
+    },
+    "iva10": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "IVA 10%"
+    },
+    "montoGravado5": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "Monto Gravado 5%"
+    },
+    "iva5": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "IVA 5%"
+    },
+    "montoNoGravado": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "Monto No Gravado / Exento"
+    },
+    "totalComprobante": {
+      "type": "number",
+      "min": 0,
+      "required": true,
+      "label": "Total Comprobante"
+    }
+  },
+  "tributario": {
+    "imputaIva": {
+      "type": "boolean",
+      "required": true,
+      "label": "Imputa IVA"
+    },
+    "imputaIre": {
+      "type": "boolean",
+      "required": false,
+      "label": "Imputa IRE"
+    },
+    "imputaIrp": {
+      "type": "boolean",
+      "required": false,
+      "label": "Imputa IRP"
+    },
+    "noImputar": {
+      "type": "boolean",
+      "required": false,
+      "label": "No Imputar"
+    }
+  },
+  "metadatos": {
+    "fechaRegistro": {
+      "type": "date",
+      "format": "YYYY-MM-DD",
+      "required": false,
+      "label": "Fecha de Registro"
+    },
+    "origenInformacion": {
+      "type": "string",
+      "enum": ["Manual", "OCR", "API", "Importación"],
+      "required": true,
+      "label": "Origen de la Información"
+    }
+  }
+}
