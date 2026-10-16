@@ -1,5 +1,5 @@
 import * as pdfParse from 'pdf-parse';
-import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
 const logger = {
@@ -52,48 +52,40 @@ class InvoiceExtractor {
   }
 
   /**
-   * Extrae campos usando Claude Vision directamente de la imagen
-   * Sin OCR previo - Claude Vision lee la imagen directamente
+   * Extrae campos usando Google Gemini Vision directamente de la imagen
+   * Sin OCR previo - Gemini Vision lee la imagen directamente
+   * GRATIS: 60 requests/minuto en free tier
    */
-  async extractFieldsWithClaudeVision(imageBuffer, filename) {
-    logger.info('Extrayendo datos con Claude Vision (sin OCR previo)...');
+  async extractFieldsWithGeminiVision(imageBuffer, filename) {
+    logger.info('Extrayendo datos con Google Gemini Vision (gratis)...');
 
     try {
-      const apiKey = process.env.ANTHROPIC_API_KEY;
+      const apiKey = process.env.GOOGLE_API_KEY;
       if (!apiKey) {
-        throw new Error('ANTHROPIC_API_KEY no configurada');
+        throw new Error('GOOGLE_API_KEY no configurada. Obtén una en https://ai.google.dev/');
       }
 
-      const client = new Anthropic({ apiKey });
+      const genAI = new GoogleGenerativeAI(apiKey);
+      const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
       // Convertir imagen a base64
       const base64Image = imageBuffer.toString('base64');
       const mimeType = this.getMimeType(filename);
 
-      logger.info(`📸 Enviando imagen a Claude Vision (${mimeType})...`);
+      logger.info(`📸 Enviando imagen a Gemini Vision (${mimeType})...`);
 
-      // SOLUCIÓN CORRECTA: Enviar imagen directamente a Claude Vision
-      // No hacer OCR primero - Claude Vision lee la imagen directamente
-      const message = await client.messages.create({
-        model: 'claude-opus-5-5',
-        max_tokens: 2048,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'image',
-                source: {
-                  type: 'base64',
-                  media_type: mimeType,
-                  data: base64Image,
-                },
-              },
-              {
-                type: 'text',
-                text: `Lee esta factura paraguaya y extrae TODOS los datos en formato JSON RG90.
+      // Enviar imagen directamente a Gemini Vision
+      const response = await model.generateContent([
+        {
+          inlineData: {
+            data: base64Image,
+            mimeType: mimeType,
+          },
+        },
+        {
+          text: `Lee esta factura paraguaya y extrae TODOS los datos en formato JSON RG90.
 
-Extrae EXACTAMENTE lo que ves, incluso si falta información. Retorna SOLO JSON válido:
+Extrae EXACTAMENTE lo que ves. Retorna SOLO JSON válido, sin explicaciones:
 
 {
   "informante": {
@@ -128,20 +120,12 @@ Extrae EXACTAMENTE lo que ves, incluso si falta información. Retorna SOLO JSON 
   }
 }
 
-Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
-              },
-            ],
-          },
-        ],
-      });
+Usa null para campos no encontrados.`,
+        },
+      ]);
 
-      // Extraer JSON de la respuesta
-      const responseText = message.content
-        .filter((block) => block.type === 'text')
-        .map((block) => block.text)
-        .join('');
-
-      logger.info(`✓ Respuesta recibida de Claude Vision`);
+      const responseText = response.response.text();
+      logger.info(`✓ Respuesta recibida de Gemini Vision`);
 
       // Parsear JSON
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
@@ -151,7 +135,7 @@ Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
       }
 
       const extracted = JSON.parse(jsonMatch[0]);
-      logger.info('✓ Datos extraídos exitosamente con Claude Vision');
+      logger.info('✓ Datos extraídos exitosamente con Gemini Vision');
 
       // Validar estructura mínima
       if (!extracted.informante) extracted.informante = {};
@@ -162,7 +146,7 @@ Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
 
       return extracted;
     } catch (error) {
-      logger.error(`Error con Claude Vision: ${error.message}`);
+      logger.error(`Error con Gemini Vision: ${error.message}`);
       return {
         informante: {},
         informado: {},
@@ -192,8 +176,8 @@ Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
         throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
       }
 
-      // 2. SOLUCIÓN CORRECTA: Usar Claude Vision directamente sin OCR previo
-      const extractedFields = await this.extractFieldsWithClaudeVision(
+      // 2. SOLUCIÓN CORRECTA: Usar Gemini Vision directamente sin OCR previo
+      const extractedFields = await this.extractFieldsWithGeminiVision(
         bufferToProcess,
         filename
       );
@@ -226,7 +210,7 @@ Usa null para campos no encontrados. Retorna SOLO el JSON, sin explicaciones.`,
           },
         },
         missingFields,
-        method: 'Claude Vision (Direct Image Analysis)',
+        method: 'Google Gemini Vision (Free, No OCR)',
       };
 
       logger.info(`✓ Procesamiento completado: ${response.confidence.overall}% confianza`);
