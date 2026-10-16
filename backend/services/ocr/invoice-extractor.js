@@ -1,7 +1,7 @@
 import Tesseract from 'tesseract.js';
 import * as pdfParse from 'pdf-parse';
 import sharp from 'sharp';
-import { fieldPatterns, extractField } from './utils/field-patterns.js';
+import Anthropic from '@anthropic-ai/sdk';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
 const logger = {
@@ -102,91 +102,65 @@ class InvoiceExtractor {
   }
 
   /**
-   * Extrae campos específicos del texto
+   * Extrae campos usando Claude API con structured output
    */
-  extractFields(text) {
-    logger.info('Extrayendo campos de texto...');
+  async extractFieldsWithClaude(text) {
+    logger.info('Extrayendo campos con Claude API...');
 
-    const extracted = {};
-    let totalFieldsFound = 0;
-
-    // Agrupar patrones por categoría
-    const categories = {
-      informante: ['ruc', 'nombre'],
-      informado: ['ruc', 'tipoIdentificacion', 'nombre'],
-      comprobante: [
-        'tipoRegistro',
-        'tipoComprobante',
-        'fecha',
-        'periodo',
-        'timbrado',
-        'numeroComprobante',
-        'cdc',
-        'condicionOperacion',
-        'monedaExtranjera',
-      ],
-      financiero: [
-        'montoGravado10',
-        'iva10',
-        'montoGravado5',
-        'iva5',
-        'montoNoGravado',
-        'monto', // total
-      ],
-    };
-
-    // Extraer cada field
-    for (const [category, fields] of Object.entries(categories)) {
-      extracted[category] = {};
-
-      fields.forEach((field) => {
-        let fieldKey = field;
-        let pattern = fieldPatterns[field];
-
-        // Si no existe patrón directo, intentar variaciones
-        if (!pattern) {
-          for (const [key, pat] of Object.entries(fieldPatterns)) {
-            if (key.includes(field)) {
-              pattern = pat;
-              break;
-            }
-          }
-        }
-
-        if (pattern) {
-          const result = extractField(text, pattern);
-          if (result.found) {
-            extracted[category][fieldKey] = result.value;
-            totalFieldsFound++;
-            logger.info(`✓ ${category}.${fieldKey}: ${result.value}`);
-          }
-        }
+    try {
+      const client = new Anthropic({
+        apiKey: process.env.ANTHROPIC_API_KEY,
       });
-    }
 
-    // Renombrar algunos campos para coincidir con template
-    if (extracted.comprobante?.fecha) {
-      extracted.comprobante.fechaEmision = extracted.comprobante.fecha;
-      delete extracted.comprobante.fecha;
-    }
-    if (extracted.comprobante?.periodo) {
-      extracted.comprobante.periodoEmision = extracted.comprobante.periodo;
-      delete extracted.comprobante.periodo;
-    }
-    if (extracted.comprobante?.numeroComprobante) {
-      extracted.comprobante.numero = extracted.comprobante.numeroComprobante;
-      delete extracted.comprobante.numeroComprobante;
-    }
-    if (extracted.comprobante?.timbrado) {
-      extracted.comprobante.timbrado = extracted.comprobante.timbrado;
-    }
-    if (extracted.financiero?.monto) {
-      extracted.financiero.totalComprobante = extracted.financiero.monto;
-      delete extracted.financiero.monto;
-    }
+      const message = await client.messages.create({
+        model: 'claude-opus-4-1-20250805',
+        max_tokens: 1024,
+        thinking: {
+          type: 'enabled',
+          budget_tokens: 500,
+        },
+        system: `Eres un experto en extracción de datos de facturas paraguayas (formato RG90).
+Extrae TODOS los datos disponibles del texto OCR de la factura.
+Si un campo no está presente, déjalo vacío o con valor null.
+Sé muy preciso con números, fechas y códigos.`,
+        messages: [
+          {
+            role: 'user',
+            content: `Extrae datos de esta factura en formato JSON exacto.
 
-    logger.info(`Total campos encontrados: ${totalFieldsFound}`);
-    return extracted;
+TEXTO OCR:
+${text}
+
+Responde SOLO con JSON válido, sin explicaciones:`,
+          },
+        ],
+      });
+
+      // Extraer JSON de la respuesta
+      const responseText = message.content
+        .filter((block) => block.type === 'text')
+        .map((block) => block.text)
+        .join('');
+
+      // Parsear JSON
+      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        throw new Error('No se encontró JSON válido en respuesta de Claude');
+      }
+
+      const extracted = JSON.parse(jsonMatch[0]);
+      logger.info('✓ Datos extraídos con Claude');
+      return extracted;
+    } catch (error) {
+      logger.warn(`No se pudo usar Claude: ${error.message}, retornando objeto vacío`);
+      return {
+        informante: {},
+        informado: {},
+        comprobante: {},
+        financiero: {},
+        tributario: {},
+      };
+    }
   }
 
   /**
@@ -210,8 +184,8 @@ class InvoiceExtractor {
         throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
       }
 
-      // 2. Extraer campos del texto
-      const extractedFields = this.extractFields(ocrResult.text);
+      // 2. Extraer campos del texto usando Claude
+      const extractedFields = await this.extractFieldsWithClaude(ocrResult.text);
 
       // 3. Validar contra schema RG90
       const validationResult = validateRG90Data(extractedFields);
