@@ -2,7 +2,7 @@ import fs from 'fs';
 import { getInvoiceExtractor } from './services/ocr/invoice-extractor.js';
 
 async function test() {
-  console.log('🚀 Probando extracción con Claude Vision...\n');
+  console.log('🚀 Probando extracción con Google Gemini Vision (GRATIS)...\n');
 
   const extractor = getInvoiceExtractor();
 
@@ -20,7 +20,7 @@ async function test() {
     const imageBuffer = fs.readFileSync(testImagePath);
     console.log(`✓ Imagen cargada: ${(imageBuffer.length / 1024).toFixed(2)} KB\n`);
 
-    console.log(`🔍 Procesando con Claude Vision...`);
+    console.log(`🔍 Procesando con Gemini Vision...`);
     const result = await extractor.processFile(imageBuffer, 'factura.jpg');
 
     if (result.success) {
@@ -61,7 +61,7 @@ async function test() {
         }
       }
 
-      console.log('🎉 La solución funciona correctamente con Claude Vision');
+      console.log('🎉 La solución funciona correctamente con Gemini Vision (¡sin costo!)');
     } else {
       console.error(`❌ Error: ${result.error}`);
     }
