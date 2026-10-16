@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://quadra-45d6.onrender.com'
 
 function ChangePassword({ onClose, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState('')

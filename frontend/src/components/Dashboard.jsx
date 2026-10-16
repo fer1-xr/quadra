@@ -6,7 +6,9 @@ import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
 import '../styles/Sidebar.css'
 
-const API_BASE_URL = 'http://localhost:3000'
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3000'
+  : 'https://quadra-45d6.onrender.com'
 
 function Dashboard({ user, onLogout }) {
   const [rg90File, setRg90File] = useState(null)
