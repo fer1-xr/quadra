@@ -66,7 +66,7 @@ class InvoiceExtractor {
       }
 
       const genAI = new GoogleGenerativeAI(apiKey);
-      const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const model = genAI.getGenerativeModel({ model: 'gemini-3.8-flash' });
 
       // Convertir imagen a base64
       const base64Image = imageBuffer.toString('base64');
@@ -167,18 +167,16 @@ Usa null para campos no encontrados.`,
       const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(filename);
       const isPDF = /\.pdf$/i.test(filename);
 
-      let bufferToProcess = fileBuffer;
-
-      // 1. Para PDFs, procesar como está (en el futuro se podría convertir a imagen)
+      // 1. Solo procesar imágenes - Gemini Vision requiere imágenes, no PDFs
       if (isPDF) {
-        logger.info('PDF detectado - procesando...');
+        throw new Error('Los PDFs requieren conversión a imagen. Por favor usa JPG o PNG.');
       } else if (!isImage) {
-        throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
+        throw new Error('Tipo de archivo no soportado. Use JPG o PNG.');
       }
 
-      // 2. SOLUCIÓN CORRECTA: Usar Gemini Vision directamente sin OCR previo
+      // 2. SOLUCIÓN CORRECTA: Usar Gemini Vision directamente con imagen
       const extractedFields = await this.extractFieldsWithGeminiVision(
-        bufferToProcess,
+        fileBuffer,
         filename
       );
 
