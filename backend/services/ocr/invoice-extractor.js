@@ -1,5 +1,7 @@
 import * as pdfParse from 'pdf-parse';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getDocument } from 'pdfjs-dist/legacy/build/pdf.js';
+import { createCanvas } from 'canvas';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
 const logger = {
@@ -29,25 +31,48 @@ class InvoiceExtractor {
   }
 
   /**
-   * Procesa un PDF - intenta extraer como imagen para Vision
+   * Convierte PDF a imágenes (una por página) para procesar con Gemini Vision
    */
-  async extractFromPDF(pdfBuffer) {
+  async convertPdfToImages(pdfBuffer) {
     try {
-      logger.info('Procesando PDF...');
+      logger.info('Convirtiendo PDF a imágenes...');
 
-      const pdfData = await pdfParse(pdfBuffer);
-      logger.info(`PDF procesado: ${pdfData.numpages} páginas`);
+      const pdf = await getDocument({ data: pdfBuffer }).promise;
+      const numPages = pdf.numPages;
+      logger.info(`PDF detectado: ${numPages} páginas`);
 
-      // Para PDFs escaneados, retornar el buffer para procesamiento como imagen
-      // En este caso simplificado, retornamos el resultado
-      return {
-        buffer: pdfBuffer,
-        source: 'pdf',
-        pages: pdfData.numpages,
-      };
+      const images = [];
+
+      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 2 });
+
+        // Renderizar página a canvas
+        const canvas = createCanvas(viewport.width, viewport.height);
+        const context = canvas.getContext('2d');
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport,
+        }).promise;
+
+        // Convertir canvas a buffer JPG
+        const buffer = canvas.toBuffer('image/jpeg', { quality: 0.9 });
+
+        images.push({
+          buffer,
+          pageNum,
+          filename: `page-${pageNum}.jpg`,
+        });
+
+        logger.info(`✓ Página ${pageNum}/${numPages} convertida a imagen`);
+      }
+
+      logger.info(`✓ PDF convertido: ${images.length} imágenes generadas`);
+      return images;
     } catch (error) {
-      logger.error(`Error procesando PDF: ${error.message}`);
-      throw new Error(`Falló el procesamiento de PDF: ${error.message}`);
+      logger.error(`Error convirtiendo PDF: ${error.message}`);
+      throw new Error(`Falló la conversión de PDF: ${error.message}`);
     }
   }
 
@@ -167,18 +192,35 @@ Usa null para campos no encontrados.`,
       const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(filename);
       const isPDF = /\.pdf$/i.test(filename);
 
-      // 1. Solo procesar imágenes - Gemini Vision requiere imágenes, no PDFs
+      let filesToProcess = [];
+
+      // 1. Si es PDF, convertir a imágenes
       if (isPDF) {
-        throw new Error('Los PDFs requieren conversión a imagen. Por favor usa JPG o PNG.');
-      } else if (!isImage) {
-        throw new Error('Tipo de archivo no soportado. Use JPG o PNG.');
+        logger.info('PDF detectado - convirtiendo a imágenes...');
+        const images = await this.convertPdfToImages(fileBuffer);
+        filesToProcess = images;
+      } else if (isImage) {
+        filesToProcess = [{ buffer: fileBuffer, pageNum: 1, filename }];
+      } else {
+        throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
       }
 
-      // 2. SOLUCIÓN CORRECTA: Usar Gemini Vision directamente con imagen
-      const extractedFields = await this.extractFieldsWithGeminiVision(
-        fileBuffer,
-        filename
-      );
+      // 2. Procesar cada imagen/página
+      const results = [];
+      for (const file of filesToProcess) {
+        const extractedFields = await this.extractFieldsWithGeminiVision(
+          file.buffer,
+          file.filename
+        );
+
+        results.push({
+          pageNum: file.pageNum,
+          data: extractedFields,
+        });
+      }
+
+      // 3. Si hay múltiples páginas, retornar todas; si es una, retornar la primera
+      const extractedFields = results.length === 1 ? results[0].data : results;
 
       // 3. Validar contra schema RG90
       const validationResult = validateRG90Data(extractedFields);
@@ -225,27 +267,57 @@ Usa null para campos no encontrados.`,
   }
 
   /**
-   * Procesa múltiples archivos en lote
+   * Procesa múltiples archivos en lote (imágenes y/o PDFs)
+   * Retorna array con todas las facturas extraídas
    */
   async processFileBatch(files) {
     logger.info(`Procesando lote de ${files.length} archivos...`);
 
-    const results = [];
-    for (let i = 0; i < files.length; i++) {
-      logger.info(`Procesando archivo ${i + 1}/${files.length}...`);
-      const result = await this.processFile(files[i].buffer, files[i].originalname);
-      results.push({
-        ...result,
-        batchIndex: i,
-        timestamp: new Date().toISOString(),
-      });
+    const allResults = [];
+    let fileIndex = 0;
+
+    for (const file of files) {
+      fileIndex++;
+      logger.info(`Procesando archivo ${fileIndex}/${files.length}: ${file.originalname}`);
+
+      try {
+        const result = await this.processFile(file.buffer, file.originalname);
+
+        // Si es un PDF con múltiples páginas, result será un array
+        if (Array.isArray(result)) {
+          result.forEach((pageResult, idx) => {
+            allResults.push({
+              success: true,
+              filename: file.originalname,
+              pageNum: pageResult.pageNum,
+              extractedData: pageResult.data,
+              timestamp: new Date().toISOString(),
+            });
+          });
+        } else {
+          // Si es una imagen o PDF con 1 página
+          allResults.push({
+            success: true,
+            filename: file.originalname,
+            extractedData: result,
+            timestamp: new Date().toISOString(),
+          });
+        }
+      } catch (error) {
+        allResults.push({
+          success: false,
+          filename: file.originalname,
+          error: error.message,
+          timestamp: new Date().toISOString(),
+        });
+      }
     }
 
     return {
       totalFiles: files.length,
-      successfulProcesses: results.filter((r) => r.success).length,
-      failedProcesses: results.filter((r) => !r.success).length,
-      results,
+      totalExtracted: allResults.filter((r) => r.success).length,
+      totalFailed: allResults.filter((r) => !r.success).length,
+      results: allResults,
     };
   }
 }

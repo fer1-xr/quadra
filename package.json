@@ -11,5 +11,10 @@
   },
   "workspaces": [
     "frontend"
-  ]
+  ],
+  "dependencies": {
+    "canvas": "^3.2.3",
+    "pdf-parse": "^2.4.5",
+    "pdfjs-dist": "^6.4.299"
+  }
 }
