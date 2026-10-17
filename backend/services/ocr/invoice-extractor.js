@@ -204,35 +204,48 @@ Usa null para campos no encontrados.`,
 
   /**
    * Procesa múltiples archivos en lote (solo imágenes)
+   * Procesa en paralelo hasta 5 archivos simultáneamente
    * Retorna array con todas las facturas extraídas
    */
   async processFileBatch(files) {
-    logger.info(`Procesando lote de ${files.length} archivos...`);
+    logger.info(`Procesando lote de ${files.length} archivos en paralelo...`);
+    const MAX_CONCURRENT = 5;
 
     const allResults = [];
-    let fileIndex = 0;
+    const fileQueue = files.map((file, idx) => ({ file, index: idx }));
 
-    for (const file of files) {
-      fileIndex++;
-      logger.info(`Procesando archivo ${fileIndex}/${files.length}: ${file.originalname}`);
+    // Procesar en paralelo
+    const processChunk = async (items) => {
+      return Promise.all(
+        items.map(async (item) => {
+          logger.info(`Procesando archivo ${item.index + 1}/${files.length}: ${item.file.originalname}`);
 
-      try {
-        const result = await this.processFile(file.buffer, file.originalname);
+          try {
+            const result = await this.processFile(item.file.buffer, item.file.originalname);
 
-        allResults.push({
-          success: true,
-          filename: file.originalname,
-          extractedData: result,
-          timestamp: new Date().toISOString(),
-        });
-      } catch (error) {
-        allResults.push({
-          success: false,
-          filename: file.originalname,
-          error: error.message,
-          timestamp: new Date().toISOString(),
-        });
-      }
+            return {
+              success: true,
+              filename: item.file.originalname,
+              extractedData: result,
+              timestamp: new Date().toISOString(),
+            };
+          } catch (error) {
+            return {
+              success: false,
+              filename: item.file.originalname,
+              error: error.message,
+              timestamp: new Date().toISOString(),
+            };
+          }
+        })
+      );
+    };
+
+    // Procesar en chunks de MAX_CONCURRENT
+    for (let i = 0; i < fileQueue.length; i += MAX_CONCURRENT) {
+      const chunk = fileQueue.slice(i, i + MAX_CONCURRENT);
+      const results = await processChunk(chunk);
+      allResults.push(...results);
     }
 
     return {
