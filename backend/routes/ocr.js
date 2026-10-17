@@ -186,9 +186,19 @@ router.post('/batch', upload.array('files', 20), async (req, res) => {
     await cleanupTempFiles(req.files);
 
     // Extraer solo las facturas exitosas para Excel
-    const successfulInvoices = batchResult.results
+    // Si hay múltiples páginas, aplanar el array
+    const successfulInvoices = [];
+    batchResult.results
       .filter((r) => r.success)
-      .map((r) => r.extractedData);
+      .forEach((r) => {
+        if (Array.isArray(r.extractedData)) {
+          // Si es un array (múltiples páginas), agregar cada una
+          successfulInvoices.push(...r.extractedData.map(item => item.data));
+        } else {
+          // Si es un objeto (imagen o PDF single page), agregar directamente
+          successfulInvoices.push(r.extractedData);
+        }
+      });
 
     if (successfulInvoices.length === 0) {
       return res.status(400).json({
