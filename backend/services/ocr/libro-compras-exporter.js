@@ -48,38 +48,8 @@ export class LibroComprasExporter {
 
     // Fila 4: Vacía
 
-    // Fila 5: Headers principales
-    const headerRow = worksheet.getRow(5);
-    const headers1 = [
-      'FECHA',
-      'TIPO TIMBRADO',
-      'DOCUMENTO',
-      'SERIE',
-      'CDC DOCUMENTO',
-      'TIMB.',
-      'VENC.',
-      'PROVEEDOR',
-      null,
-      null,
-      'VALORES DE COMPRAS',
-      null,
-      null,
-      null,
-      null,
-    ];
-
-    headers1.forEach((h, idx) => {
-      if (h) {
-        const cell = headerRow.getCell(idx + 1);
-        cell.value = h;
-        cell.font = { bold: true, color: { argb: 'FF000000' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFD3D3D3' } };
-        cell.alignment = { horizontal: 'center', vertical: 'center', wrapText: true };
-      }
-    });
-
-    // Fila 6: Sub-headers
-    const subHeaderRow = worksheet.getRow(6);
+    // Fila 5: Encabezado único
+    const subHeaderRow = worksheet.getRow(5);
     const subHeaders = [
       'FECHA',
       'TIPO TIMBRADO',
@@ -119,7 +89,7 @@ export class LibroComprasExporter {
     });
 
     // Agregar datos de facturas
-    let dataRowNumber = 7;
+    let dataRowNumber = 6;
     let totalGrav10 = 0;
     let totalGrav5 = 0;
     let totalIva10 = 0;
