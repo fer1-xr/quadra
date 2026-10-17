@@ -1,7 +1,5 @@
 import * as pdfParse from 'pdf-parse';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.js';
-import { createCanvas } from 'canvas';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
 const logger = {
@@ -30,51 +28,6 @@ class InvoiceExtractor {
     return mimes[ext] || 'image/png';
   }
 
-  /**
-   * Convierte PDF a imágenes (una por página) para procesar con Gemini Vision
-   */
-  async convertPdfToImages(pdfBuffer) {
-    try {
-      logger.info('Convirtiendo PDF a imágenes...');
-
-      const pdf = await getDocument({ data: pdfBuffer }).promise;
-      const numPages = pdf.numPages;
-      logger.info(`PDF detectado: ${numPages} páginas`);
-
-      const images = [];
-
-      for (let pageNum = 1; pageNum <= numPages; pageNum++) {
-        const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 2 });
-
-        // Renderizar página a canvas
-        const canvas = createCanvas(viewport.width, viewport.height);
-        const context = canvas.getContext('2d');
-
-        await page.render({
-          canvasContext: context,
-          viewport: viewport,
-        }).promise;
-
-        // Convertir canvas a buffer JPG
-        const buffer = canvas.toBuffer('image/jpeg', { quality: 0.9 });
-
-        images.push({
-          buffer,
-          pageNum,
-          filename: `page-${pageNum}.jpg`,
-        });
-
-        logger.info(`✓ Página ${pageNum}/${numPages} convertida a imagen`);
-      }
-
-      logger.info(`✓ PDF convertido: ${images.length} imágenes generadas`);
-      return images;
-    } catch (error) {
-      logger.error(`Error convirtiendo PDF: ${error.message}`);
-      throw new Error(`Falló la conversión de PDF: ${error.message}`);
-    }
-  }
 
   /**
    * Extrae campos usando Google Gemini Vision directamente de la imagen
@@ -183,7 +136,7 @@ Usa null para campos no encontrados.`,
   }
 
   /**
-   * Procesa un archivo (imagen o PDF) y extrae datos para RG90
+   * Procesa un archivo (solo imágenes) y extrae datos para RG90
    */
   async processFile(fileBuffer, filename) {
     try {
@@ -192,35 +145,18 @@ Usa null para campos no encontrados.`,
       const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(filename);
       const isPDF = /\.pdf$/i.test(filename);
 
-      let filesToProcess = [];
-
-      // 1. Si es PDF, convertir a imágenes
+      // Solo aceptar imágenes
       if (isPDF) {
-        logger.info('PDF detectado - convirtiendo a imágenes...');
-        const images = await this.convertPdfToImages(fileBuffer);
-        filesToProcess = images;
-      } else if (isImage) {
-        filesToProcess = [{ buffer: fileBuffer, pageNum: 1, filename }];
-      } else {
-        throw new Error('Tipo de archivo no soportado. Use JPG, PNG o PDF.');
+        throw new Error('PDFs no soportados directamente. Convierte a JPG/PNG primero.');
+      } else if (!isImage) {
+        throw new Error('Tipo de archivo no soportado. Use JPG, PNG, GIF o BMP.');
       }
 
-      // 2. Procesar cada imagen/página
-      const results = [];
-      for (const file of filesToProcess) {
-        const extractedFields = await this.extractFieldsWithGeminiVision(
-          file.buffer,
-          file.filename
-        );
-
-        results.push({
-          pageNum: file.pageNum,
-          data: extractedFields,
-        });
-      }
-
-      // 3. Si hay múltiples páginas, retornar todas; si es una, retornar la primera
-      const extractedFields = results.length === 1 ? results[0].data : results;
+      // Procesar imagen con Gemini Vision
+      const extractedFields = await this.extractFieldsWithGeminiVision(
+        fileBuffer,
+        filename
+      );
 
       // 3. Validar contra schema RG90
       const validationResult = validateRG90Data(extractedFields);
@@ -267,7 +203,7 @@ Usa null para campos no encontrados.`,
   }
 
   /**
-   * Procesa múltiples archivos en lote (imágenes y/o PDFs)
+   * Procesa múltiples archivos en lote (solo imágenes)
    * Retorna array con todas las facturas extraídas
    */
   async processFileBatch(files) {
@@ -283,26 +219,12 @@ Usa null para campos no encontrados.`,
       try {
         const result = await this.processFile(file.buffer, file.originalname);
 
-        // Si es un PDF con múltiples páginas, result será un array
-        if (Array.isArray(result)) {
-          result.forEach((pageResult, idx) => {
-            allResults.push({
-              success: true,
-              filename: file.originalname,
-              pageNum: pageResult.pageNum,
-              extractedData: pageResult.data,
-              timestamp: new Date().toISOString(),
-            });
-          });
-        } else {
-          // Si es una imagen o PDF con 1 página
-          allResults.push({
-            success: true,
-            filename: file.originalname,
-            extractedData: result,
-            timestamp: new Date().toISOString(),
-          });
-        }
+        allResults.push({
+          success: true,
+          filename: file.originalname,
+          extractedData: result,
+          timestamp: new Date().toISOString(),
+        });
       } catch (error) {
         allResults.push({
           success: false,
