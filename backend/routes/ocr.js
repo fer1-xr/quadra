@@ -163,7 +163,7 @@ router.post('/export', async (req, res) => {
 
 /**
  * POST /api/ocr/batch
- * Procesa múltiples archivos
+ * Procesa múltiples archivos (imágenes y/o PDFs) y retorna Excel
  */
 router.post('/batch', upload.array('files', 20), async (req, res) => {
   try {
@@ -185,11 +185,30 @@ router.post('/batch', upload.array('files', 20), async (req, res) => {
     // Limpiar archivos
     await cleanupTempFiles(req.files);
 
-    res.json({
-      success: true,
-      ...batchResult,
-      timestamp: new Date().toISOString(),
-    });
+    // Extraer solo las facturas exitosas para Excel
+    const successfulInvoices = batchResult.results
+      .filter((r) => r.success)
+      .map((r) => r.extractedData);
+
+    if (successfulInvoices.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No se pudieron extraer facturas',
+        details: batchResult.results,
+      });
+    }
+
+    // Generar Excel
+    const workbook = await LibroComprasExporter.exportToExcel(successfulInvoices);
+    const timestamp = new Date().toISOString().split('T')[0];
+    const filename = `LIBRO_COMPRAS_${timestamp}.xlsx`;
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+
+    console.log(`[OCR] Excel generado: ${filename} (${successfulInvoices.length} facturas)`);
+    return res.send(buffer);
   } catch (error) {
     console.error(`[Batch Error] ${error.message}`);
 
