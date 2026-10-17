@@ -9,13 +9,11 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 function ImportarDocumentos() {
   const [dragActive, setDragActive] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [file, setFile] = useState(null)
-  const [extractedData, setExtractedData] = useState(null)
-  const [validationResult, setValidationResult] = useState(null)
-  const [editedData, setEditedData] = useState(null)
+  const [files, setFiles] = useState([])
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [step, setStep] = useState('upload') // upload, processing, review, export
+  const [step, setStep] = useState('upload') // upload, processing, complete
+  const [processingProgress, setProcessingProgress] = useState('')
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -32,124 +30,84 @@ function ImportarDocumentos() {
     e.stopPropagation()
     setDragActive(false)
 
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const dropped = e.dataTransfer.files[0]
-      const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(dropped.name)
-      const isPDF = /\.pdf$/i.test(dropped.name)
-
-      if (isImage || isPDF) {
-        setFile(dropped)
-        setError('')
-        processFile(dropped)
-      } else {
-        setError('Formato no permitido. Use JPG, PNG, GIF, BMP o PDF.')
-      }
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      addFiles(Array.from(e.dataTransfer.files))
     }
   }
 
   const handleFileInput = (e) => {
-    if (e.target.files && e.target.files[0]) {
-      setFile(e.target.files[0])
-      setError('')
-      processFile(e.target.files[0])
+    if (e.target.files && e.target.files.length > 0) {
+      addFiles(Array.from(e.target.files))
     }
   }
 
-  const processFile = async (selectedFile) => {
+  const addFiles = (newFiles) => {
+    const validFiles = newFiles.filter((file) => {
+      const isImage = /\.(jpg|jpeg|png|gif|bmp)$/i.test(file.name)
+      const isPDF = /\.pdf$/i.test(file.name)
+      return isImage || isPDF
+    })
+
+    if (validFiles.length !== newFiles.length) {
+      setError(`${newFiles.length - validFiles.length} archivo(s) no soportado(s)`)
+    }
+
+    setFiles((prev) => [...prev, ...validFiles])
+    setError('')
+  }
+
+  const removeFile = (index) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const processFiles = async () => {
+    if (files.length === 0) {
+      setError('Selecciona al menos un archivo')
+      return
+    }
+
     setLoading(true)
     setStep('processing')
     setError('')
     setSuccess('')
+    setProcessingProgress(`Procesando ${files.length} archivo(s)...`)
 
     try {
       const formData = new FormData()
-      formData.append('file', selectedFile)
+      files.forEach((file) => {
+        formData.append('files', file)
+      })
 
       const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post(`${API_BASE_URL}/api/ocr/upload`, formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/ocr/batch`, formData, {
+        responseType: 'blob',
         headers: {
-          'Content-Type': 'multipart/form-data',
           Authorization: `Bearer ${token}`,
         },
       })
 
-      if (response.data.success) {
-        setExtractedData(response.data.data)
-        setValidationResult(response.data.validation)
-        setEditedData({ ...response.data.data })
-        setStep('review')
-        setSuccess('✅ Datos extraídos correctamente')
-      } else {
-        setError(response.data.errors?.[0] || 'Error al procesar el archivo')
-        setStep('upload')
-      }
-    } catch (err) {
-      setError(err.response?.data?.error || 'Error al subir el archivo. Intenta con otro.')
-      setStep('upload')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleFieldChange = (section, field, value) => {
-    setEditedData((prev) => ({
-      ...prev,
-      [section]: {
-        ...prev[section],
-        [field]: value,
-      },
-    }))
-  }
-
-  const handleValidate = async () => {
-    try {
-      const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post(`${API_BASE_URL}/api/ocr/validate`,
-        { data: editedData },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setValidationResult(response.data)
-      if (response.data.valid) {
-        setSuccess('✅ Datos validados correctamente')
-      }
-    } catch (err) {
-      setError('Error al validar los datos')
-    }
-  }
-
-  const handleExport = async () => {
-    try {
-      setLoading(true)
-      const token = localStorage.getItem('quaedra_token')
-      const response = await axios.post(
-        `${API_BASE_URL}/api/ocr/export`,
-        { invoices: [editedData], format: 'excel' },
-        {
-          responseType: 'blob',
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      )
-
+      // Descargar Excel directamente
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')
       link.href = url
-      link.setAttribute('download', `RG90_${new Date().toISOString().split('T')[0]}.xlsx`)
+      link.setAttribute('download', `LIBRO_COMPRAS_${new Date().toISOString().split('T')[0]}.xlsx`)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      setSuccess('✅ Archivo exportado correctamente')
-      setStep('upload')
-      setFile(null)
-      setExtractedData(null)
-      setEditedData(null)
+      setSuccess(`✅ ${files.length} archivo(s) procesados correctamente`)
+      setStep('complete')
+      setFiles([])
     } catch (err) {
-      setError('Error al exportar el archivo')
+      setError(err.response?.data?.error || 'Error al procesar archivos. Intenta de nuevo.')
+      setStep('upload')
     } finally {
       setLoading(false)
+      setProcessingProgress('')
     }
   }
+
 
   const renderUploadStep = () => (
     <div className="upload-container">
@@ -161,191 +119,75 @@ function ImportarDocumentos() {
         onDrop={handleDrop}
       >
         <div className="drop-icon">📄</div>
-        <h3>Arrastra tu archivo aquí</h3>
-        <p>o haz clic para seleccionar</p>
-        <p className="file-types">Soporta: JPG, PNG, PDF</p>
+        <h3>Arrastra archivos aquí</h3>
+        <p>o haz clic para seleccionar múltiples archivos</p>
+        <p className="file-types">Soporta: JPG, PNG, GIF, BMP, PDF (con múltiples páginas)</p>
         <input
           type="file"
           accept=".jpg,.jpeg,.png,.pdf,.gif,.bmp"
           onChange={handleFileInput}
           className="file-input"
+          multiple
         />
       </div>
-      {file && <div className="file-selected">✓ {file.name}</div>}
+
+      {files.length > 0 && (
+        <div className="files-list">
+          <h3>Archivos seleccionados ({files.length})</h3>
+          <div className="files-items">
+            {files.map((file, idx) => (
+              <div key={idx} className="file-item">
+                <span className="file-icon">📎</span>
+                <span className="file-name">{file.name}</span>
+                <span className="file-size">({(file.size / 1024).toFixed(1)} KB)</span>
+                <button
+                  className="btn-remove"
+                  onClick={() => removeFile(idx)}
+                  title="Eliminar archivo"
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="action-buttons">
+            <button
+              className="btn btn-primary"
+              onClick={processFiles}
+              disabled={loading || files.length === 0}
+            >
+              {loading ? '⏳ Procesando...' : `📥 Procesar ${files.length} archivo(s)`}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 
-  const renderReviewStep = () => {
-    if (!editedData) return null
-
-    return (
-      <div className="review-container">
-        <div className="review-header">
-          <h2>📋 Verificar Datos Extraídos</h2>
-          <p>Revisa los datos extraídos. Puedes editarlos si es necesario.</p>
-        </div>
-
-        <div className="review-grid">
-          {/* Sección Informante */}
-          <div className="review-section">
-            <h3>Informante</h3>
-            <div className="field-group">
-              <label>RUC</label>
-              <input
-                type="text"
-                value={editedData.informante?.ruc || ''}
-                onChange={(e) => handleFieldChange('informante', 'ruc', e.target.value)}
-              />
-            </div>
-            <div className="field-group">
-              <label>Nombre</label>
-              <input
-                type="text"
-                value={editedData.informante?.nombre || ''}
-                onChange={(e) => handleFieldChange('informante', 'nombre', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Sección Informado */}
-          <div className="review-section">
-            <h3>Proveedor</h3>
-            <div className="field-group">
-              <label>RUC</label>
-              <input
-                type="text"
-                value={editedData.informado?.ruc || ''}
-                onChange={(e) => handleFieldChange('informado', 'ruc', e.target.value)}
-              />
-            </div>
-            <div className="field-group">
-              <label>Nombre</label>
-              <input
-                type="text"
-                value={editedData.informado?.nombre || ''}
-                onChange={(e) => handleFieldChange('informado', 'nombre', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Sección Comprobante */}
-          <div className="review-section">
-            <h3>Comprobante</h3>
-            <div className="field-group">
-              <label>Número</label>
-              <input
-                type="text"
-                value={editedData.comprobante?.numero || ''}
-                onChange={(e) => handleFieldChange('comprobante', 'numero', e.target.value)}
-              />
-            </div>
-            <div className="field-group">
-              <label>Fecha</label>
-              <input
-                type="date"
-                value={editedData.comprobante?.fechaEmision || ''}
-                onChange={(e) => handleFieldChange('comprobante', 'fechaEmision', e.target.value)}
-              />
-            </div>
-            <div className="field-group">
-              <label>Timbrado</label>
-              <input
-                type="text"
-                value={editedData.comprobante?.timbrado || ''}
-                onChange={(e) => handleFieldChange('comprobante', 'timbrado', e.target.value)}
-              />
-            </div>
-          </div>
-
-          {/* Sección Montos */}
-          <div className="review-section">
-            <h3>Montos</h3>
-            <div className="field-group">
-              <label>Total Comprobante</label>
-              <input
-                type="number"
-                value={editedData.financiero?.totalComprobante || 0}
-                onChange={(e) =>
-                  handleFieldChange('financiero', 'totalComprobante', parseFloat(e.target.value))
-                }
-              />
-            </div>
-            <div className="field-group">
-              <label>IVA 10%</label>
-              <input
-                type="number"
-                value={editedData.financiero?.iva10 || 0}
-                onChange={(e) => handleFieldChange('financiero', 'iva10', parseFloat(e.target.value))}
-              />
-            </div>
-            <div className="field-group">
-              <label>IVA 5%</label>
-              <input
-                type="number"
-                value={editedData.financiero?.iva5 || 0}
-                onChange={(e) => handleFieldChange('financiero', 'iva5', parseFloat(e.target.value))}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Mensajes de Validación */}
-        {validationResult && (
-          <div className="validation-box">
-            <div className={`validation-status ${validationResult.valid ? 'valid' : 'invalid'}`}>
-              {validationResult.valid ? '✅ Datos válidos' : '❌ Hay errores de validación'}
-            </div>
-            {validationResult.errors && validationResult.errors.length > 0 && (
-              <div className="validation-errors">
-                <h4>Errores:</h4>
-                <ul>
-                  {validationResult.errors.map((err, idx) => (
-                    <li key={idx}>
-                      <strong>{err.field}:</strong> {err.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {validationResult.warnings && validationResult.warnings.length > 0 && (
-              <div className="validation-warnings">
-                <h4>Advertencias:</h4>
-                <ul>
-                  {validationResult.warnings.map((warn, idx) => (
-                    <li key={idx}>{warn}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Botones de Acción */}
-        <div className="action-buttons">
-          <button className="btn btn-secondary" onClick={() => setStep('upload')}>
-            ← Otra factura
-          </button>
-          <button className="btn btn-info" onClick={handleValidate} disabled={loading}>
-            ✓ Validar Datos
-          </button>
-          <button
-            className="btn btn-primary"
-            onClick={handleExport}
-            disabled={loading || !validationResult?.valid}
-          >
-            {loading ? '⏳ Exportando...' : '📥 Descargar Excel'}
-          </button>
-        </div>
-      </div>
-    )
-  }
+  const renderCompleteStep = () => (
+    <div className="complete-container">
+      <div className="complete-icon">✅</div>
+      <h2>¡Listo!</h2>
+      <p>Tu archivo Excel ha sido descargado automáticamente</p>
+      <button
+        className="btn btn-primary"
+        onClick={() => {
+          setStep('upload')
+          setSuccess('')
+        }}
+      >
+        ➕ Procesar más archivos
+      </button>
+    </div>
+  )
 
   return (
     <div className="importar-documentos">
       <div className="card">
         <div className="header">
           <h1>📄 Importar Documentos</h1>
-          <p>OCR y procesamiento de facturas para Marangatu</p>
+          <p>Sube imágenes o PDFs de facturas - Se extraerán automáticamente a Excel</p>
         </div>
 
         {error && <div className="alert alert-error">{error}</div>}
@@ -355,11 +197,11 @@ function ImportarDocumentos() {
         {step === 'processing' && (
           <div className="processing">
             <div className="spinner"></div>
-            <p>Procesando documento...</p>
+            <p>{processingProgress || 'Procesando archivos...'}</p>
             <p className="subtitle">Esto puede tomar unos segundos</p>
           </div>
         )}
-        {step === 'review' && renderReviewStep()}
+        {step === 'complete' && renderCompleteStep()}
       </div>
     </div>
   )
