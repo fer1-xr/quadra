@@ -121,10 +121,10 @@ function ImportarDocumentos() {
         <div className="drop-icon">📄</div>
         <h3>Arrastra archivos aquí</h3>
         <p>o haz clic para seleccionar múltiples archivos</p>
-        <p className="file-types">Soporta: JPG, PNG, GIF, BMP, PDF (con múltiples páginas)</p>
+        <p className="file-types">Soporta: JPG, PNG, GIF, BMP</p>
         <input
           type="file"
-          accept=".jpg,.jpeg,.png,.pdf,.gif,.bmp"
+          accept=".jpg,.jpeg,.png,.gif,.bmp"
           onChange={handleFileInput}
           className="file-input"
           multiple
