@@ -98,6 +98,14 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
         <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.3"></circle>
         <path d="M12 7v10M7 12h10"></path>
       </svg>
+    )},
+    { id: 'control-pagos', label: 'Control de Pagos', icon: '💳', isSvg: true, svg: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+        <line x1="1" y1="10" x2="23" y2="10"></line>
+        <circle cx="6" cy="15" r="1" fill="currentColor"></circle>
+        <line x1="11" y1="14" x2="17" y2="14"></line>
+      </svg>
     )}
   ]
 

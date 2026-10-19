@@ -8,6 +8,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import sgMail from '@sendgrid/mail';
 import ocrRoutes from './routes/ocr.js';
+import controlPagosRoutes from './routes/control-pagos.js';
 import { uploadErrorHandler } from './middleware/upload-handler.js';
 
 dotenv.config();
@@ -1295,6 +1296,10 @@ app.post('/api/cotizacion', verifyToken, async (req, res) => {
 
 // ==================== OCR ROUTES ====================
 app.use('/api/ocr', ocrRoutes);
+
+// ==================== CONTROL PAGOS ROUTES ====================
+app.use('/api/control-pagos', controlPagosRoutes);
+
 app.use(uploadErrorHandler);
 
 app.get('/health', (_, res) => res.json({ status: 'ok' }));

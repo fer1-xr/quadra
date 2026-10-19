@@ -6,6 +6,7 @@ import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
 import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
+import ControlPagos from './ControlPagos'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
@@ -115,6 +116,9 @@ function Dashboard({ user, onLogout }) {
       case 'importar-documentos':
         setView('importar-documentos')
         break
+      case 'control-pagos':
+        setView('control-pagos')
+        break
       case 'cotizacion':
         setView('cotizacion')
         break
@@ -215,6 +219,14 @@ function Dashboard({ user, onLogout }) {
                     </div>
                     <h3>Importar Documentos</h3>
                     <p>OCR y procesamiento de PDF e imágenes de comprobantes</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card service-card--pagos" onClick={() => handleNavigate('control-pagos')}>
+                    <div className="card-icon">
+                      <span className="icon-emoji">💳</span>
+                    </div>
+                    <h3>Control de Pagos</h3>
+                    <p>Gestión de pólizas y préstamos con seguimiento de pagos mensuales</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                   <div className="service-card service-card--liquidacion" onClick={() => handleNavigate('liquidacion')}>
@@ -376,6 +388,10 @@ function Dashboard({ user, onLogout }) {
 
             {view === 'importar-documentos' && (
               <ImportarDocumentos />
+            )}
+
+            {view === 'control-pagos' && (
+              <ControlPagos />
             )}
 
             {view === 'liquidacion' && (
