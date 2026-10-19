@@ -8,6 +8,7 @@ import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
+import Cotizacion from './Cotizacion'
 import '../styles/Sidebar.css'
 import '../styles/Dashboard.css'
 
@@ -108,6 +109,9 @@ function Dashboard({ user, onLogout }) {
         break
       case 'importar-documentos':
         setView('importar-documentos')
+        break
+      case 'cotizacion':
+        setView('cotizacion')
         break
       case 'cuenta':
         setView('cuenta')
@@ -236,6 +240,14 @@ function Dashboard({ user, onLogout }) {
                     </div>
                     <h3>Flujo de Caja</h3>
                     <p>Proyecciones y análisis de liquidez y efectivo</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card service-card--cotizacion" onClick={() => handleNavigate('cotizacion')}>
+                    <div className="card-icon">
+                      <span className="icon-emoji">💱</span>
+                    </div>
+                    <h3>Cotización</h3>
+                    <p>Consulta tipos de cambio del DNIT por fecha y moneda</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                 </div>
@@ -419,6 +431,10 @@ function Dashboard({ user, onLogout }) {
 
             {view === 'metas' && (
               <MetasAnuales />
+            )}
+
+            {view === 'cotizacion' && (
+              <Cotizacion />
             )}
           </div>
         </div>

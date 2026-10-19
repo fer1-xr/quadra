@@ -210,6 +210,15 @@
   box-shadow: 0 20px 40px rgba(255, 107, 107, 0.1);
 }
 
+.service-card--cotizacion {
+  border-color: rgba(255, 193, 7, 0.2);
+}
+
+.service-card--cotizacion:hover {
+  border-color: rgba(255, 193, 7, 0.4);
+  box-shadow: 0 20px 40px rgba(255, 193, 7, 0.1);
+}
+
 /* ========== BUTTONS ========== */
 
 .btn {

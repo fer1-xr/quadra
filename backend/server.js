@@ -1176,6 +1176,123 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
   }
 });
 
+// ==================== COTIZACIÓN DNIT ====================
+// Datos simulados de cotizaciones del DNIT (en un caso real, esto vendría de una API o web scraping)
+const cotizacionesDNIT = {
+  'USD': [
+    { fecha: '2026-10-19', comprador: 6850.00, vendedor: 6920.00 },
+    { fecha: '2026-10-18', comprador: 6840.00, vendedor: 6910.00 },
+    { fecha: '2026-10-17', comprador: 6830.00, vendedor: 6900.00 },
+    { fecha: '2026-10-16', comprador: 6820.00, vendedor: 6890.00 },
+    { fecha: '2026-10-15', comprador: 6810.00, vendedor: 6880.00 },
+  ],
+  'ARS': [
+    { fecha: '2026-10-19', comprador: 65.50, vendedor: 66.50 },
+    { fecha: '2026-10-18', comprador: 65.00, vendedor: 66.00 },
+    { fecha: '2026-10-17', comprador: 64.50, vendedor: 65.50 },
+  ],
+  'BRL': [
+    { fecha: '2026-10-19', comprador: 1250.00, vendedor: 1270.00 },
+    { fecha: '2026-10-18', comprador: 1240.00, vendedor: 1260.00 },
+  ],
+  'EUR': [
+    { fecha: '2026-10-19', comprador: 7100.00, vendedor: 7180.00 },
+    { fecha: '2026-10-18', comprador: 7090.00, vendedor: 7170.00 },
+  ],
+  'CLP': [
+    { fecha: '2026-10-19', comprador: 7.50, vendedor: 7.62 },
+    { fecha: '2026-10-18', comprador: 7.48, vendedor: 7.60 },
+  ],
+  'CHF': [
+    { fecha: '2026-10-19', comprador: 7600.00, vendedor: 7700.00 },
+    { fecha: '2026-10-18', comprador: 7590.00, vendedor: 7690.00 },
+  ],
+  'JPY': [
+    { fecha: '2026-10-19', comprador: 45.50, vendedor: 46.20 },
+    { fecha: '2026-10-18', comprador: 45.00, vendedor: 45.70 },
+  ],
+  'GBP': [
+    { fecha: '2026-10-19', comprador: 8500.00, vendedor: 8620.00 },
+    { fecha: '2026-10-18', comprador: 8480.00, vendedor: 8600.00 },
+  ]
+};
+
+app.post('/api/cotizacion', verifyToken, async (req, res) => {
+  try {
+    const { fecha, moneda } = req.body;
+
+    if (!fecha || !moneda) {
+      return res.status(400).json({
+        success: false,
+        message: 'Fecha y moneda son requeridas'
+      });
+    }
+
+    const monedaCotizaciones = cotizacionesDNIT[moneda];
+    if (!monedaCotizaciones) {
+      return res.status(400).json({
+        success: false,
+        message: `Moneda ${moneda} no disponible`
+      });
+    }
+
+    // Buscar la cotización exacta
+    let cotizacion = monedaCotizaciones.find(c => c.fecha === fecha);
+
+    // Si no existe la fecha exacta, buscar la más cercana
+    if (!cotizacion && monedaCotizaciones.length > 0) {
+      const fechaDate = new Date(fecha);
+      let fechaMasCercana = monedaCotizaciones[0];
+      let diferenciaMenor = Math.abs(new Date(fechaMasCercana.fecha) - fechaDate);
+
+      for (const cot of monedaCotizaciones) {
+        const diferencia = Math.abs(new Date(cot.fecha) - fechaDate);
+        if (diferencia < diferenciaMenor) {
+          diferenciaMenor = diferencia;
+          fechaMasCercana = cot;
+        }
+      }
+
+      cotizacion = fechaMasCercana;
+    }
+
+    if (!cotizacion) {
+      return res.status(404).json({
+        success: false,
+        message: `No hay cotización disponible para ${moneda} en la fecha ${fecha}`
+      });
+    }
+
+    // Guardar en la base de datos para historial
+    const { error: insertError } = await supabase.from('cotizaciones')
+      .insert([{
+        user_id: req.user.id,
+        fecha: cotizacion.fecha,
+        moneda,
+        comprador: cotizacion.comprador,
+        vendedor: cotizacion.vendedor,
+        created_at: new Date().toISOString()
+      }])
+      .select();
+
+    res.json({
+      success: true,
+      data: {
+        fecha: cotizacion.fecha,
+        moneda,
+        comprador: cotizacion.comprador,
+        vendedor: cotizacion.vendedor
+      }
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      success: false,
+      message: err.message
+    });
+  }
+});
+
 // ==================== OCR ROUTES ====================
 app.use('/api/ocr', ocrRoutes);
 app.use(uploadErrorHandler);
