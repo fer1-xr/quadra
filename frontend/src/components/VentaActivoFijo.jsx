@@ -19,113 +19,168 @@ const VentaActivoFijo = () => {
       'prestador-servicios': {
         'no-aplica': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Debe emitir factura de venta de inmuebles',
-            'Aplica IVA según el caso (algunos inmuebles están exentos)',
+            'Base gravada: 30% del valor neto con IVA 5%',
+            'Base exenta: 70% del valor neto',
             'Debe informar al SET la venta'
           ],
           decreto: 'Decreto 14.627/92 - Código Tributario de Paraguay',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         },
         'si': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Debe facturar como venta de activo fijo',
             'El activo debe ser registrado previamente en la contabilidad',
-            'Aplica IVA según corresponda'
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70% exento'
           ],
           decreto: 'Ley 1.682/2001 - Estatuto Tributario',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         },
         'no': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Como no es activo de la empresa, debe facturar la venta',
-            'Aplica el régimen de personas físicas',
-            'Debe cumplir obligaciones tributarias'
+            'Base gravada: 30% del monto con IVA 5%',
+            'Base exenta: 70% exento',
+            'Aplica el régimen de personas físicas'
           ],
           decreto: 'Código Tributario - Art. 15',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         }
       },
       'ire-simple': {
         'no-aplica': {
           debe_facturar: false,
+          modo_calculo: 'No aplica - Sin facturación obligatoria',
+          tasa_iva: 'N/A',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 0,
           normas: [
-            'IRE SIMPLE está exento de facturación para actividades no comerciales',
+            'IRE SIMPLE está exento de facturación obligatoria',
             'No es obligatorio facturar inmuebles',
-            'Debe declarar la renta en su declaración anual'
+            'Debe declarar la renta en liquidación anual'
           ],
           decreto: 'Ley Nº 125/91 - Régimen de Impuesto a la Renta Simple',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
         },
         'si': {
           debe_facturar: false,
+          modo_calculo: 'No aplica - Sin facturación obligatoria',
+          tasa_iva: 'N/A',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 0,
           normas: [
             'Si es activo de la empresa bajo IRE SIMPLE, generalmente está exento',
             'No requiere facturación especial',
-            'Declarar en formulario anual'
+            'Reportar en formulario anual'
           ],
           decreto: 'Ley Nº 125/91 - Régimen de IRE Simple',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
         },
         'no': {
           debe_facturar: false,
+          modo_calculo: 'No aplica - Sin facturación obligatoria',
+          tasa_iva: 'N/A',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 0,
           normas: [
             'No aplicable para IRE SIMPLE sin actividad comercial',
             'No requiere factura',
             'Puede informar voluntariamente al SET'
           ],
           decreto: 'Ley Nº 125/91',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
         }
       },
       'ire-general': {
         'no-aplica': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Debe emitir factura obligatoriamente',
             'IRE GENERAL exige facturación para todas las transacciones',
-            'Aplica IVA según la naturaleza del bien'
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%'
           ],
           decreto: 'Ley Nº 125/91 - IRE General Art. 8',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         },
         'si': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Obligatorio facturar como venta de bien de activo fijo',
             'Debe coincidir con registros contables',
-            'Puede aplicar depreciaciónes acumuladas'
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%'
           ],
           decreto: 'Ley Nº 125/91 y Decreto 14.627/92',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         },
         'no': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Bajo IRE GENERAL debe facturar obligatoriamente',
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%',
             'Aplican todas las retenciones e impuestos correspondientes'
           ],
           decreto: 'Código Tributario Art. 128',
-          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
+          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
         }
       },
       'no-contribuyente': {
         'no-aplica': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'No contribuyente debe emitir factura de venta de inmueble',
-            'Debe indicar su condición en el documento',
-            'Aplica retención del 2% sobre el monto'
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%',
+            'Indicar su condición como no contribuyente en la factura',
+            'Aplica retención del 2% sobre el monto por el comprador'
           ],
           decreto: 'Resolución SET relativa a No Contribuyentes',
           fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'si': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Debe facturar como no contribuyente',
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%',
             'Indica la venta de activo de la empresa',
             'Aplica retención de 2%'
           ],
@@ -134,8 +189,14 @@ const VentaActivoFijo = () => {
         },
         'no': {
           debe_facturar: true,
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
+          tasa_iva: '5%',
+          porcentaje_gravado: 30,
+          porcentaje_exento: 70,
           normas: [
             'Como persona sin condición de contribuyente debe facturar',
+            'Base gravada: 30% con IVA 5%',
+            'Base exenta: 70%',
             'Informa que el bien no es activo de empresa',
             'Aplica normativa de persona física'
           ],
@@ -149,10 +210,14 @@ const VentaActivoFijo = () => {
         'nuevo': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'Debe facturar como vendedor de vehículo nuevo',
+              'Base gravada: 100% del monto con IVA 10%',
               'Requiere documentación especial del fabricante/distribuidor',
-              'Aplica IVA del 10% sobre el monto',
               'Debe tramitar el cambio de titularidad ante Dirección General de Aduanas'
             ],
             decreto: 'Decreto Nº 4.295/13 y Ley de Aduanas',
@@ -160,8 +225,13 @@ const VentaActivoFijo = () => {
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'Factura como venta de vehículo nuevo que es activo de la empresa',
+              'Base gravada: 100% con IVA 10%',
               'Debe haber sido registrado en activos fijos',
               'Aplica depreciación acumulada'
             ],
@@ -170,8 +240,13 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'Factura como vendedor aunque no es activo de empresa',
+              'Base gravada: 100% con IVA 10%',
               'Aplica régimen de persona física o prestador de servicios',
               'Debe cumplir requisitos aduanales'
             ],
@@ -182,20 +257,30 @@ const VentaActivoFijo = () => {
         'usado': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'Venta de vehículo usado - Debe facturar',
-              'No aplica IVA en venta de usado (exento)',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70% (Decreto Nº 4.295/13)',
               'Requiere comprobante de transferencia ante DGA',
               'Debe constar el RUC y datos del comprador'
             ],
-            decreto: 'Decreto Nº 4.295/13 y Exención IVA para vehículos usados',
+            decreto: 'Decreto Nº 4.295/13 - Régimen especial para vehículos usados',
             fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
-              'Venda de activo fijo - vehículo usado',
-              'Exento de IVA',
+              'Venta de activo fijo - vehículo usado',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Debe detallar depreciaciones acumuladas en contabilidad'
             ],
             decreto: 'Decreto Nº 4.295/13',
@@ -203,9 +288,14 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'Venta de vehículo usado - Factura obligatoria',
-              'Sin IVA (exento)',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Persona física como vendedor'
             ],
             decreto: 'Código Tributario',
@@ -217,62 +307,86 @@ const VentaActivoFijo = () => {
         'nuevo': {
           'no-aplica': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'IRE SIMPLE - No obligatorio facturar venta de vehículo nuevo',
               'Debe declarar en formulario anual',
               'No está dentro del giro del negocio generalmente'
             ],
             decreto: 'Ley Nº 125/91 - IRE Simple',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           },
           'si': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'IRE SIMPLE - Activo de empresa',
               'No requiere factura especial',
               'Informar en declaración anual'
             ],
             decreto: 'Ley Nº 125/91',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           },
           'no': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'No es venta dentro del giro de IRE SIMPLE',
               'No requiere factura'
             ],
             decreto: 'Ley Nº 125/91',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           }
         },
         'usado': {
           'no-aplica': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'IRE SIMPLE - No obligatorio',
               'Venta de bien de uso personal',
-              'Declarar voluntariamente'
+              'Puede declarar voluntariamente'
             ],
             decreto: 'Ley Nº 125/91',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           },
           'si': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'IRE SIMPLE - Activo fijo de empresa',
               'Generalmente exento de facturación obligatoria',
               'Reportar en liquidación anual'
             ],
             decreto: 'Ley Nº 125/91',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           },
           'no': {
             debe_facturar: false,
+            modo_calculo: 'No aplica - Sin facturación obligatoria',
+            tasa_iva: 'N/A',
+            porcentaje_gravado: 0,
+            porcentaje_exento: 0,
             normas: [
               'No requiere factura bajo IRE SIMPLE'
             ],
             decreto: 'Ley Nº 125/91',
-            fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
+            fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
           }
         }
       },
@@ -280,10 +394,14 @@ const VentaActivoFijo = () => {
         'nuevo': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'IRE GENERAL - Facturación obligatoria',
+              'Base gravada: 100% con IVA 10%',
               'Venta de vehículo nuevo',
-              'Aplica IVA del 10%',
               'Debe registrarse en contabilidad'
             ],
             decreto: 'Ley Nº 125/91 - IRE General',
@@ -291,10 +409,14 @@ const VentaActivoFijo = () => {
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'IRE GENERAL - Activo fijo de empresa',
+              'Base gravada: 100% con IVA 10%',
               'Facturación obligatoria',
-              'Aplica IVA',
               'Debe coincidir con depreciaciones contables'
             ],
             decreto: 'Ley Nº 125/91 y Decreto 14.627/92',
@@ -302,10 +424,15 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'IRE GENERAL - Facturación obligatoria',
+              'Base gravada: 100% con IVA 10%',
               'Venta de vehículo nuevo sin ser activo de empresa',
-              'Aplica IVA y retenciones'
+              'Aplica retenciones'
             ],
             decreto: 'Código Tributario',
             fuente: 'https://consultoria.com.py/facturacion-venta-vehiculo-paraguay/'
@@ -314,9 +441,14 @@ const VentaActivoFijo = () => {
         'usado': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'IRE GENERAL - Factura obligatoria',
-              'Vehículo usado - Exento de IVA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70% (Decreto Nº 4.295/13)',
               'Requiere comprobante de DGA',
               'Debe indicarse el estado del vehículo'
             ],
@@ -325,9 +457,14 @@ const VentaActivoFijo = () => {
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'IRE GENERAL - Venta de activo fijo usado',
-              'Exento de IVA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Requiere documentación de DGA',
               'Reportar depreciación acumulada'
             ],
@@ -336,9 +473,14 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'IRE GENERAL - Facturación obligatoria',
-              'Exento de IVA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Vehículo usado sin ser activo de empresa'
             ],
             decreto: 'Código Tributario',
@@ -350,10 +492,14 @@ const VentaActivoFijo = () => {
         'nuevo': {
           'si': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'PLAYA DE VEHICULOS - Facturación OBLIGATORIA',
+              'Base gravada: 100% con IVA 10%',
               'Vehículo nuevo - Activo de la empresa',
-              'Aplica IVA del 10%',
               'Requiere documentación de fabricante/distribuidor',
               'Debe registrar en sistema de inventarios'
             ],
@@ -364,10 +510,15 @@ const VentaActivoFijo = () => {
         'usado': {
           'si': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'PLAYA DE VEHICULOS - Facturación OBLIGATORIA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70% (Decreto Nº 4.295/13)',
               'Vehículo usado - Activo de empresa',
-              'Exento de IVA para usados',
               'Control mediante DGA',
               'Registro en inventario de existencias'
             ],
@@ -380,8 +531,13 @@ const VentaActivoFijo = () => {
         'nuevo': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'NO CONTRIBUYENTE - Debe facturar venta de vehículo nuevo',
+              'Base gravada: 100% con IVA 10%',
               'Indica su condición de no contribuyente en factura',
               'Aplica retención del 1% del monto',
               'Requiere identificarse ante el comprador'
@@ -391,8 +547,13 @@ const VentaActivoFijo = () => {
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'NO CONTRIBUYENTE - Activo de empresa',
+              'Base gravada: 100% con IVA 10%',
               'Debe facturar la venta',
               'Aplica retención de 1%',
               'Documentar adecuadamente'
@@ -402,8 +563,13 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '100% Gravado (IVA 10%)',
+            tasa_iva: '10%',
+            porcentaje_gravado: 100,
+            porcentaje_exento: 0,
             normas: [
               'NO CONTRIBUYENTE - Factura obligatoria',
+              'Base gravada: 100% con IVA 10%',
               'Venta de vehículo nuevo',
               'Aplica retención de 1%'
             ],
@@ -414,9 +580,14 @@ const VentaActivoFijo = () => {
         'usado': {
           'no-aplica': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'NO CONTRIBUYENTE - Debe facturar vehículo usado',
-              'Exento de IVA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70% (Decreto Nº 4.295/13)',
               'Aplica retención de 1%',
               'Documentar con comprobante de DGA'
             ],
@@ -425,10 +596,15 @@ const VentaActivoFijo = () => {
           },
           'si': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'NO CONTRIBUYENTE - Activo fijo usado',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Factura obligatoria',
-              'Exento de IVA',
               'Aplica retención de 1%'
             ],
             decreto: 'Resolución SET',
@@ -436,9 +612,14 @@ const VentaActivoFijo = () => {
           },
           'no': {
             debe_facturar: true,
+            modo_calculo: '30% Gravado (IVA 10%) + 70% Exento',
+            tasa_iva: '10%',
+            porcentaje_gravado: 30,
+            porcentaje_exento: 70,
             normas: [
               'NO CONTRIBUYENTE - Facturación obligatoria',
-              'Exento de IVA',
+              'Base gravada: 30% con IVA 10%',
+              'Base exenta: 70%',
               'Aplica retención de 1%'
             ],
             decreto: 'Código Tributario',
@@ -670,6 +851,37 @@ const VentaActivoFijo = () => {
                 {getModoFacturacion()}
               </div>
             </div>
+
+            {/* Modo de Cálculo */}
+            {resultado.debe_facturar && (
+              <div className="resultado-card modo-calculo-card">
+                <h4>🧮 Modo de Cálculo</h4>
+                <div className="modo-calculo-content">
+                  <p className="modo-calculo-titulo">{resultado.modo_calculo}</p>
+                  <p className="modo-calculo-tasa">Tasa de IVA: <strong>{resultado.tasa_iva}</strong></p>
+
+                  <div className="calculo-desglose">
+                    <div className="desglose-item gravado">
+                      <span className="desglose-label">Base Gravada:</span>
+                      <span className="desglose-porcentaje">{resultado.porcentaje_gravado}%</span>
+                      <span className="desglose-monto">₲ {((resultado.monto * resultado.porcentaje_gravado) / 100).toLocaleString('es-PY', {minimumFractionDigits: 2})}</span>
+                    </div>
+                    <div className="desglose-item exento">
+                      <span className="desglose-label">Base Exenta:</span>
+                      <span className="desglose-porcentaje">{resultado.porcentaje_exento}%</span>
+                      <span className="desglose-monto">₲ {((resultado.monto * resultado.porcentaje_exento) / 100).toLocaleString('es-PY', {minimumFractionDigits: 2})}</span>
+                    </div>
+                  </div>
+
+                  {resultado.porcentaje_gravado > 0 && (
+                    <div className="calculo-iva">
+                      <p><strong>IVA a pagar:</strong></p>
+                      <p className="iva-monto">₲ {(((resultado.monto * resultado.porcentaje_gravado) / 100) * (parseInt(resultado.tasa_iva) / 100)).toLocaleString('es-PY', {minimumFractionDigits: 2})}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Normativas y Requisitos */}
             <div className="resultado-card normas-card">

@@ -272,6 +272,99 @@
   border-bottom: none;
 }
 
+/* Modo de Cálculo */
+.modo-calculo-card {
+  border-top: 2px solid #9b59b6;
+  background: linear-gradient(135deg, #f5f0ff 0%, #f9fafb 100%);
+}
+
+.modo-calculo-content {
+  padding: 15px 0;
+}
+
+.modo-calculo-titulo {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 10px 0;
+  text-align: center;
+}
+
+.modo-calculo-tasa {
+  font-size: 14px;
+  color: #666;
+  margin: 10px 0;
+  text-align: center;
+}
+
+.calculo-desglose {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin: 15px 0;
+  padding: 15px;
+  background: white;
+  border-radius: 6px;
+}
+
+.desglose-item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.desglose-item.gravado {
+  background: rgba(244, 208, 63, 0.1);
+  border-left: 3px solid #f4d03f;
+}
+
+.desglose-item.exento {
+  background: rgba(39, 174, 96, 0.1);
+  border-left: 3px solid #27ae60;
+}
+
+.desglose-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #666;
+}
+
+.desglose-porcentaje {
+  font-size: 18px;
+  font-weight: 700;
+  color: #333;
+}
+
+.desglose-monto {
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+}
+
+.calculo-iva {
+  background: rgba(102, 126, 234, 0.1);
+  border-left: 3px solid #667eea;
+  padding: 12px 15px;
+  border-radius: 4px;
+  margin-top: 15px;
+  text-align: center;
+}
+
+.calculo-iva p {
+  margin: 5px 0;
+  font-size: 13px;
+  color: #666;
+}
+
+.iva-monto {
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  color: #667eea !important;
+}
+
 /* Marco Legal */
 .marco-legal-card {
   border-top: 2px solid #3498db;
