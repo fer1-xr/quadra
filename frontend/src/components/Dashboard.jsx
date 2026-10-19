@@ -6,6 +6,8 @@ import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
 import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
+import TodoDelDia from './TodoDelDia'
+import MetasAnuales from './MetasAnuales'
 import '../styles/Sidebar.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -148,6 +150,13 @@ function Dashboard({ user, onLogout }) {
                   <h1>Bienvenido a QUADRA</h1>
                   <p>Plataforma integral de conciliación y gestión contable</p>
                 </div>
+
+                {/* TO DO del Día */}
+                <TodoDelDia />
+
+                {/* Metas Anuales y Mensuales */}
+                <MetasAnuales />
+
                 <div className="services-grid">
                   <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
                     <div className="card-icon card-icon--img">
