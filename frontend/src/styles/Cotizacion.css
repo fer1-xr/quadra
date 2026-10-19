@@ -186,7 +186,7 @@
 
 .cotizacion-info {
   background: rgba(15, 20, 25, 0.5);
-  border-left: 3px solid #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.2);
   padding: 16px;
   border-radius: 4px;
 }
