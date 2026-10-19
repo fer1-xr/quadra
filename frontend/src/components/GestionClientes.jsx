@@ -21,7 +21,8 @@ function GestionClientes() {
     tipoImpuesto: 'iva',
     alDia: false,
     honorarios: '',
-    pagoAlDia: false
+    pagoAlDia: false,
+    facturado: false
   })
 
   // Cargar clientes del localStorage
@@ -62,7 +63,8 @@ function GestionClientes() {
       tipoImpuesto: 'iva',
       alDia: false,
       honorarios: '',
-      pagoAlDia: false
+      pagoAlDia: false,
+      facturado: false
     })
     setMostrarFormulario(false)
   }
@@ -87,7 +89,8 @@ function GestionClientes() {
       tipoImpuesto: 'iva',
       alDia: false,
       honorarios: '',
-      pagoAlDia: false
+      pagoAlDia: false,
+      facturado: false
     })
     setEditandoId(null)
     setMostrarFormulario(false)
@@ -213,6 +216,14 @@ function GestionClientes() {
                 />
                 <span>¿Pago al día?</span>
               </label>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={nuevoCliente.facturado}
+                  onChange={(e) => setNuevoCliente({ ...nuevoCliente, facturado: e.target.checked })}
+                />
+                <span>¿Facturado?</span>
+              </label>
             </div>
           </div>
 
@@ -262,6 +273,7 @@ function GestionClientes() {
                 <th>¿Al día?</th>
                 <th>Honorarios</th>
                 <th>¿Pago al día?</th>
+                <th>¿Facturado?</th>
                 <th>Acciones</th>
               </tr>
             </thead>
@@ -286,6 +298,11 @@ function GestionClientes() {
                   <td className="checkbox-cell">
                     <span className={`status-badge ${cliente.pagoAlDia ? 'si' : 'no'}`}>
                       {cliente.pagoAlDia ? '✓' : '✕'}
+                    </span>
+                  </td>
+                  <td className="checkbox-cell">
+                    <span className={`status-badge ${cliente.facturado ? 'si' : 'no'}`}>
+                      {cliente.facturado ? '✓' : '✕'}
                     </span>
                   </td>
                   <td className="acciones">
