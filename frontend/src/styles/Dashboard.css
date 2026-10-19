@@ -37,7 +37,7 @@
   font-weight: 700;
   margin: 0 0 12px 0;
   color: #d4af37;
-  font-family: 'Playfair Display', serif;
+  font-family: Arial, sans-serif;
   letter-spacing: 1px;
 }
 
@@ -153,7 +153,7 @@
   margin: 0 0 14px 0;
   color: #ffffff;
   letter-spacing: 0.3px;
-  font-family: 'Playfair Display', serif;
+  font-family: Arial, sans-serif;
   position: relative;
   z-index: 1;
 }
@@ -167,6 +167,7 @@
   position: relative;
   z-index: 1;
   font-weight: 400;
+  font-family: Arial, sans-serif;
 }
 
 /* Dark mode improvements */
