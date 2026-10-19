@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator } from 'lucide-react'
 import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
@@ -230,8 +230,8 @@ function Dashboard({ user, onLogout }) {
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                   <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
-                    <div className="card-icon card-icon--img">
-                      <img src="/rg90-logo.png" alt="RG90" />
+                    <div className="card-icon">
+                      <Scale size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Conciliación RG90</h3>
                     <p>Compara tu reporte RG90 con el libro de compras según normativa central</p>
@@ -262,8 +262,8 @@ function Dashboard({ user, onLogout }) {
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                   <div className="service-card service-card--liquidacion" onClick={() => handleNavigate('liquidacion')}>
-                    <div className="card-icon card-icon--img">
-                      <img src="/ips-logo.png" alt="IPS" />
+                    <div className="card-icon">
+                      <Calculator size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Liquidación Salarial</h3>
                     <p>Cálculo y gestión de nóminas con descuentos e impuestos</p>
