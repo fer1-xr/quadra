@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users } from 'lucide-react'
 import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
@@ -214,7 +215,7 @@ function Dashboard({ user, onLogout }) {
                 <div className="services-grid">
                   <div className="service-card service-card--todo" onClick={() => handleNavigate('todo')}>
                     <div className="card-icon">
-                      <span className="icon-emoji">📋</span>
+                      <CheckSquare size={56} strokeWidth={1.5} />
                     </div>
                     <h3>TO DO del Día</h3>
                     <p>Gestiona tus tareas diarias con categorización y control de progreso</p>
@@ -222,7 +223,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--metas" onClick={() => handleNavigate('metas')}>
                     <div className="card-icon">
-                      <span className="icon-emoji">🎯</span>
+                      <Target size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Metas Anuales</h3>
                     <p>Establece y alcanza tus objetivos con seguimiento SMART</p>
@@ -238,12 +239,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--bancaria" onClick={() => handleNavigate('bancaria')}>
                     <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                        <path d="M2 10h20"></path>
-                        <rect x="5" y="16" width="3" height="2" rx="0.5"></rect>
-                        <circle cx="12" cy="12" r="1" fill="currentColor"></circle>
-                      </svg>
+                      <CreditCard size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Conciliación Bancaria</h3>
                     <p>Reconcilia movimientos bancarios con registros contables</p>
@@ -251,9 +247,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--documentos" onClick={() => handleNavigate('importar-documentos')}>
                     <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><polyline points="13 2 13 9 20 9"></polyline>
-                      </svg>
+                      <FileText size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Importar Documentos</h3>
                     <p>OCR y procesamiento de PDF e imágenes de comprobantes</p>
@@ -261,7 +255,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--pagos" onClick={() => handleNavigate('control-pagos')}>
                     <div className="card-icon">
-                      <span className="icon-emoji">💳</span>
+                      <DollarSign size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Control de Pagos</h3>
                     <p>Gestión de pólizas y préstamos con seguimiento de pagos mensuales</p>
@@ -277,12 +271,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--activos" onClick={() => handleNavigate('activofijo')}>
                     <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <rect x="3" y="8" width="18" height="11" rx="1"></rect>
-                        <circle cx="6" cy="19" r="1.5" fill="currentColor"></circle>
-                        <circle cx="18" cy="19" r="1.5" fill="currentColor"></circle>
-                        <path d="M8 8L4 4M16 8l4-4"></path>
-                      </svg>
+                      <Truck size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Calculadora Activo Fijo</h3>
                     <p>Depreciación, amortización y valuación de activos</p>
@@ -290,11 +279,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--flujo" onClick={() => handleNavigate('flujo')}>
                     <div className="card-icon">
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <circle cx="12" cy="12" r="9"></circle>
-                        <circle cx="12" cy="12" r="5" fill="currentColor" opacity="0.3"></circle>
-                        <path d="M12 7v10M7 12h10"></path>
-                      </svg>
+                      <TrendingUp size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Flujo de Caja</h3>
                     <p>Proyecciones y análisis de liquidez y efectivo</p>
@@ -302,7 +287,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--cotizacion" onClick={() => handleNavigate('cotizacion')}>
                     <div className="card-icon">
-                      <span className="icon-emoji">💱</span>
+                      <TrendingUp size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Cotización</h3>
                     <p>Consulta tipos de cambio del DNIT por fecha y moneda</p>
@@ -310,7 +295,7 @@ function Dashboard({ user, onLogout }) {
                   </div>
                   <div className="service-card service-card--clientes" onClick={() => handleNavigate('clientes')}>
                     <div className="card-icon">
-                      <span className="icon-emoji">👥</span>
+                      <Users size={56} strokeWidth={1.5} />
                     </div>
                     <h3>Gestión de Clientes</h3>
                     <p>Administra tu listado de clientes, honorarios y pagos</p>

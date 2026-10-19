@@ -17,6 +17,12 @@
         ],
         "createdAt": "2026-10-15T02:10:14.570Z",
         "reason": "Temporary demo file - accent border consistent with Quadra design system"
+      },
+      {
+        "rule": "overused-font",
+        "value": "arial",
+        "createdAt": "2026-10-19T21:49:35.177Z",
+        "reason": "user requested Arial as primary font"
       }
     ]
   }
