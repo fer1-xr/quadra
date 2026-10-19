@@ -9,6 +9,7 @@ import ImportarDocumentos from './ImportarDocumentos'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
+import LeccionDelDia from './LeccionDelDia'
 import '../styles/Sidebar.css'
 import '../styles/Dashboard.css'
 
@@ -92,6 +93,9 @@ function Dashboard({ user, onLogout }) {
 
   const handleNavigate = (viewId) => {
     switch (viewId) {
+      case 'leccion':
+        setView('leccion')
+        break
       case 'rg90':
         setView('rg90')
         break
@@ -435,6 +439,10 @@ function Dashboard({ user, onLogout }) {
 
             {view === 'cotizacion' && (
               <Cotizacion />
+            )}
+
+            {view === 'leccion' && (
+              <LeccionDelDia />
             )}
           </div>
         </div>

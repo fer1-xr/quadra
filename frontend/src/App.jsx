@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
+import leccionScheduler from './services/leccionScheduler'
 import './App.css'
 
 function App() {
@@ -13,11 +14,18 @@ function App() {
 
     if (token && storedUser) {
       setUser(JSON.parse(storedUser))
+      // Iniciar el scheduler de lecciones cuando el usuario está autenticado
+      leccionScheduler.start()
     } else {
       // Redirigir a login si no hay sesión
       window.location.href = '/login'
     }
     setLoading(false)
+
+    // Limpiar el scheduler cuando se desmonta el componente
+    return () => {
+      leccionScheduler.stop()
+    }
   }, [])
 
   const handleLogout = () => {

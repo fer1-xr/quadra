@@ -59,6 +59,15 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
 
   const menuItems = [
     { id: 'inicio', label: 'INICIO', icon: '🏠' },
+    { id: 'leccion', label: 'Leccion del Dia', icon: '📚', isSvg: true, svg: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        <line x1="8" y1="6" x2="16" y2="6"></line>
+        <line x1="8" y1="10" x2="16" y2="10"></line>
+        <line x1="8" y1="14" x2="16" y2="14"></line>
+      </svg>
+    )},
     { id: 'buscar', label: 'Buscar', icon: '🔍', isSvg: true, svg: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <circle cx="11" cy="11" r="8"></circle>
