@@ -45,7 +45,7 @@
   margin: 20px;
   padding: 15px;
   background-color: #fee;
-  border-left: 4px solid #f44;
+  border-top: 2px solid #f44;
   color: #c33;
   border-radius: 4px;
   font-size: 14px;
@@ -182,7 +182,7 @@
 /* Tarjeta de Datos */
 .datos-card {
   background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 100%);
-  border-left: 4px solid #667eea;
+  border-top: 2px solid #667eea;
 }
 
 .dato-row {
@@ -209,7 +209,7 @@
 
 /* Modo de Facturación */
 .modo-facturacion {
-  border-left: 4px solid #667eea;
+  border-top: 3px solid #667eea;
   background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 100%);
 }
 
@@ -224,7 +224,7 @@
 }
 
 .modo-facturacion.debe-facturar {
-  border-left-color: #27ae60;
+  border-top-color: #27ae60;
 }
 
 .modo-facturacion.debe-facturar .modo-principal {
@@ -232,7 +232,7 @@
 }
 
 .modo-facturacion.no-facturar {
-  border-left-color: #e74c3c;
+  border-top-color: #e74c3c;
 }
 
 .modo-facturacion.no-facturar .modo-principal {
@@ -241,7 +241,7 @@
 
 /* Normas */
 .normas-card {
-  border-left: 4px solid #f39c12;
+  border-top: 2px solid #f39c12;
 }
 
 .normas-list {
@@ -274,7 +274,7 @@
 
 /* Marco Legal */
 .marco-legal-card {
-  border-left: 4px solid #3498db;
+  border-top: 2px solid #3498db;
 }
 
 .decreto {
@@ -285,7 +285,7 @@
   font-size: 14px;
   font-weight: 500;
   margin: 10px 0;
-  border-left: 3px solid #3498db;
+  border-left: 2px solid #3498db;
 }
 
 .fuente-link {
@@ -305,7 +305,7 @@
 /* Advertencia */
 .advertencia-card {
   background: linear-gradient(135deg, #fef5e7 0%, #fdf2e9 100%);
-  border-left: 4px solid #f39c12;
+  border-top: 2px solid #f39c12;
 }
 
 .advertencia-card p {
