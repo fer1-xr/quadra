@@ -9,6 +9,7 @@ import ImportarDocumentos from './ImportarDocumentos'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import '../styles/Sidebar.css'
+import '../styles/Dashboard.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
@@ -111,6 +112,12 @@ function Dashboard({ user, onLogout }) {
       case 'cuenta':
         setView('cuenta')
         break
+      case 'todo':
+        setView('todo')
+        break
+      case 'metas':
+        setView('metas')
+        break
       default:
         setView('inicio')
     }
@@ -150,14 +157,23 @@ function Dashboard({ user, onLogout }) {
                   <h1>Bienvenido a QUADRA</h1>
                   <p>Plataforma integral de conciliación y gestión contable</p>
                 </div>
-
-                {/* TO DO del Día */}
-                <TodoDelDia />
-
-                {/* Metas Anuales y Mensuales */}
-                <MetasAnuales />
-
                 <div className="services-grid">
+                  <div className="service-card service-card--todo" onClick={() => handleNavigate('todo')}>
+                    <div className="card-icon">
+                      <span className="icon-emoji">📋</span>
+                    </div>
+                    <h3>TO DO del Día</h3>
+                    <p>Gestiona tus tareas diarias con categorización y control de progreso</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card service-card--metas" onClick={() => handleNavigate('metas')}>
+                    <div className="card-icon">
+                      <span className="icon-emoji">🎯</span>
+                    </div>
+                    <h3>Metas Anuales</h3>
+                    <p>Establece y alcanza tus objetivos con seguimiento SMART</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
                   <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
                     <div className="card-icon card-icon--img">
                       <img src="/rg90-logo.png" alt="RG90" />
@@ -395,6 +411,14 @@ function Dashboard({ user, onLogout }) {
                   </div>
                 </div>
               </div>
+            )}
+
+            {view === 'todo' && (
+              <TodoDelDia />
+            )}
+
+            {view === 'metas' && (
+              <MetasAnuales />
             )}
           </div>
         </div>
