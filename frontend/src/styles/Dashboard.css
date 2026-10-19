@@ -219,6 +219,15 @@
   box-shadow: 0 20px 40px rgba(255, 193, 7, 0.1);
 }
 
+.service-card--clientes {
+  border-color: rgba(138, 126, 234, 0.2);
+}
+
+.service-card--clientes:hover {
+  border-color: rgba(138, 126, 234, 0.4);
+  box-shadow: 0 20px 40px rgba(138, 126, 234, 0.1);
+}
+
 /* ========== BUTTONS ========== */
 
 .btn {

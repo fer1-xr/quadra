@@ -10,6 +10,7 @@ import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
 import LeccionDelDia from './LeccionDelDia'
+import GestionClientes from './GestionClientes'
 import '../styles/Sidebar.css'
 import '../styles/Dashboard.css'
 
@@ -125,6 +126,9 @@ function Dashboard({ user, onLogout }) {
         break
       case 'metas':
         setView('metas')
+        break
+      case 'clientes':
+        setView('clientes')
         break
       default:
         setView('inicio')
@@ -252,6 +256,14 @@ function Dashboard({ user, onLogout }) {
                     </div>
                     <h3>Cotización</h3>
                     <p>Consulta tipos de cambio del DNIT por fecha y moneda</p>
+                    <button className="btn btn-primary">Acceder →</button>
+                  </div>
+                  <div className="service-card service-card--clientes" onClick={() => handleNavigate('clientes')}>
+                    <div className="card-icon">
+                      <span className="icon-emoji">👥</span>
+                    </div>
+                    <h3>Gestión de Clientes</h3>
+                    <p>Administra tu listado de clientes, honorarios y pagos</p>
                     <button className="btn btn-primary">Acceder →</button>
                   </div>
                 </div>
@@ -443,6 +455,10 @@ function Dashboard({ user, onLogout }) {
 
             {view === 'leccion' && (
               <LeccionDelDia />
+            )}
+
+            {view === 'clientes' && (
+              <GestionClientes />
             )}
           </div>
         </div>
