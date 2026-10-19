@@ -19,109 +19,120 @@ const VentaActivoFijo = () => {
       'prestador-servicios': {
         'no-aplica': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Debe emitir factura de venta de inmuebles',
-            'Base gravada: 30% del valor neto con IVA 5%',
-            'Base exenta: 70% del valor neto',
-            'Debe informar al SET la venta'
+            'Persona física no contribuyente',
+            'Factura de venta de inmuebles exenta (opcional emitir)',
+            'IRP (Impuesto de Renta sobre la Ganancia): 2.4% retenido por escribano público',
+            'Escritura y comprobante de retención constituyen documentación completa',
+            'Base para IRP: diferencia entre precio de venta y costo de adquisición'
           ],
-          decreto: 'Decreto 14.627/92 - Código Tributario de Paraguay',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'si': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
+          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento + IRP',
+          tasa_iva: '5% (sobre 30%)',
           porcentaje_gravado: 30,
           porcentaje_exento: 70,
           normas: [
-            'Debe facturar como venta de activo fijo',
-            'El activo debe ser registrado previamente en la contabilidad',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70% exento'
+            'Empresa unipersonal con IRE General (inmueble como activo de empresa)',
+            'Facturación: 30% gravado por IVA 5% + 70% exento',
+            'Dos opciones de cálculo de renta:',
+            '  • Renta presunta: 30% del valor de venta (tasa IRE 10%)',
+            '  • Renta real: ingreso menos valor de adquisición (tasa IRE 10%)',
+            'No hay retención IRP adicional'
           ],
-          decreto: 'Ley 1.682/2001 - Estatuto Tributario',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'no': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Como no es activo de la empresa, debe facturar la venta',
-            'Base gravada: 30% del monto con IVA 5%',
-            'Base exenta: 70% exento',
-            'Aplica el régimen de personas físicas'
+            'Empresa unipersonal IRE General (inmueble FUERA de activo)',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Base para IRP: ganancia por venta (precio venta menos costo adquisición)',
+            'Tasa IRE General: 10% sobre la ganancia neta'
           ],
-          decreto: 'Código Tributario - Art. 15',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         }
       },
       'ire-simple': {
         'no-aplica': {
-          debe_facturar: false,
-          modo_calculo: 'No aplica - Sin facturación obligatoria',
-          tasa_iva: 'N/A',
+          debe_facturar: true,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
           porcentaje_gravado: 0,
-          porcentaje_exento: 0,
+          porcentaje_exento: 100,
           normas: [
-            'IRE SIMPLE está exento de facturación obligatoria',
-            'No es obligatorio facturar inmuebles',
-            'Debe declarar la renta en liquidación anual'
+            'IRE SIMPLE - Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Escritura y comprobante de retención bastan como documentación',
+            'No requiere facturación virtual/electrónica especial',
+            'Impuesto a la renta SIMPLE aplica sobre la ganancia: 10% + 0.5% Fondo Educativo'
           ],
-          decreto: 'Ley Nº 125/91 - Régimen de Impuesto a la Renta Simple',
-          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'si': {
-          debe_facturar: false,
-          modo_calculo: 'No aplica - Sin facturación obligatoria',
-          tasa_iva: 'N/A',
+          debe_facturar: true,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
           porcentaje_gravado: 0,
-          porcentaje_exento: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Si es activo de la empresa bajo IRE SIMPLE, generalmente está exento',
-            'No requiere facturación especial',
-            'Reportar en formulario anual'
+            'IRE SIMPLE - Activo de empresa',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Reportar en declaración anual de IRE Simple',
+            'Ganancia: precio venta menos valor en libros del activo'
           ],
-          decreto: 'Ley Nº 125/91 - Régimen de IRE Simple',
-          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'no': {
-          debe_facturar: false,
-          modo_calculo: 'No aplica - Sin facturación obligatoria',
-          tasa_iva: 'N/A',
+          debe_facturar: true,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
           porcentaje_gravado: 0,
-          porcentaje_exento: 0,
+          porcentaje_exento: 100,
           normas: [
-            'No aplicable para IRE SIMPLE sin actividad comercial',
-            'No requiere factura',
-            'Puede informar voluntariamente al SET'
+            'IRE SIMPLE - Persona física o microempresa',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Bien de uso personal (fuera de actividad comercial)',
+            'Ganancia gravada: precio venta menos costo de adquisición'
           ],
-          decreto: 'Ley Nº 125/91',
-          fuente: 'https://www.bacn.gov.py/leyes-paraguayas/2345/ley-n-125-establece-el-nuevo-regimen-tributario'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         }
       },
       'ire-general': {
         'no-aplica': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Debe emitir factura obligatoriamente',
-            'IRE GENERAL exige facturación para todas las transacciones',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%'
+            'IRE GENERAL - Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Impuesto a la Renta General: 10% sobre la ganancia neta',
+            'Ganancia: precio venta menos valor de adquisición',
+            'Debe inscribirse ante SET como contribuyente de IRE General'
           ],
-          decreto: 'Ley Nº 125/91 - IRE General Art. 8',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'si': {
           debe_facturar: true,
@@ -130,75 +141,78 @@ const VentaActivoFijo = () => {
           porcentaje_gravado: 30,
           porcentaje_exento: 70,
           normas: [
-            'Obligatorio facturar como venta de bien de activo fijo',
-            'Debe coincidir con registros contables',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%'
+            'IRE GENERAL - Empresa unipersonal con inmueble como ACTIVO FIJO',
+            'Factura: 30% gravado por IVA 5% + 70% exento',
+            'Dos opciones de cálculo de renta:',
+            '  • Renta presunta: 30% del valor de venta (tasa IRE General 10%)',
+            '  • Renta real: (ingreso menos valor de adquisición) x tasa 10%',
+            'Debe coincidir con registros contables y depreciaciones'
           ],
-          decreto: 'Ley Nº 125/91 y Decreto 14.627/92',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'no': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Bajo IRE GENERAL debe facturar obligatoriamente',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%',
-            'Aplican todas las retenciones e impuestos correspondientes'
+            'IRE GENERAL - Bien FUERA del activo de empresa',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Impuesto a la Renta General: 10% sobre la ganancia',
+            'Documentación: escritura y comprobante de retención IRP'
           ],
-          decreto: 'Código Tributario Art. 128',
-          fuente: 'https://www.dnit.gov.py/en/web/portal-institucional/w/iva-transferencia-de-inmueble'
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
+          fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         }
       },
       'no-contribuyente': {
         'no-aplica': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'No contribuyente debe emitir factura de venta de inmueble',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%',
-            'Indicar su condición como no contribuyente en la factura',
-            'Aplica retención del 2% sobre el monto por el comprador'
+            'Persona física no registrada ante SET (no contribuyente)',
+            'Factura de venta de inmuebles exenta (opcional)',
+            'IRP (Impuesto sobre Ganancia): 2.4% retenido por escribano público',
+            'Escritura y comprobante de retención constituyen documentación completa',
+            'Base para IRP: diferencia entre precio de venta y costo de adquisición'
           ],
-          decreto: 'Resolución SET relativa a No Contribuyentes',
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
           fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'si': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Debe facturar como no contribuyente',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%',
-            'Indica la venta de activo de la empresa',
-            'Aplica retención de 2%'
+            'No contribuyente - Bien registrado como activo de empresa',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Ganancia = precio venta menos valor en libros del activo',
+            'Se recomienda registrarse ante SET antes de la venta'
           ],
-          decreto: 'Resolución SET',
+          decreto: 'Ley 6380/19 - Arts. 19, 30, 82 y 85. Decreto 3.184/19',
           fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
         },
         'no': {
           debe_facturar: true,
-          modo_calculo: '30% Gravado (IVA 5%) + 70% Exento',
-          tasa_iva: '5%',
-          porcentaje_gravado: 30,
-          porcentaje_exento: 70,
+          modo_calculo: 'Factura Exenta (Sin IVA) + IRP 2.4%',
+          tasa_iva: 'N/A - Exento',
+          porcentaje_gravado: 0,
+          porcentaje_exento: 100,
           normas: [
-            'Como persona sin condición de contribuyente debe facturar',
-            'Base gravada: 30% con IVA 5%',
-            'Base exenta: 70%',
-            'Informa que el bien no es activo de empresa',
-            'Aplica normativa de persona física'
+            'Persona física no registrada (no contribuyente)',
+            'Bien de uso personal, no relacionado con actividad comercial',
+            'Factura exenta, sin IVA',
+            'IRP del 2.4% retenido por escribano público',
+            'Base para IRP: ganancia por venta'
           ],
           decreto: 'Código Tributario',
           fuente: 'https://consultoria.com.py/caceres-schneider-asesoramiento-tributario-en-la-venta-de-inmuebles/'
