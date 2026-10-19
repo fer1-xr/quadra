@@ -1,0 +1,390 @@
+.venta-activo-fijo-container {
+  min-height: 100vh;
+  padding: 20px;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.venta-activo-fijo-container .card {
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.venta-activo-fijo-container h2 {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px 30px 20px;
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.venta-activo-fijo-container .subtitle {
+  color: #666;
+  padding: 0 30px 20px;
+  margin: 0;
+  font-size: 14px;
+}
+
+.error-message {
+  margin: 20px;
+  padding: 15px;
+  background-color: #fee;
+  border-left: 4px solid #f44;
+  color: #c33;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Formulario */
+.venta-form {
+  padding: 30px;
+}
+
+.form-section {
+  margin-bottom: 30px;
+}
+
+.form-section h3 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  color: #555;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.select-input,
+.input-number {
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  font-family: inherit;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.select-input:focus,
+.input-number:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+/* Botones */
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  width: 100%;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+}
+
+/* Resultado */
+.resultado-section {
+  padding: 30px;
+}
+
+.resultado-header {
+  margin-bottom: 30px;
+}
+
+.resultado-header h3 {
+  color: #333;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.resultado-card {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.resultado-card h4 {
+  color: #333;
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 15px 0;
+}
+
+/* Tarjeta de Datos */
+.datos-card {
+  background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 100%);
+  border-left: 4px solid #667eea;
+}
+
+.dato-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.dato-row:last-child {
+  border-bottom: none;
+}
+
+.dato-row span {
+  color: #666;
+  font-weight: 500;
+}
+
+.dato-row strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Modo de Facturación */
+.modo-facturacion {
+  border-left: 4px solid #667eea;
+  background: linear-gradient(135deg, #f0f4ff 0%, #f9fafb 100%);
+}
+
+.modo-principal {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 15px;
+  text-align: center;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+}
+
+.modo-facturacion.debe-facturar {
+  border-left-color: #27ae60;
+}
+
+.modo-facturacion.debe-facturar .modo-principal {
+  color: #27ae60;
+}
+
+.modo-facturacion.no-facturar {
+  border-left-color: #e74c3c;
+}
+
+.modo-facturacion.no-facturar .modo-principal {
+  color: #e74c3c;
+}
+
+/* Normas */
+.normas-card {
+  border-left: 4px solid #f39c12;
+}
+
+.normas-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.normas-list li {
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+  color: #555;
+  font-size: 14px;
+  line-height: 1.5;
+  position: relative;
+  padding-left: 20px;
+}
+
+.normas-list li:before {
+  content: '✓';
+  position: absolute;
+  left: 0;
+  color: #27ae60;
+  font-weight: bold;
+}
+
+.normas-list li:last-child {
+  border-bottom: none;
+}
+
+/* Marco Legal */
+.marco-legal-card {
+  border-left: 4px solid #3498db;
+}
+
+.decreto {
+  background: white;
+  padding: 12px;
+  border-radius: 4px;
+  color: #333;
+  font-size: 14px;
+  font-weight: 500;
+  margin: 10px 0;
+  border-left: 3px solid #3498db;
+}
+
+.fuente-link {
+  color: #3498db;
+  text-decoration: none;
+  font-size: 14px;
+  word-break: break-all;
+  display: inline-block;
+  transition: color 0.3s;
+}
+
+.fuente-link:hover {
+  color: #2980b9;
+  text-decoration: underline;
+}
+
+/* Advertencia */
+.advertencia-card {
+  background: linear-gradient(135deg, #fef5e7 0%, #fdf2e9 100%);
+  border-left: 4px solid #f39c12;
+}
+
+.advertencia-card p {
+  color: #7d5f00;
+  font-size: 13px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Botones de Acción */
+.button-group {
+  display: flex;
+  gap: 10px;
+  margin-top: 30px;
+  justify-content: center;
+}
+
+.button-group .btn {
+  min-width: 150px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .venta-activo-fijo-container {
+    padding: 10px;
+  }
+
+  .venta-activo-fijo-container .card {
+    border-radius: 8px;
+  }
+
+  .venta-activo-fijo-container h2 {
+    font-size: 24px;
+    padding: 20px 20px 15px;
+  }
+
+  .venta-form,
+  .resultado-section {
+    padding: 20px;
+  }
+
+  .dato-row {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .fuente-link {
+    font-size: 12px;
+  }
+
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group .btn {
+    width: 100%;
+  }
+}
+
+/* Estados de botones */
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+/* Animaciones de carga */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.loading {
+  animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

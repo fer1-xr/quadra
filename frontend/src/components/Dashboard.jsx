@@ -4,6 +4,7 @@ import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
+import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
 import '../styles/Sidebar.css'
 
@@ -329,29 +330,7 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'activofijo' && (
-              <div className="card">
-                <h2>🏢 Calculadora de Activo Fijo</h2>
-                <p style={{ color: '#666', fontSize: '16px', marginBottom: '20px' }}>Gestiona la depreciación y valuación de activos fijos</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Descripción del Activo</label>
-                    <input type="text" placeholder="Ej: Máquina, Equipo, etc" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Valor Inicial</label>
-                    <input type="number" placeholder="Valor inicial" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Vida Útil (años)</label>
-                    <input type="number" placeholder="Años" min="1" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold' }}>Valor Residual</label>
-                    <input type="number" placeholder="Valor residual" style={{ width: '100%', padding: '10px', border: '1px solid #ddd', borderRadius: '4px' }} />
-                  </div>
-                </div>
-                <button className="btn btn-primary">Calcular Depreciación</button>
-              </div>
+              <VentaActivoFijo />
             )}
 
             {view === 'flujo' && (
