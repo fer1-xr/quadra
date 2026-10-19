@@ -22,6 +22,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 function Dashboard({ user, onLogout }) {
   const [rg90File, setRg90File] = useState(null)
   const [libroFile, setLibroFile] = useState(null)
+  const [rg90Files, setRg90Files] = useState([])
   const [discrepancies, setDiscrepancies] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -29,6 +30,23 @@ function Dashboard({ user, onLogout }) {
   const [view, setView] = useState('inicio')
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
+  const [monthlyInputCount, setMonthlyInputCount] = useState(1)
+
+  const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+
+  const handleMonthlyFile = (index, file) => {
+    const newFiles = [...rg90Files]
+    if (file) {
+      newFiles[index] = { file, month: months[index] || `Mes ${index + 1}` }
+    } else {
+      newFiles.splice(index, 1)
+    }
+    setRg90Files(newFiles)
+  }
+
+  const addMonthlyInput = () => {
+    setMonthlyInputCount(prev => prev + 1)
+  }
 
   const readFile = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -44,15 +62,19 @@ function Dashboard({ user, onLogout }) {
   })
 
   const handleReconciliation = async () => {
-    if (!rg90File || !libroFile) { setError('Cargá ambos archivos'); return }
+    if (rg90Files.length === 0 || !libroFile) { setError('Cargá los archivos mensuales y el archivo de Maragnatu'); return }
     setLoading(true)
     setError('')
     try {
-      const rg90Data = await readFile(rg90File)
       const libroData = await readFile(libroFile)
+      const monthlyData = []
+      for (const fileObj of rg90Files) {
+        const fileData = await readFile(fileObj.file)
+        monthlyData.push({ month: fileObj.month, data: fileData })
+      }
       const token = localStorage.getItem('quaedra_token')
       const response = await axios.post(`${API_BASE_URL}/api/reconciliation`,
-        { rg90Data, libroData },
+        { monthlyData, libroData },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setDiscrepancies(response.data.discrepancies)
@@ -284,21 +306,34 @@ function Dashboard({ user, onLogout }) {
 
             {view === 'rg90' && (
               <div className="card">
-                <h2>📊 Conciliación RG90 vs Libro Compras</h2>
+                <h2>📊 Conciliación: Compras / Ventas / Notas de Crédito vs Comprobantes Maragnatu</h2>
                 {error && <div className="error-message">{error}</div>}
-                <div className="file-input">
-                  <div className="file-input-group">
-                    <label>Reporte RG90 (CSV o Excel)</label>
-                    <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setRg90File(e.target.files[0])} />
-                    {rg90File && <div className="file-name">✓ {rg90File.name}</div>}
+                <div className="rg90-note" style={{ background: 'rgba(212, 175, 55, 0.08)', border: '1px solid rgba(212, 175, 55, 0.25)', padding: '12px 16px', borderRadius: '8px', marginBottom: '24px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  💡 Cargá los archivos mensuales del año. Podes agregar múltiples archivos para enero a diciembre. Se conciliarán contra el registro de comprobantes de Maragnatu.
+                </div>
+                <div className="rg90-upload-section">
+                  <div className="file-input">
+                    <div className="file-input-group">
+                      <label>Archivo Maragnatu (Comprobantes)</label>
+                      <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setLibroFile(e.target.files[0])} />
+                      {libroFile && <div className="file-name">✓ {libroFile.name}</div>}
+                    </div>
                   </div>
-                  <div className="file-input-group">
-                    <label>Libro Compras (CSV o Excel)</label>
-                    <input type="file" accept=".csv,.xlsx,.xls" onChange={(e) => setLibroFile(e.target.files[0])} />
-                    {libroFile && <div className="file-name">✓ {libroFile.name}</div>}
+                  <div style={{ marginTop: '24px' }}>
+                    <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>Reportes Mensuales (Compras/Ventas/Notas de Crédito)</label>
+                    <div className="monthly-files-container" id="monthly-files-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                      {Array.from({ length: monthlyInputCount }).map((_, index) => (
+                        <div key={index} className="file-input-group" style={{ position: 'relative' }}>
+                          <label style={{ color: 'var(--text-primary)', fontSize: '13px', marginBottom: '8px' }}>{months[index] || `Mes ${index + 1}`}</label>
+                          <input type="file" accept=".csv,.xlsx,.xls" className="monthly-file-input" onChange={(e) => handleMonthlyFile(index, e.target.files[0])} />
+                          {rg90Files[index] && <div className="file-name">✓ {rg90Files[index].file.name}</div>}
+                        </div>
+                      ))}
+                    </div>
+                    <button className="btn" onClick={addMonthlyInput} style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', marginBottom: '20px' }}>+ Agregar archivo</button>
                   </div>
                 </div>
-                <button className="btn btn-primary" onClick={handleReconciliation} disabled={loading || !rg90File || !libroFile}>
+                <button className="btn btn-primary" onClick={handleReconciliation} disabled={loading || rg90Files.length === 0 || !libroFile}>
                   {loading ? 'Procesando...' : '▶ Ejecutar Conciliación'}
                 </button>
               </div>
@@ -344,7 +379,7 @@ function Dashboard({ user, onLogout }) {
                 </div>
                 <div className="button-group">
                   <button className="btn btn-success" onClick={handleExport}>⬇ Descargar Excel</button>
-                  <button className="btn btn-primary" onClick={() => { setDiscrepancies([]); setView('rg90') }}>🔄 Nueva Conciliación</button>
+                  <button className="btn btn-primary" onClick={() => { setDiscrepancies([]); setRg90Files([]); setLibroFile(null); setMonthlyInputCount(1); setView('rg90') }}>🔄 Nueva Conciliación</button>
                 </div>
               </div>
             )}
