@@ -375,6 +375,20 @@
   border: 1px solid #f5c6cb;
 }
 
+.status-badge.clickable-badge {
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-badge.clickable-badge:hover {
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.status-badge.clickable-badge:active {
+  transform: scale(0.95);
+}
+
 .honorarios {
   font-weight: 600;
   color: #333;

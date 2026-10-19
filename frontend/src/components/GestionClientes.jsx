@@ -96,6 +96,24 @@ function GestionClientes() {
     setMostrarFormulario(false)
   }
 
+  const toggleAlDia = (id) => {
+    setClientes(clientes.map(c =>
+      c.id === id ? { ...c, alDia: !c.alDia } : c
+    ))
+  }
+
+  const togglePagoAlDia = (id) => {
+    setClientes(clientes.map(c =>
+      c.id === id ? { ...c, pagoAlDia: !c.pagoAlDia } : c
+    ))
+  }
+
+  const toggleFacturado = (id) => {
+    setClientes(clientes.map(c =>
+      c.id === id ? { ...c, facturado: !c.facturado } : c
+    ))
+  }
+
   const getTipoImpuestoLabel = (id) => {
     return TIPOS_IMPUESTO.find(t => t.id === id)?.label || id
   }
@@ -288,22 +306,34 @@ function GestionClientes() {
                     <span className="badge">{getTipoImpuestoLabel(cliente.tipoImpuesto)}</span>
                   </td>
                   <td className="checkbox-cell">
-                    <span className={`status-badge ${cliente.alDia ? 'si' : 'no'}`}>
+                    <button
+                      className={`status-badge ${cliente.alDia ? 'si' : 'no'} clickable-badge`}
+                      onClick={() => toggleAlDia(cliente.id)}
+                      title="Click para cambiar estado"
+                    >
                       {cliente.alDia ? '✓' : '✕'}
-                    </span>
+                    </button>
                   </td>
                   <td className="honorarios">
                     {cliente.honorarios ? `${parseFloat(cliente.honorarios).toLocaleString('es-PY', { maximumFractionDigits: 0 })} GS` : '-'}
                   </td>
                   <td className="checkbox-cell">
-                    <span className={`status-badge ${cliente.pagoAlDia ? 'si' : 'no'}`}>
+                    <button
+                      className={`status-badge ${cliente.pagoAlDia ? 'si' : 'no'} clickable-badge`}
+                      onClick={() => togglePagoAlDia(cliente.id)}
+                      title="Click para cambiar estado"
+                    >
                       {cliente.pagoAlDia ? '✓' : '✕'}
-                    </span>
+                    </button>
                   </td>
                   <td className="checkbox-cell">
-                    <span className={`status-badge ${cliente.facturado ? 'si' : 'no'}`}>
+                    <button
+                      className={`status-badge ${cliente.facturado ? 'si' : 'no'} clickable-badge`}
+                      onClick={() => toggleFacturado(cliente.id)}
+                      title="Click para cambiar estado"
+                    >
                       {cliente.facturado ? '✓' : '✕'}
-                    </span>
+                    </button>
                   </td>
                   <td className="acciones">
                     <button
