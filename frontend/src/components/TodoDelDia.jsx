@@ -9,21 +9,30 @@ const CATEGORIAS = [
   { id: 'financiero', label: 'Financiero', color: '#98D8C8' }
 ]
 
+const DIAS_SEMANA = [
+  { id: 'lunes', label: 'Lunes' },
+  { id: 'martes', label: 'Martes' },
+  { id: 'miercoles', label: 'Miércoles' },
+  { id: 'jueves', label: 'Jueves' },
+  { id: 'viernes', label: 'Viernes' }
+]
+
 function TodoDelDia() {
   const [tareas, setTareas] = useState([])
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
+  const [mostrarCompletadas, setMostrarCompletadas] = useState(false)
   const [nuevaTarea, setNuevaTarea] = useState({
     titulo: '',
     categoria: 'tributacion',
-    fecha: new Date().toISOString().split('T')[0],
     hora: '17:00',
+    dia: 'lunes',
+    prioridad: 'media',
     pasos: [],
     completada: false
   })
   const [editandoTarea, setEditandoTarea] = useState(null)
   const [nuevoPaso, setNuevoPaso] = useState('')
 
-  // Cargar tareas del localStorage
   useEffect(() => {
     const tareasGuardadas = localStorage.getItem('quadra_tareas_diarias')
     if (tareasGuardadas) {
@@ -31,7 +40,6 @@ function TodoDelDia() {
     }
   }, [])
 
-  // Guardar tareas en localStorage
   useEffect(() => {
     localStorage.setItem('quadra_tareas_diarias', JSON.stringify(tareas))
   }, [tareas])
@@ -52,8 +60,9 @@ function TodoDelDia() {
     setNuevaTarea({
       titulo: '',
       categoria: 'tributacion',
-      fecha: new Date().toISOString().split('T')[0],
       hora: '17:00',
+      dia: 'lunes',
+      prioridad: 'media',
       pasos: [],
       completada: false
     })
@@ -99,50 +108,48 @@ function TodoDelDia() {
     setTareas(tareas.filter(tarea => tarea.id !== tareaId))
   }
 
-  const eliminarPaso = (tareaId, pasoId) => {
-    setTareas(tareas.map(tarea => {
-      if (tarea.id === tareaId) {
-        return {
-          ...tarea,
-          pasos: tarea.pasos.filter(paso => paso.id !== pasoId)
-        }
-      }
-      return tarea
-    }))
+  const getTareasPorDia = (diaId) => {
+    return mostrarCompletadas
+      ? tareas.filter(t => t.dia === diaId && t.completada)
+      : tareas.filter(t => t.dia === diaId && !t.completada)
   }
 
-  const getTareasHoy = () => {
-    const hoy = new Date().toISOString().split('T')[0]
-    return tareas.filter(t => t.fecha === hoy && !t.completada)
+  const getTareas3Principales = (diaId) => {
+    return getTareasPorDia(diaId).filter(t => t.prioridad === 'alta').slice(0, 3)
   }
 
-  const getTareasPorCategoria = (categoria) => {
-    return getTareasHoy().filter(t => t.categoria === categoria).length
+  const getTareasRestantes = (diaId) => {
+    const principales = getTareasPorDia(diaId).filter(t => t.prioridad === 'alta').slice(0, 3)
+    return getTareasPorDia(diaId).filter(t => !principales.includes(t))
   }
 
   const getCategoriaInfo = (categoriaId) => {
     return CATEGORIAS.find(c => c.id === categoriaId)
   }
 
-  const tareasHoy = getTareasHoy()
   const tareasCompletadas = tareas.filter(t => t.completada).length
+  const tareasPendientes = tareas.filter(t => !t.completada).length
 
   return (
     <div className="todo-del-dia">
       <div className="todo-header">
         <div className="todo-titulo">
-          <h3>📋 TO DO del Día</h3>
-          <p className="todo-subtitulo">Tareas pendientes para hoy</p>
+          <h3>📋 TO DO de la Semana</h3>
+          <p className="todo-subtitulo">Organiza tus tareas por día (Lunes a Viernes)</p>
         </div>
-        <div className="todo-stats">
-          <div className="stat-box">
-            <span className="stat-number">{tareasHoy.length}</span>
-            <span className="stat-label">Pendientes</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-number">{tareasCompletadas}</span>
-            <span className="stat-label">Completadas</span>
-          </div>
+        <div className="todo-pestanas">
+          <button
+            className={`pestaña ${!mostrarCompletadas ? 'activa' : ''}`}
+            onClick={() => setMostrarCompletadas(false)}
+          >
+            Pendientes ({tareasPendientes})
+          </button>
+          <button
+            className={`pestaña ${mostrarCompletadas ? 'activa' : ''}`}
+            onClick={() => setMostrarCompletadas(true)}
+          >
+            Completadas ({tareasCompletadas})
+          </button>
         </div>
       </div>
 
@@ -155,7 +162,7 @@ function TodoDelDia() {
               type="text"
               value={nuevaTarea.titulo}
               onChange={(e) => setNuevaTarea({ ...nuevaTarea, titulo: e.target.value })}
-              placeholder="Ej: Revisar comprobantes RG90"
+              placeholder="Ej: Revisar comprobantes"
               autoFocus
             />
           </div>
@@ -174,16 +181,31 @@ function TodoDelDia() {
             </div>
 
             <div className="form-group">
-              <label>Fecha</label>
-              <input
-                type="date"
-                value={nuevaTarea.fecha}
-                onChange={(e) => setNuevaTarea({ ...nuevaTarea, fecha: e.target.value })}
-              />
+              <label>Día</label>
+              <select
+                value={nuevaTarea.dia}
+                onChange={(e) => setNuevaTarea({ ...nuevaTarea, dia: e.target.value })}
+              >
+                {DIAS_SEMANA.map(dia => (
+                  <option key={dia.id} value={dia.id}>{dia.label}</option>
+                ))}
+              </select>
             </div>
 
             <div className="form-group">
-              <label>Hora Límite</label>
+              <label>Prioridad</label>
+              <select
+                value={nuevaTarea.prioridad}
+                onChange={(e) => setNuevaTarea({ ...nuevaTarea, prioridad: e.target.value })}
+              >
+                <option value="baja">Baja</option>
+                <option value="media">Media</option>
+                <option value="alta">Alta</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label>Hora</label>
               <input
                 type="time"
                 value={nuevaTarea.hora}
@@ -206,132 +228,101 @@ function TodoDelDia() {
         </button>
       )}
 
-      {/* Lista de tareas */}
-      <div className="tareas-list">
-        {tareasHoy.length === 0 ? (
-          <div className="tareas-vacio">
-            <p>✓ No hay tareas pendientes para hoy</p>
-          </div>
-        ) : (
-          tareasHoy.map(tarea => {
-            const categoriaInfo = getCategoriaInfo(tarea.categoria)
-            return (
-              <div key={tarea.id} className={`tarea-item ${tarea.completada ? 'completada' : ''}`}>
-                <div className="tarea-header">
-                  <div className="tarea-check">
-                    <input
-                      type="checkbox"
-                      checked={tarea.completada}
-                      onChange={() => completarTarea(tarea.id)}
-                    />
-                  </div>
-                  <div className="tarea-info">
-                    <h4 className="tarea-titulo">{tarea.titulo}</h4>
-                    <div className="tarea-meta">
-                      <span
-                        className="categoria-badge"
-                        style={{ borderLeftColor: categoriaInfo?.color }}
-                      >
-                        {categoriaInfo?.label}
-                      </span>
-                      <span className="tarea-hora">⏰ {tarea.hora}</span>
-                    </div>
-                  </div>
-                  <button
-                    className="btn-eliminar"
-                    onClick={() => eliminarTarea(tarea.id)}
-                    title="Eliminar tarea"
-                  >
-                    ✕
-                  </button>
+      {/* Grid de días */}
+      <div className="dias-grid">
+        {DIAS_SEMANA.map(dia => {
+          const tareasDelDia = getTareasPorDia(dia.id)
+          const principales = getTareas3Principales(dia.id)
+          const restantes = getTareasRestantes(dia.id)
+
+          return (
+            <div key={dia.id} className="dia-card">
+              <div className="dia-header">
+                <h4>{dia.label}</h4>
+                <span className="contador">{tareasDelDia.length}</span>
+              </div>
+
+              {tareasDelDia.length === 0 ? (
+                <div className="tareas-vacio">
+                  <p>Sin tareas</p>
                 </div>
-
-                {/* Pasos/Subtareas */}
-                <div className="pasos-section">
-                  <div className="pasos-list">
-                    {tarea.pasos.map(paso => (
-                      <div key={paso.id} className={`paso-item ${paso.completado ? 'completado' : ''}`}>
-                        <input
-                          type="checkbox"
-                          checked={paso.completado}
-                          onChange={() => completarPaso(tarea.id, paso.id)}
-                        />
-                        <span className="paso-texto">{paso.texto}</span>
-                        <button
-                          className="btn-eliminar-paso"
-                          onClick={() => eliminarPaso(tarea.id, paso.id)}
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-
-                  {editandoTarea === tarea.id && (
-                    <div className="agregar-paso-form">
-                      <input
-                        type="text"
-                        value={nuevoPaso}
-                        onChange={(e) => setNuevoPaso(e.target.value)}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter') {
-                            agregarPaso(tarea.id)
-                          }
-                        }}
-                        placeholder="Agregar un paso..."
-                        autoFocus
-                      />
-                      <button
-                        className="btn-paso"
-                        onClick={() => agregarPaso(tarea.id)}
-                      >
-                        ✓
-                      </button>
-                      <button
-                        className="btn-paso-cancelar"
-                        onClick={() => {
-                          setEditandoTarea(null)
-                          setNuevoPaso('')
-                        }}
-                      >
-                        ✕
-                      </button>
+              ) : (
+                <>
+                  {/* Tareas principales (3 primeras) */}
+                  {principales.length > 0 && (
+                    <div className="tareas-principales">
+                      <span className="label-principales">⭐ Prioritarias</span>
+                      {principales.map(tarea => {
+                        const categoriaInfo = getCategoriaInfo(tarea.categoria)
+                        return (
+                          <div key={tarea.id} className={`tarea-item ${tarea.completada ? 'completada' : ''}`}>
+                            <input
+                              type="checkbox"
+                              checked={tarea.completada}
+                              onChange={() => completarTarea(tarea.id)}
+                            />
+                            <div className="tarea-info">
+                              <span className="tarea-titulo">{tarea.titulo}</span>
+                              <div className="tarea-meta">
+                                <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
+                                  {categoriaInfo?.label}
+                                </span>
+                                <span className="tarea-hora">⏰ {tarea.hora}</span>
+                              </div>
+                            </div>
+                            <button
+                              className="btn-eliminar"
+                              onClick={() => eliminarTarea(tarea.id)}
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        )
+                      })}
                     </div>
                   )}
 
-                  <button
-                    className="btn-agregar-paso"
-                    onClick={() => setEditandoTarea(editandoTarea === tarea.id ? null : tarea.id)}
-                  >
-                    {editandoTarea === tarea.id ? '✕ Cancelar' : '+ Agregar paso'}
-                  </button>
-                </div>
-              </div>
-            )
-          })
-        )}
+                  {/* Tareas restantes */}
+                  {restantes.length > 0 && (
+                    <div className="tareas-restantes">
+                      <details>
+                        <summary className="label-restantes">Más ({restantes.length})</summary>
+                        {restantes.map(tarea => {
+                          const categoriaInfo = getCategoriaInfo(tarea.categoria)
+                          return (
+                            <div key={tarea.id} className={`tarea-item ${tarea.completada ? 'completada' : ''}`}>
+                              <input
+                                type="checkbox"
+                                checked={tarea.completada}
+                                onChange={() => completarTarea(tarea.id)}
+                              />
+                              <div className="tarea-info">
+                                <span className="tarea-titulo">{tarea.titulo}</span>
+                                <div className="tarea-meta">
+                                  <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
+                                    {categoriaInfo?.label}
+                                  </span>
+                                  <span className="tarea-hora">⏰ {tarea.hora}</span>
+                                </div>
+                              </div>
+                              <button
+                                className="btn-eliminar"
+                                onClick={() => eliminarTarea(tarea.id)}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </details>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )
+        })}
       </div>
-
-      {/* Resumen por categorías */}
-      {tareasHoy.length > 0 && (
-        <div className="categorias-resumen">
-          <h4>Tareas por categoría</h4>
-          <div className="categorias-grid">
-            {CATEGORIAS.map(cat => {
-              const count = getTareasPorCategoria(cat.id)
-              return (
-                <div key={cat.id} className="categoria-item">
-                  <div
-                    className="categoria-color"
-                    style={{ backgroundColor: cat.color }}
-                  ></div>
-                  <span className="categoria-count">{cat.label}: {count}</span>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
     </div>
   )
 }

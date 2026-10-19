@@ -1,7 +1,7 @@
 .todo-del-dia {
   background: white;
   border-radius: 12px;
-  padding: 24px;
+  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
 }
@@ -9,10 +9,12 @@
 .todo-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 20px;
   padding-bottom: 15px;
   border-bottom: 1px solid #f0f0f0;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .todo-titulo h3 {
@@ -30,33 +32,32 @@
   color: #999;
 }
 
-.todo-stats {
+.todo-pestanas {
   display: flex;
-  gap: 15px;
+  gap: 8px;
 }
 
-.stat-box {
-  text-align: center;
-  padding: 10px 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  min-width: 100px;
-}
-
-.stat-number {
-  display: block;
-  font-size: 24px;
-  font-weight: bold;
-  color: #4ECDC4;
-  line-height: 1.2;
-}
-
-.stat-label {
-  display: block;
-  font-size: 12px;
+.pestaña {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
   color: #666;
-  text-transform: uppercase;
-  margin-top: 4px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.pestaña:hover {
+  border-color: #4ECDC4;
+  color: #4ECDC4;
+}
+
+.pestaña.activa {
+  background: #4ECDC4;
+  color: white;
+  border-color: #4ECDC4;
 }
 
 /* Formulario */
@@ -84,7 +85,6 @@
 }
 
 .form-group input[type="text"],
-.form-group input[type="date"],
 .form-group input[type="time"],
 .form-group select {
   width: 100%;
@@ -105,7 +105,7 @@
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: repeat(4, 1fr);
   gap: 12px;
 }
 
@@ -113,23 +113,6 @@
   display: flex;
   gap: 10px;
   margin-top: 12px;
-}
-
-.btn-add-task {
-  background: #4ECDC4;
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.3s;
-  margin-bottom: 16px;
-}
-
-.btn-add-task:hover {
-  background: #3fa99a;
 }
 
 .btn {
@@ -160,69 +143,129 @@
   background: #d0d0d0;
 }
 
-/* Lista de tareas */
-.tareas-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.tareas-vacio {
-  text-align: center;
-  padding: 30px 20px;
-  background: #f0fffe;
-  border-radius: 8px;
-  color: #666;
+.btn-add-task {
+  background: #4ECDC4;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 6px;
+  cursor: pointer;
   font-size: 14px;
+  font-weight: 500;
+  transition: background 0.3s;
+  margin-bottom: 16px;
 }
 
-.tarea-item {
+.btn-add-task:hover {
+  background: #3fa99a;
+}
+
+/* Grid de días */
+.dias-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px;
+}
+
+.dia-card {
   background: #f8f9fa;
   border: 1px solid #e0e0e0;
   border-radius: 8px;
   padding: 12px;
-  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.dia-card:hover {
+  border-color: #4ECDC4;
+  box-shadow: 0 2px 8px rgba(78, 205, 196, 0.1);
+}
+
+.dia-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #4ECDC4;
+}
+
+.dia-header h4 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: #333;
+}
+
+.contador {
+  background: #4ECDC4;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.tareas-vacio {
+  text-align: center;
+  padding: 20px 10px;
+  color: #999;
+  font-size: 12px;
+}
+
+/* Tareas principales */
+.tareas-principales {
+  margin-bottom: 10px;
+}
+
+.label-principales {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #FF6B6B;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.tarea-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px;
+  background: white;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  border-left: 2px solid #4ECDC4;
+  font-size: 12px;
 }
 
 .tarea-item:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  border-color: #4ECDC4;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
-.tarea-item.completada {
-  opacity: 0.6;
-  background: #f0f0f0;
-}
-
-.tarea-header {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  margin-bottom: 8px;
-}
-
-.tarea-check {
-  margin-top: 2px;
-}
-
-.tarea-check input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+.tarea-item input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
   cursor: pointer;
   accent-color: #4ECDC4;
+  flex-shrink: 0;
+  margin-top: 2px;
 }
 
 .tarea-info {
   flex: 1;
+  min-width: 0;
 }
 
 .tarea-titulo {
-  margin: 0;
-  font-size: 15px;
-  font-weight: 600;
+  display: block;
   color: #333;
-  text-decoration: none;
+  font-weight: 600;
+  word-break: break-word;
+  margin-bottom: 3px;
 }
 
 .tarea-item.completada .tarea-titulo {
@@ -233,21 +276,20 @@
 .tarea-meta {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 6px;
-  font-size: 13px;
+  gap: 6px;
+  flex-wrap: wrap;
+  font-size: 10px;
 }
 
 .categoria-badge {
   display: inline-block;
-  padding: 3px 8px;
+  padding: 2px 6px;
   background: #f0f0f0;
-  border-left: 3px solid;
-  border-radius: 3px;
-  font-size: 11px;
+  border-left: 2px solid;
+  border-radius: 2px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
 }
 
 .tarea-hora {
@@ -259,223 +301,114 @@
   border: none;
   color: #ccc;
   cursor: pointer;
-  font-size: 18px;
+  font-size: 14px;
   padding: 2px;
   transition: color 0.3s;
+  flex-shrink: 0;
 }
 
 .btn-eliminar:hover {
   color: #ff6b6b;
 }
 
-/* Pasos/Subtareas */
-.pasos-section {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
+/* Tareas restantes */
+.tareas-restantes {
+  margin-top: 8px;
 }
 
-.pasos-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.paso-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px;
-  background: white;
-  border-radius: 4px;
-  font-size: 13px;
-}
-
-.paso-item input[type="checkbox"] {
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-  accent-color: #4ECDC4;
-  flex-shrink: 0;
-}
-
-.paso-texto {
-  flex: 1;
-  color: #333;
-}
-
-.paso-item.completado .paso-texto {
-  text-decoration: line-through;
-  color: #999;
-}
-
-.btn-eliminar-paso {
-  background: none;
-  border: none;
-  color: #ccc;
-  cursor: pointer;
-  font-size: 14px;
-  padding: 2px;
-  transition: color 0.3s;
-}
-
-.btn-eliminar-paso:hover {
-  color: #ff6b6b;
-}
-
-.agregar-paso-form {
-  display: flex;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.agregar-paso-form input {
-  flex: 1;
-  padding: 8px 10px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 13px;
-  font-family: inherit;
-}
-
-.agregar-paso-form input:focus {
-  outline: none;
-  border-color: #4ECDC4;
-}
-
-.btn-paso,
-.btn-paso-cancelar {
-  background: none;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  padding: 6px 10px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.3s;
-}
-
-.btn-paso {
-  color: #4ECDC4;
-  border-color: #4ECDC4;
-}
-
-.btn-paso:hover {
-  background: #f0fffe;
-}
-
-.btn-paso-cancelar {
-  color: #ccc;
-}
-
-.btn-paso-cancelar:hover {
-  color: #ff6b6b;
-  border-color: #ff6b6b;
-}
-
-.btn-agregar-paso {
+.label-restantes {
   display: block;
-  background: none;
-  border: 1px dashed #ddd;
+  font-size: 11px;
+  font-weight: 700;
   color: #666;
-  padding: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-  width: 100%;
-  transition: all 0.3s;
-}
-
-.btn-agregar-paso:hover {
-  border-color: #4ECDC4;
-  color: #4ECDC4;
-  background: #f0fffe;
-}
-
-/* Resumen por categorías */
-.categorias-resumen {
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 16px;
-  margin-top: 16px;
-}
-
-.categorias-resumen h4 {
-  margin: 0 0 12px 0;
-  font-size: 13px;
   text-transform: uppercase;
-  color: #333;
-  letter-spacing: 0.5px;
+  padding: 6px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+  user-select: none;
+  transition: background 0.3s;
 }
 
-.categorias-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 10px;
+.label-restantes:hover {
+  background: #e8f5f5;
 }
 
-.categoria-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: white;
-  border-radius: 6px;
-  font-size: 13px;
-  border: 1px solid #e0e0e0;
+details {
+  margin-top: 0;
 }
 
-.categoria-color {
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
-  flex-shrink: 0;
+details > summary::-webkit-details-marker {
+  display: none;
 }
 
-.categoria-count {
-  font-weight: 600;
-  color: #333;
+details[open] .label-restantes {
+  background: #e8f5f5;
+}
+
+details[open] .label-restantes::before {
+  content: '▼ ';
+}
+
+details:not([open]) .label-restantes::before {
+  content: '▶ ';
 }
 
 /* Responsive */
+@media (max-width: 1200px) {
+  .dias-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
 @media (max-width: 768px) {
+  .dias-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .form-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .todo-header {
     flex-direction: column;
-    gap: 15px;
+    align-items: flex-start;
+  }
+
+  .todo-pestanas {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pestaña {
+    flex: 1;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .todo-del-dia {
+    padding: 12px;
+  }
+
+  .dias-grid {
+    grid-template-columns: 1fr;
   }
 
   .form-row {
     grid-template-columns: 1fr;
   }
 
-  .tarea-header {
-    flex-wrap: wrap;
+  .tarea-item {
+    padding: 6px;
+    font-size: 11px;
   }
 
-  .categorias-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .dia-header h4 {
+    font-size: 13px;
   }
 
-  .tarea-meta {
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-}
-
-@media (max-width: 480px) {
-  .todo-del-dia {
-    padding: 16px;
-  }
-
-  .todo-stats {
-    width: 100%;
-  }
-
-  .stat-box {
-    flex: 1;
-  }
-
-  .categorias-grid {
-    grid-template-columns: 1fr;
+  .contador {
+    font-size: 10px;
+    padding: 2px 6px;
   }
 }
