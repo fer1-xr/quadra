@@ -17,6 +17,8 @@
   padding-bottom: 16px;
   border-bottom: 1px solid #f0f0f0;
   flex-shrink: 0;
+  gap: 20px;
+  flex-wrap: wrap;
 }
 
 .clientes-titulo h3 {
@@ -186,6 +188,48 @@
   display: flex;
   gap: 10px;
   margin-top: 16px;
+}
+
+.clientes-exportar {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.btn-export {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-export:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-export-excel {
+  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+}
+
+.btn-export-excel:hover {
+  box-shadow: 0 4px 12px rgba(17, 153, 142, 0.4);
+}
+
+.btn-export-pdf {
+  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+}
+
+.btn-export-pdf:hover {
+  box-shadow: 0 4px 12px rgba(235, 51, 73, 0.4);
 }
 
 .btn-add-cliente {

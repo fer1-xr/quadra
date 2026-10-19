@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import * as XLSX from 'xlsx'
+import jsPDF from 'jspdf'
 import '../styles/GestionClientes.css'
 
 const TIPOS_IMPUESTO = [
@@ -118,6 +120,87 @@ function GestionClientes() {
     return TIPOS_IMPUESTO.find(t => t.id === id)?.label || id
   }
 
+  const exportarAExcel = () => {
+    const datosExcel = clientes.map(c => ({
+      'Razón Social': c.razonSocial,
+      'RUC': c.ruc,
+      'Seña': c.sena || '',
+      'Tipo Impuesto': getTipoImpuestoLabel(c.tipoImpuesto),
+      '¿Al día?': c.alDia ? 'Sí' : 'No',
+      'Honorarios (GS)': c.honorarios || '',
+      '¿Pago al día?': c.pagoAlDia ? 'Sí' : 'No',
+      '¿Facturado?': c.facturado ? 'Sí' : 'No'
+    }))
+
+    const ws = XLSX.utils.json_to_sheet(datosExcel)
+    ws['!cols'] = [
+      { wch: 25 },
+      { wch: 15 },
+      { wch: 15 },
+      { wch: 12 },
+      { wch: 10 },
+      { wch: 15 },
+      { wch: 10 },
+      { wch: 12 }
+    ]
+
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'Clientes')
+    XLSX.writeFile(wb, `Clientes_${new Date().toISOString().split('T')[0]}.xlsx`)
+  }
+
+  const exportarAPDF = () => {
+    const doc = new jsPDF()
+    const fechaActual = new Date().toLocaleDateString('es-PY')
+
+    doc.setFontSize(16)
+    doc.text('Gestión de Clientes', 14, 15)
+    doc.setFontSize(10)
+    doc.text(`Generado: ${fechaActual}`, 14, 22)
+    doc.text(`Total de clientes: ${clientes.length}`, 14, 28)
+
+    let y = 35
+    const pageHeight = doc.internal.pageSize.height
+    const lineHeight = 7
+
+    clientes.forEach((cliente, index) => {
+      if (y > pageHeight - 20) {
+        doc.addPage()
+        y = 15
+      }
+
+      doc.setFontSize(11)
+      doc.setFont(undefined, 'bold')
+      doc.text(`${index + 1}. ${cliente.razonSocial}`, 14, y)
+      y += lineHeight
+
+      doc.setFontSize(9)
+      doc.setFont(undefined, 'normal')
+      doc.text(`RUC: ${cliente.ruc}`, 14, y)
+      y += lineHeight
+
+      if (cliente.sena) {
+        doc.text(`Seña: ${cliente.sena}`, 14, y)
+        y += lineHeight
+      }
+
+      doc.text(`Tipo Impuesto: ${getTipoImpuestoLabel(cliente.tipoImpuesto)}`, 14, y)
+      y += lineHeight
+
+      doc.text(`¿Al día?: ${cliente.alDia ? '✓ Sí' : '✕ No'} | ¿Pago al día?: ${cliente.pagoAlDia ? '✓ Sí' : '✕ No'} | ¿Facturado?: ${cliente.facturado ? '✓ Sí' : '✕ No'}`, 14, y)
+      y += lineHeight
+
+      if (cliente.honorarios) {
+        doc.text(`Honorarios: ${parseFloat(cliente.honorarios).toLocaleString('es-PY')} GS`, 14, y)
+        y += lineHeight
+      }
+
+      y += 2
+    })
+
+    doc.save(`Clientes_${new Date().toISOString().split('T')[0]}.pdf`)
+  }
+
   const clientesFiltrados = clientes.filter(c =>
     c.razonSocial.toLowerCase().includes(busqueda.toLowerCase()) ||
     c.ruc.includes(busqueda)
@@ -134,6 +217,24 @@ function GestionClientes() {
           <h3>👥 Gestión de Clientes</h3>
           <p className="clientes-subtitulo">Administra tu listado de clientes y servicios</p>
         </div>
+        {clientes.length > 0 && (
+          <div className="clientes-exportar">
+            <button
+              className="btn-export btn-export-excel"
+              onClick={exportarAExcel}
+              title="Descargar en formato Excel"
+            >
+              📊 Excel
+            </button>
+            <button
+              className="btn-export btn-export-pdf"
+              onClick={exportarAPDF}
+              title="Descargar en formato PDF"
+            >
+              📄 PDF
+            </button>
+          </div>
+        )}
         <div className="clientes-stats">
           <div className="stat-box">
             <span className="stat-number">{clientes.length}</span>
