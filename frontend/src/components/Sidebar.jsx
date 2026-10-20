@@ -81,19 +81,22 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
       onMouseLeave={() => setIsHovered(false)}
     >
         <nav className="sidebar-menu">
-          {menuItems.map(item => (
-            <button
-              key={item.id}
-              className={`menu-item ${currentView === item.id ? 'active' : ''}`}
-              onClick={() => handleNavigate(item.id)}
-              title={item.label}
-            >
-              <span className="menu-icon">
-                <item.icon size={20} strokeWidth={1.5} />
-              </span>
-              <span className="menu-label">{item.label}</span>
-            </button>
-          ))}
+          {menuItems.map(item => {
+            const IconComponent = item.icon
+            return (
+              <button
+                key={item.id}
+                className={`menu-item ${currentView === item.id ? 'active' : ''}`}
+                onClick={() => handleNavigate(item.id)}
+                title={item.label}
+              >
+                <span className="menu-icon">
+                  <IconComponent size={20} strokeWidth={1.5} />
+                </span>
+                <span className="menu-label">{item.label}</span>
+              </button>
+            )
+          })}
         </nav>
 
         <div className="sidebar-footer">
