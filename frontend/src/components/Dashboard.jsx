@@ -207,99 +207,16 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'inicio' && (
-              <div className="dashboard-view">
-                <div className="dashboard-header">
-                  <h1>Bienvenido a QUADRA</h1>
-                  <p>Plataforma integral de conciliación y gestión contable</p>
-                </div>
-                <div className="services-grid">
-                  <div className="service-card service-card--todo" onClick={() => handleNavigate('todo')}>
-                    <div className="card-icon">
-                      <CheckSquare size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>TO DO del Día</h3>
-                    <p>Gestiona tus tareas diarias con categorización y control de progreso</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--metas" onClick={() => handleNavigate('metas')}>
-                    <div className="card-icon">
-                      <Target size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Metas Anuales</h3>
-                    <p>Establece y alcanza tus objetivos con seguimiento SMART</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--rg90" onClick={() => handleNavigate('rg90')}>
-                    <div className="card-icon">
-                      <Scale size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Conciliación RG90</h3>
-                    <p>Compara tu reporte RG90 con el libro de compras según normativa central</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--bancaria" onClick={() => handleNavigate('bancaria')}>
-                    <div className="card-icon">
-                      <CreditCard size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Conciliación Bancaria</h3>
-                    <p>Reconcilia movimientos bancarios con registros contables</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--documentos" onClick={() => handleNavigate('importar-documentos')}>
-                    <div className="card-icon">
-                      <FileText size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Importar Documentos</h3>
-                    <p>OCR y procesamiento de PDF e imágenes de comprobantes</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--pagos" onClick={() => handleNavigate('control-pagos')}>
-                    <div className="card-icon">
-                      <DollarSign size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Control de Pagos</h3>
-                    <p>Gestión de pólizas y préstamos con seguimiento de pagos mensuales</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--liquidacion" onClick={() => handleNavigate('liquidacion')}>
-                    <div className="card-icon">
-                      <Calculator size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Liquidación Salarial</h3>
-                    <p>Cálculo y gestión de nóminas con descuentos e impuestos</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--activos" onClick={() => handleNavigate('activofijo')}>
-                    <div className="card-icon">
-                      <Truck size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Calculadora Activo Fijo</h3>
-                    <p>Depreciación, amortización y valuación de activos</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--flujo" onClick={() => handleNavigate('flujo')}>
-                    <div className="card-icon">
-                      <TrendingUp size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Flujo de Caja</h3>
-                    <p>Proyecciones y análisis de liquidez y efectivo</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--cotizacion" onClick={() => handleNavigate('cotizacion')}>
-                    <div className="card-icon">
-                      <TrendingUp size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Cotización</h3>
-                    <p>Consulta tipos de cambio del DNIT por fecha y moneda</p>
-                    <button className="btn btn-primary">Acceder →</button>
-                  </div>
-                  <div className="service-card service-card--clientes" onClick={() => handleNavigate('clientes')}>
-                    <div className="card-icon">
-                      <Users size={56} strokeWidth={1.5} />
-                    </div>
-                    <h3>Gestión de Clientes</h3>
-                    <p>Administra tu listado de clientes, honorarios y pagos</p>
-                    <button className="btn btn-primary">Acceder →</button>
+              <div className="dashboard-view dashboard-view--nature">
+                <div className="nature-container">
+                  <img
+                    src="https://images.unsplash.com/photo-1580836343994-aaefa2b9cd94?w=1600&h=900&fit=crop"
+                    alt="Naturaleza Paraguaya - Cataratas del Iguazú"
+                    className="nature-image"
+                  />
+                  <div className="nature-overlay">
+                    <h1>Bienvenido a QUADRA</h1>
+                    <p>Plataforma integral de conciliación y gestión contable</p>
                   </div>
                 </div>
               </div>

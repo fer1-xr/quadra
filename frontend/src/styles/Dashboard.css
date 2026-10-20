@@ -475,6 +475,61 @@
   color: #d4af37;
 }
 
+/* ========== NATURE BACKGROUND ========== */
+
+.dashboard-view--nature {
+  padding: 0;
+  height: 100%;
+}
+
+.nature-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.nature-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.nature-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, rgba(15, 20, 25, 0.5) 0%, rgba(10, 18, 32, 0.4) 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  text-align: center;
+}
+
+.nature-overlay h1 {
+  font-size: 56px;
+  font-weight: 700;
+  margin: 0 0 16px 0;
+  color: #d4af37;
+  font-family: Arial, sans-serif;
+  letter-spacing: 1px;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.nature-overlay p {
+  font-size: 20px;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  font-family: Arial, sans-serif;
+}
+
 /* ========== RESPONSIVE ========== */
 
 @media (max-width: 1024px) {
@@ -486,6 +541,18 @@
 @media (max-width: 768px) {
   .dashboard-view {
     padding: 20px;
+  }
+
+  .dashboard-view--nature {
+    padding: 0;
+  }
+
+  .nature-overlay h1 {
+    font-size: 36px;
+  }
+
+  .nature-overlay p {
+    font-size: 16px;
   }
 
   .dashboard-header h1 {

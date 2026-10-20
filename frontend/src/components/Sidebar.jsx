@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import '../styles/Sidebar.css'
-import { Home, BookOpen, Search, BarChart3, Wallet, Calculator, Building2, TrendingUp, CreditCard, Sun, Moon, User, LogOut } from 'lucide-react'
+import { Home, BookOpen, Search, BarChart3, Wallet, Calculator, Building2, TrendingUp, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
 
 function Sidebar({ currentView, onNavigate, user, onLogout }) {
   const [isHovered, setIsHovered] = useState(false)
@@ -60,14 +60,18 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
 
   const menuItems = [
     { id: 'inicio', label: 'INICIO', icon: Home },
-    { id: 'leccion', label: 'Leccion del Dia', icon: BookOpen },
-    { id: 'buscar', label: 'Buscar', icon: Search },
+    { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
+    { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
+    { id: 'metas', label: 'Metas Anuales', icon: Target },
     { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
     { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
+    { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
+    { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard },
     { id: 'liquidacion', label: 'Liquidación Salarial', icon: Calculator },
     { id: 'activofijo', label: 'Activo Fijo', icon: Building2 },
     { id: 'flujo', label: 'Flujo de Caja', icon: TrendingUp },
-    { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard }
+    { id: 'cotizacion', label: 'Cotización', icon: TrendingUp },
+    { id: 'clientes', label: 'Gestión de Clientes', icon: Users }
   ]
 
   const handleNavigate = (viewId) => {
