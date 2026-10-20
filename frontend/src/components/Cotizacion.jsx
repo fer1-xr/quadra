@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Divider } from '@heroui/react'
+import { DollarSign, TrendingUp, Copy, Download } from 'lucide-react'
 import '../styles/Cotizacion.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'

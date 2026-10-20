@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { Card, CardBody, CardHeader, Button, Input, Checkbox, Chip, Divider } from '@heroui/react'
+import { Plus, Trash2, CheckCircle2 } from 'lucide-react'
 import '../styles/TodoDelDia.css'
 
 const CATEGORIAS = [

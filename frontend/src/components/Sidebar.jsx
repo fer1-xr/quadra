@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import '../styles/Sidebar.css'
-import { Home, BookOpen, Search, BarChart3, Wallet, Calculator, Building2, TrendingUp, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
+import { Button, Divider } from '@heroui/react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
 
 function Sidebar({ currentView, onNavigate, user, onLogout }) {
   const [isHovered, setIsHovered] = useState(false)
@@ -79,55 +79,72 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
   }
 
   return (
-    <aside
-      className={`sidebar ${isHovered ? 'expanded' : 'collapsed'}`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
-        <nav className="sidebar-menu">
-          {menuItems.map(item => {
+    <aside className="w-64 h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col overflow-y-auto">
+      {/* Logo */}
+      <div className="p-6 border-b border-gray-200 dark:border-slate-700">
+        <h1 className="text-2xl font-bold text-primary">QUΔDRA</h1>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">v1.0</p>
+      </div>
+
+      {/* Menu Navigation */}
+      <nav className="flex-1 overflow-y-auto p-4">
+        <div className="space-y-2">
+          {menuItems.map((item) => {
             const IconComponent = item.icon
+            const isActive = currentView === item.id
+
             return (
-              <button
+              <Button
                 key={item.id}
-                className={`menu-item ${currentView === item.id ? 'active' : ''}`}
+                fullWidth
+                className={`justify-start gap-3 font-medium transition-all ${
+                  isActive
+                    ? 'bg-gradient-to-r from-primary to-accent text-white shadow-md'
+                    : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
+                }`}
                 onClick={() => handleNavigate(item.id)}
-                title={item.label}
+                startContent={<IconComponent size={20} strokeWidth={1.5} />}
               >
-                <span className="menu-icon">
-                  <IconComponent size={20} strokeWidth={1.5} />
-                </span>
-                <span className="menu-label">{item.label}</span>
-              </button>
+                {item.label}
+              </Button>
             )
           })}
-        </nav>
-
-        <div className="sidebar-footer">
-          <button
-            className="menu-item theme-toggle-item"
-            onClick={toggleTheme}
-            title={isDarkMode ? 'Modo claro' : 'Modo oscuro'}
-          >
-            <span className="menu-icon">
-              {isDarkMode ? <Sun size={20} strokeWidth={1.5} /> : <Moon size={20} strokeWidth={1.5} />}
-            </span>
-            <span className="menu-label">{isDarkMode ? 'Claro' : 'Oscuro'}</span>
-          </button>
-          <button className="menu-item account-item" onClick={() => handleNavigate('cuenta')} title="Mi cuenta">
-            <span className="menu-icon">
-              <User size={20} strokeWidth={1.5} />
-            </span>
-            <span className="menu-label">Mi cuenta</span>
-          </button>
-          <button className="menu-item logout-item" onClick={onLogout} title="Cerrar sesión">
-            <span className="menu-icon">
-              <LogOut size={20} strokeWidth={1.5} />
-            </span>
-            <span className="menu-label">Cerrar sesión</span>
-          </button>
         </div>
-      </aside>
+      </nav>
+
+      {/* Divider */}
+      <Divider className="my-4" />
+
+      {/* Footer Actions */}
+      <div className="p-4 space-y-2 border-t border-gray-200 dark:border-slate-700">
+        <Button
+          fullWidth
+          className="justify-start gap-3 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 font-medium"
+          onClick={toggleTheme}
+          startContent={isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+        >
+          {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
+        </Button>
+
+        <Button
+          fullWidth
+          className="justify-start gap-3 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 font-medium"
+          onClick={() => handleNavigate('cuenta')}
+          startContent={<User size={20} />}
+        >
+          Mi Cuenta
+        </Button>
+
+        <Button
+          fullWidth
+          className="justify-start gap-3 bg-transparent text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800 font-medium"
+          onClick={onLogout}
+          startContent={<LogOut size={20} />}
+        >
+          Cerrar Sesión
+        </Button>
+      </div>
+    </aside>
   )
 }
 

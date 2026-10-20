@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
+import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
+import { Plus, Edit2, Trash2, Download, Users } from 'lucide-react'
 import '../styles/GestionClientes.css'
 
 const TIPOS_IMPUESTO = [

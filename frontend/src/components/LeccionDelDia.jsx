@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react'
+import { Card, CardBody, CardHeader, Button, Spinner, Divider, Chip } from '@heroui/react'
+import { BookOpen, Share2, Bookmark } from 'lucide-react'
 import '../styles/LeccionDelDia.css'
 
 function LeccionDelDia() {

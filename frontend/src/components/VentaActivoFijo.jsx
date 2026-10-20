@@ -1,4 +1,6 @@
 import React, { useState } from 'react'
+import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner } from '@heroui/react'
+import { Download } from 'lucide-react'
 import '../styles/VentaActivoFijo.css'
 
 const VentaActivoFijo = () => {

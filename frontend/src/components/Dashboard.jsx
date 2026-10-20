@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, LogOut } from 'lucide-react'
+import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Navbar, NavbarBrand, NavbarContent, NavbarItem } from '@heroui/react'
 import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
@@ -13,7 +14,6 @@ import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
 import LeccionDelDia from './LeccionDelDia'
 import GestionClientes from './GestionClientes'
-import '../styles/Sidebar.css'
 import '../styles/Dashboard.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -183,16 +183,22 @@ function Dashboard({ user, onLogout }) {
 
   return (
     <div className="dashboard">
-      <nav className="navbar">
-        <h1>QUΔDRA</h1>
-        <div className="nav-right">
-          <span>Hola, {user?.name || user?.email}</span>
-          <div className="reconciliation-counter">
-            <span className="counter-label">Conciliaciones disponibles:</span>
-            <span className="counter-value">8/10</span>
+      <Navbar isBordered className="bg-white dark:bg-slate-900">
+        <NavbarBrand>
+          <p className="font-bold text-2xl text-primary">QUΔDRA</p>
+        </NavbarBrand>
+        <NavbarContent justify="end" className="gap-4">
+          <div className="flex items-center gap-4">
+            <span className="text-sm font-medium">Hola, {user?.name || user?.email}</span>
+            <Chip variant="flat" color="primary" className="font-semibold">
+              8/10 Conciliaciones
+            </Chip>
+            <Button isIconOnly variant="light" size="lg" onClick={onLogout}>
+              <LogOut size={20} className="text-primary" />
+            </Button>
           </div>
-        </div>
-      </nav>
+        </NavbarContent>
+      </Navbar>
 
       <div className="dashboard-content">
         <Sidebar currentView={view} onNavigate={handleNavigate} user={user} onLogout={onLogout} />
@@ -224,83 +230,195 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'rg90' && (
-              <div className="card">
-                {error && <div className="error-message">{error}</div>}
-                <div className="rg90-upload-section">
-                  <div style={{ marginBottom: '32px' }}>
-                    <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>Archivos Maragnatu</label>
-                    <div className="maragnatu-files-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+              <Card className="max-w-4xl">
+                <CardHeader className="flex flex-col items-start px-[26px] py-[18px] gap-3">
+                  <h2 className="text-2xl font-bold text-primary">📊 Conciliación RG90</h2>
+                </CardHeader>
+                <CardBody className="px-[26px] py-[18px] gap-6">
+                  {error && (
+                    <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                      {error}
+                    </div>
+                  )}
+
+                  <div className="space-y-4">
+                    <label className="block text-lg font-semibold text-primary">Archivos Maragnatu</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {Array.from({ length: marangatuInputCount }).map((_, index) => (
-                        <div key={index} className="file-input-group" style={{ position: 'relative' }}>
-                          <input type="file" accept=".csv,.xlsx,.xls" className="maragnatu-file-input" onChange={(e) => handleMarangatuFile(index, e.target.files[0])} />
-                          {libroFiles[index] && <div className="file-name">✓ {libroFiles[index].name}</div>}
+                        <div key={index} className="relative">
+                          <label htmlFor={`maragnatu-${index}`} className="cursor-pointer">
+                            <div className="border-2 border-dashed border-primary rounded-lg p-4 text-center hover:bg-blue-50 dark:hover:bg-slate-800 transition">
+                              <FileText className="inline-block mb-2" size={24} color="var(--primary)" />
+                              <p className="text-sm font-medium text-primary">
+                                {libroFiles[index] ? `✓ ${libroFiles[index].name}` : 'Seleccionar archivo'}
+                              </p>
+                            </div>
+                            <input
+                              id={`maragnatu-${index}`}
+                              type="file"
+                              accept=".csv,.xlsx,.xls"
+                              className="hidden"
+                              onChange={(e) => handleMarangatuFile(index, e.target.files[0])}
+                            />
+                          </label>
                         </div>
                       ))}
                     </div>
-                    <button className="btn" onClick={addMarangatuInput} style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', marginBottom: '20px' }}>+ Agregar archivo</button>
+                    <Button
+                      variant="bordered"
+                      color="primary"
+                      onClick={addMarangatuInput}
+                      className="w-full"
+                    >
+                      + Agregar archivo Maragnatu
+                    </Button>
                   </div>
-                  <div>
-                    <label style={{ display: 'block', marginBottom: '12px', fontWeight: '600', color: 'var(--text-primary)' }}>Reportes (Compras/Ventas/Notas de Crédito)</label>
-                    <div className="monthly-files-container" id="monthly-files-container" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+
+                  <div className="space-y-4">
+                    <label className="block text-lg font-semibold text-primary">Reportes (Compras/Ventas/Notas de Crédito)</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                       {Array.from({ length: monthlyInputCount }).map((_, index) => (
-                        <div key={index} className="file-input-group" style={{ position: 'relative' }}>
-                          <input type="file" accept=".csv,.xlsx,.xls" className="monthly-file-input" onChange={(e) => handleMonthlyFile(index, e.target.files[0])} />
-                          {rg90Files[index] && <div className="file-name">✓ {rg90Files[index].name}</div>}
+                        <div key={index} className="relative">
+                          <label htmlFor={`monthly-${index}`} className="cursor-pointer">
+                            <div className="border-2 border-dashed border-accent rounded-lg p-4 text-center hover:bg-indigo-50 dark:hover:bg-slate-800 transition">
+                              <CreditCard className="inline-block mb-2" size={24} color="var(--accent)" />
+                              <p className="text-sm font-medium text-accent">
+                                {rg90Files[index] ? `✓ ${rg90Files[index].name}` : 'Seleccionar archivo'}
+                              </p>
+                            </div>
+                            <input
+                              id={`monthly-${index}`}
+                              type="file"
+                              accept=".csv,.xlsx,.xls"
+                              className="hidden"
+                              onChange={(e) => handleMonthlyFile(index, e.target.files[0])}
+                            />
+                          </label>
                         </div>
                       ))}
                     </div>
-                    <button className="btn" onClick={addMonthlyInput} style={{ background: 'transparent', border: '1px solid var(--accent)', color: 'var(--accent)', marginBottom: '20px' }}>+ Agregar archivo</button>
+                    <Button
+                      variant="bordered"
+                      color="secondary"
+                      onClick={addMonthlyInput}
+                      className="w-full"
+                    >
+                      + Agregar archivo RG90
+                    </Button>
                   </div>
-                </div>
-                <button className="btn btn-primary" onClick={handleReconciliation} disabled={loading || rg90Files.length === 0 || libroFiles.length === 0}>
-                  {loading ? 'Procesando...' : '▶ Ejecutar Conciliación'}
-                </button>
-              </div>
+
+                  <Button
+                    color="primary"
+                    size="lg"
+                    onClick={handleReconciliation}
+                    disabled={loading || rg90Files.length === 0 || libroFiles.length === 0}
+                    className="w-full font-semibold"
+                  >
+                    {loading ? <Spinner size="sm" color="current" /> : null}
+                    {loading ? 'Procesando...' : '▶ Ejecutar Conciliación'}
+                  </Button>
+                </CardBody>
+              </Card>
             )}
 
             {view === 'rg90-results' && discrepancies.length > 0 && (
-              <div className="card results-card">
-                <h2>📋 Resultados</h2>
-                <div className="summary">
-                  <div className="summary-row"><span>✓ Coinciden:</span><strong className="success">{totalCoincidencias}</strong></div>
-                  <div className="summary-row"><span>✗ Discrepancias:</span><strong className="error">{totalErrors}</strong></div>
-                </div>
-                <div className="table-wrapper">
-                  <table className="results-table">
-                    <thead>
-                      <tr>
-                        <th>Razón Social</th><th>RUC</th>
-                        <th>Total Libro</th><th>Total RG90</th>
-                        <th>IVA 10% Libro</th><th>IVA 10% RG90</th>
-                        <th>IVA 5% Libro</th><th>IVA 5% RG90</th>
-                        <th>Exenta Libro</th><th>Exenta RG90</th>
-                        <th>Mensaje</th>
-                      </tr>
-                    </thead>
-                    <tbody>
+              <Card className="max-w-6xl">
+                <CardHeader className="flex flex-col items-start px-[26px] py-[18px] gap-4">
+                  <h2 className="text-2xl font-bold text-primary">📋 Resultados de Conciliación</h2>
+                  <div className="flex gap-4 w-full">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900 rounded-lg">
+                      <span className="text-green-700 dark:text-green-200 font-semibold">✓ Coinciden:</span>
+                      <span className="text-2xl font-bold text-green-600 dark:text-green-300">{totalCoincidencias}</span>
+                    </div>
+                    <div className="flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900 rounded-lg">
+                      <span className="text-red-700 dark:text-red-200 font-semibold">✗ Discrepancias:</span>
+                      <span className="text-2xl font-bold text-red-600 dark:text-red-300">{totalErrors}</span>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardBody className="px-[26px] py-[18px] gap-4 overflow-x-auto">
+                  <Table
+                    aria-label="Resultados de conciliación"
+                    className="w-full"
+                    isCompact
+                    removeWrapper
+                  >
+                    <TableHeader>
+                      <TableColumn>Razón Social</TableColumn>
+                      <TableColumn>RUC</TableColumn>
+                      <TableColumn align="right">Total Libro</TableColumn>
+                      <TableColumn align="right">Total RG90</TableColumn>
+                      <TableColumn align="right">IVA 10% Libro</TableColumn>
+                      <TableColumn align="right">IVA 10% RG90</TableColumn>
+                      <TableColumn align="right">IVA 5% Libro</TableColumn>
+                      <TableColumn align="right">IVA 5% RG90</TableColumn>
+                      <TableColumn align="right">Exenta Libro</TableColumn>
+                      <TableColumn align="right">Exenta RG90</TableColumn>
+                      <TableColumn>Mensaje</TableColumn>
+                    </TableHeader>
+                    <TableBody>
                       {discrepancies.map((d, i) => (
-                        <tr key={i} className={`row-${d.status}`}>
-                          <td>{d.razonSocial}</td>
-                          <td>{d.ruc}</td>
-                          <td className={Math.abs(d.totalLibro - d.totalRG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.totalLibro)}</td>
-                          <td className={Math.abs(d.totalLibro - d.totalRG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.totalRG90)}</td>
-                          <td className={Math.abs(d.iva10Libro - d.iva10RG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.iva10Libro)}</td>
-                          <td className={Math.abs(d.iva10Libro - d.iva10RG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.iva10RG90)}</td>
-                          <td className={Math.abs(d.iva5Libro - d.iva5RG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.iva5Libro)}</td>
-                          <td className={Math.abs(d.iva5Libro - d.iva5RG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.iva5RG90)}</td>
-                          <td className={Math.abs(d.exentaLibro - d.exentaRG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.exentaLibro)}</td>
-                          <td className={Math.abs(d.exentaLibro - d.exentaRG90) <= 1 ? 'cell-success' : 'cell-error'}>{fmt(d.exentaRG90)}</td>
-                          <td className="mensaje">{d.mensaje}</td>
-                        </tr>
+                        <TableRow key={i} className={d.status === 'error' ? 'bg-red-50 dark:bg-red-950' : 'bg-green-50 dark:bg-green-950'}>
+                          <TableCell className="font-semibold">{d.razonSocial}</TableCell>
+                          <TableCell>{d.ruc}</TableCell>
+                          <TableCell className={Math.abs(d.totalLibro - d.totalRG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.totalLibro)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.totalLibro - d.totalRG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.totalRG90)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.iva10Libro - d.iva10RG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.iva10Libro)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.iva10Libro - d.iva10RG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.iva10RG90)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.iva5Libro - d.iva5RG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.iva5Libro)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.iva5Libro - d.iva5RG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.iva5RG90)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.exentaLibro - d.exentaRG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.exentaLibro)}
+                          </TableCell>
+                          <TableCell className={Math.abs(d.exentaLibro - d.exentaRG90) <= 1 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
+                            {fmt(d.exentaRG90)}
+                          </TableCell>
+                          <TableCell className="text-sm max-w-[150px]">{d.mensaje}</TableCell>
+                        </TableRow>
                       ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="button-group">
-                  <button className="btn btn-success" onClick={handleExport}>⬇ Descargar Excel</button>
-                  <button className="btn btn-primary" onClick={() => { setDiscrepancies([]); setRg90Files([]); setLibroFiles([]); setMarangatuInputCount(1); setMonthlyInputCount(1); setView('rg90') }}>🔄 Nueva Conciliación</button>
-                </div>
-              </div>
+                    </TableBody>
+                  </Table>
+
+                  <div className="flex gap-4 mt-6 w-full">
+                    <Button
+                      color="success"
+                      size="lg"
+                      className="flex-1 font-semibold"
+                      onClick={handleExport}
+                    >
+                      ⬇ Descargar Excel
+                    </Button>
+                    <Button
+                      color="primary"
+                      size="lg"
+                      variant="bordered"
+                      className="flex-1 font-semibold"
+                      onClick={() => {
+                        setDiscrepancies([])
+                        setRg90Files([])
+                        setLibroFiles([])
+                        setMarangatuInputCount(1)
+                        setMonthlyInputCount(1)
+                        setView('rg90')
+                      }}
+                    >
+                      🔄 Nueva Conciliación
+                    </Button>
+                  </div>
+                </CardBody>
+              </Card>
             )}
 
             {view === 'bancaria' && (

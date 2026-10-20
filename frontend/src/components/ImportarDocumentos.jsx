@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { Card, CardBody, CardHeader, Button, Spinner, Progress, Chip } from '@heroui/react'
+import { Upload, File } from 'lucide-react'
 import '../styles/ImportarDocumentos.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'

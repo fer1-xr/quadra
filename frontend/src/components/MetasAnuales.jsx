@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import jsPDF from 'jspdf'
+import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
+import { Plus, Trash2, Download, Target } from 'lucide-react'
 import '../styles/MetasAnuales.css'
 import Toast from './Toast'
 

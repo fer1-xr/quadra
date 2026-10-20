@@ -1,5 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
+import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Checkbox, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react'
+import { Download } from 'lucide-react'
 import '../styles/LiquidacionSalarial.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
