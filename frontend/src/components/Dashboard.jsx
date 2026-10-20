@@ -210,9 +210,10 @@ function Dashboard({ user, onLogout }) {
               <div className="dashboard-view dashboard-view--nature">
                 <div className="nature-container">
                   <img
-                    src="https://images.unsplash.com/photo-1580836343994-aaefa2b9cd94?w=1600&h=900&fit=crop"
+                    src="https://images.pexels.com/photos/1619488/pexels-photo-1619488.jpeg?w=1600&h=900&fit=crop"
                     alt="Naturaleza Paraguaya - Cataratas del Iguazú"
                     className="nature-image"
+                    onError={(e) => e.target.style.display = 'none'}
                   />
                   <div className="nature-overlay">
                     <h1>Bienvenido a QUADRA</h1>

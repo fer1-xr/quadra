@@ -233,22 +233,24 @@
   display: none;
 }
 
-/* Scrollbar del sidebar */
+/* Scrollbar del sidebar - Hidden */
 .sidebar::-webkit-scrollbar {
-  width: 6px;
+  width: 0;
+  display: none;
 }
 
 .sidebar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.2);
+  background: transparent;
+  display: none;
 }
 
 .sidebar::-webkit-scrollbar-thumb {
-  background: var(--accent);
-  border-radius: 3px;
+  background: transparent;
+  display: none;
 }
 
 .sidebar::-webkit-scrollbar-thumb:hover {
-  background: #C9A227;
+  background: transparent;
 }
 
 /* ========== LAYOUT CON SIDEBAR ========== */

@@ -487,6 +487,7 @@
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background: linear-gradient(135deg, #1a3a52 0%, #0f1419 100%);
 }
 
 .nature-image {
@@ -494,6 +495,7 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
+  display: block;
 }
 
 .nature-overlay {
