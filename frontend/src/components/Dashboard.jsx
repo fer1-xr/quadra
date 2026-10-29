@@ -213,17 +213,85 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'inicio' && (
-              <div className="dashboard-view dashboard-view--nature">
-                <div className="nature-container">
-                  <img
-                    src="https://images.pexels.com/photos/1619488/pexels-photo-1619488.jpeg?w=1600&h=900&fit=crop"
-                    alt="Naturaleza Paraguaya - Cataratas del Iguazú"
-                    className="nature-image"
-                    onError={(e) => e.target.style.display = 'none'}
-                  />
-                  <div className="nature-overlay">
-                    <h1>Bienvenido a QUADRA</h1>
-                    <p>Plataforma integral de conciliación y gestión contable</p>
+              <div className="dashboard-view">
+                <div className="welcome-section">
+                  <div className="welcome-header">
+                    <h1 className="text-4xl font-bold text-primary mb-2">Bienvenido a QUADRA</h1>
+                    <p className="text-lg text-slate-600 dark:text-slate-400">Plataforma integral de conciliación y gestión contable</p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
+                    <div onClick={() => handleNavigate('rg90')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-blue-100 dark:bg-blue-900">
+                            <FileText className="text-blue-600 dark:text-blue-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Conciliación RG90</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Concilia tus archivos Maragnatu con reportes de compras y ventas</p>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    <div onClick={() => handleNavigate('liquidacion')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-green-100 dark:bg-green-900">
+                            <DollarSign className="text-green-600 dark:text-green-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Liquidación Salarial</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Calcula y gestiona liquidaciones de sueldo de tus empleados</p>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    <div onClick={() => handleNavigate('control-pagos')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-purple-100 dark:bg-purple-900">
+                            <CreditCard className="text-purple-600 dark:text-purple-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Control de Pagos</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Administra pólizas de seguros y préstamos</p>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    <div onClick={() => handleNavigate('activofijo')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-orange-100 dark:bg-orange-900">
+                            <TrendingUp className="text-orange-600 dark:text-orange-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Venta Activo Fijo</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Registra y calcula la venta de bienes de uso</p>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    <div onClick={() => handleNavigate('importar-documentos')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-indigo-100 dark:bg-indigo-900">
+                            <Truck className="text-indigo-600 dark:text-indigo-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Importar Documentos</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Carga y procesa archivos de tus proveedores</p>
+                        </CardBody>
+                      </Card>
+                    </div>
+
+                    <div onClick={() => handleNavigate('clientes')} className="hover:shadow-lg transition-all cursor-pointer">
+                      <Card>
+                        <CardBody className="gap-4 p-6">
+                          <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-red-100 dark:bg-red-900">
+                            <Users className="text-red-600 dark:text-red-300" size={24} />
+                          </div>
+                          <h3 className="text-xl font-semibold text-primary">Gestión de Clientes</h3>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">Administra la información de tus clientes</p>
+                        </CardBody>
+                      </Card>
+                    </div>
                   </div>
                 </div>
               </div>
