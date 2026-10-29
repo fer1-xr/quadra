@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
+import Login from './components/Login'
 import leccionScheduler from './services/leccionScheduler'
 import './App.css'
 
@@ -16,9 +17,6 @@ function App() {
       setUser(JSON.parse(storedUser))
       // Iniciar el scheduler de lecciones cuando el usuario está autenticado
       leccionScheduler.start()
-    } else {
-      // Redirigir a login si no hay sesión
-      window.location.href = '/login'
     }
     setLoading(false)
 
@@ -28,10 +26,16 @@ function App() {
     }
   }, [])
 
+  const handleLogin = (userData) => {
+    setUser(userData)
+    leccionScheduler.start()
+  }
+
   const handleLogout = () => {
     localStorage.removeItem('quaedra_token')
     localStorage.removeItem('quaedra_user')
-    window.location.href = '/login'
+    setUser(null)
+    leccionScheduler.stop()
   }
 
   if (loading) {
@@ -47,7 +51,9 @@ function App() {
 
   return user ? (
     <Dashboard user={user} onLogout={handleLogout} />
-  ) : null
+  ) : (
+    <Login onLogin={handleLogin} />
+  )
 }
 
 export default App
