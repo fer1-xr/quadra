@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
+import { authService } from '../services/authService'
 import '../styles/Login.css'
 
-function Login({ onLogin }) {
+function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -83,25 +84,19 @@ function Login({ onLogin }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!email || !password) {
+      setError('Por favor completa todos los campos')
+      return
+    }
+
     setLoading(true)
 
     try {
-      // Simular llamada al backend
-      await new Promise(resolve => setTimeout(resolve, 500))
-
-      if (email && password) {
-        const userData = {
-          email: email,
-          name: email.split('@')[0]
-        }
-        localStorage.setItem('quaedra_token', 'mock_token_' + Date.now())
-        localStorage.setItem('quaedra_user', JSON.stringify(userData))
-        onLogin(userData)
-      } else {
-        setError('Por favor completa todos los campos')
-      }
+      const result = await authService.login(email, password)
+      onLogin(result.user)
     } catch (err) {
-      setError('Error al iniciar sesión')
+      setError(err.message)
     } finally {
       setLoading(false)
     }
@@ -202,13 +197,35 @@ function Login({ onLogin }) {
                   <span>o</span>
                 </div>
 
-                <p className="demo-info">
-                  <strong>Demo:</strong> usa cualquier email y contraseña
-                </p>
+                <Button
+                  type="button"
+                  className="login-button"
+                  variant="bordered"
+                  fullWidth
+                  size="lg"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    onSwitchToRegister()
+                  }}
+                >
+                  Crear Cuenta
+                </Button>
               </form>
 
               <div className="form-footer">
-                <p>¿Problemas para ingresar? <a href="#help">Contáctanos</a></p>
+                <p>
+                  <a
+                    href="#forgot"
+                    onClick={(e) => {
+                      e.preventDefault()
+                      onSwitchToForgotPassword()
+                    }}
+                    style={{ color: '#666', textDecoration: 'underline', cursor: 'pointer', marginRight: '16px' }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </a>
+                  <a href="#help" style={{ color: '#666', textDecoration: 'underline', cursor: 'pointer' }}>Contáctanos</a>
+                </p>
               </div>
             </CardBody>
           </Card>

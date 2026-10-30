@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react'
 import Dashboard from './components/Dashboard'
 import Login from './components/Login'
+import Register from './components/Register'
+import ForgotPassword from './components/ForgotPassword'
+import ResetPassword from './components/ResetPassword'
 import leccionScheduler from './services/leccionScheduler'
 import './App.css'
 
 function App() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [authPage, setAuthPage] = useState('login') // 'login', 'register', 'forgot-password', 'reset-password'
+  const [resetToken, setResetToken] = useState(null)
 
   useEffect(() => {
     // Obtener usuario del localStorage o verificar token
     const token = localStorage.getItem('quaedra_token')
     const storedUser = localStorage.getItem('quaedra_user')
 
-    if (token && storedUser) {
+    // Verificar si hay un token de recuperación de contraseña en la URL
+    const params = new URLSearchParams(window.location.search)
+    const resetTokenFromUrl = params.get('token')
+    if (resetTokenFromUrl) {
+      setResetToken(resetTokenFromUrl)
+      setAuthPage('reset-password')
+    }
+
+    if (token && storedUser && !resetTokenFromUrl) {
       setUser(JSON.parse(storedUser))
       // Iniciar el scheduler de lecciones cuando el usuario está autenticado
       leccionScheduler.start()
@@ -28,6 +41,13 @@ function App() {
 
   const handleLogin = (userData) => {
     setUser(userData)
+    setAuthPage('login')
+    leccionScheduler.start()
+  }
+
+  const handleRegister = (userData) => {
+    setUser(userData)
+    setAuthPage('login')
     leccionScheduler.start()
   }
 
@@ -35,6 +55,7 @@ function App() {
     localStorage.removeItem('quaedra_token')
     localStorage.removeItem('quaedra_user')
     setUser(null)
+    setAuthPage('login')
     leccionScheduler.stop()
   }
 
@@ -49,10 +70,32 @@ function App() {
     )
   }
 
-  return user ? (
-    <Dashboard user={user} onLogout={handleLogout} />
-  ) : (
-    <Login onLogin={handleLogin} />
+  if (user) {
+    return <Dashboard user={user} onLogout={handleLogout} />
+  }
+
+  return (
+    <>
+      {authPage === 'login' && (
+        <Login
+          onLogin={handleLogin}
+          onSwitchToRegister={() => setAuthPage('register')}
+          onSwitchToForgotPassword={() => setAuthPage('forgot-password')}
+        />
+      )}
+      {authPage === 'register' && (
+        <Register
+          onRegister={handleRegister}
+          onSwitchToLogin={() => setAuthPage('login')}
+        />
+      )}
+      {authPage === 'forgot-password' && (
+        <ForgotPassword onBackToLogin={() => setAuthPage('login')} />
+      )}
+      {authPage === 'reset-password' && resetToken && (
+        <ResetPassword token={resetToken} onBackToLogin={() => setAuthPage('login')} />
+      )}
+    </>
   )
 }
 
