@@ -180,14 +180,14 @@
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #1a3a52;
+  color: #ffffff;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: Arial, sans-serif;
 }
 
 .form-group.focused .form-label {
-  color: #d4af37;
+  color: #ffffff;
 }
 
 .input-field {
@@ -220,22 +220,24 @@
 
 .password-toggle-btn {
   position: absolute;
-  right: 12px;
+  right: 16px;
   background: none;
   border: none;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #718096;
-  padding: 4px;
+  color: #a0aec0;
+  padding: 10px;
   transition: color 0.3s ease;
   z-index: 10;
   font-family: Arial, sans-serif;
+  width: 44px;
+  height: 44px;
 }
 
 .password-toggle-btn:hover {
-  color: #1a3a52;
+  color: #d4af37;
 }
 
 .password-toggle-btn:focus {
@@ -262,9 +264,9 @@
 
 .login-button {
   background: linear-gradient(135deg, #1a3a52 0%, #2d5a7b 100%);
-  color: #d4af37;
+  color: #ffffff;
   font-weight: 600;
-  border: 2px solid #d4af37;
+  border: none;
   border-radius: 10px;
   padding: 12px 24px;
   font-size: 15px;
@@ -282,7 +284,7 @@
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(26, 58, 82, 0.5);
   background: linear-gradient(135deg, #2d5a7b 0%, #1a3a52 100%);
-  color: #ffd700;
+  color: #ffffff;
 }
 
 .login-button:active {
@@ -330,11 +332,11 @@
 .form-footer p {
   margin: 0;
   font-size: 13px;
-  color: #718096;
+  color: #ffffff;
 }
 
 .form-footer a {
-  color: #d4af37;
+  color: #ffffff;
   text-decoration: none;
   font-weight: 600;
   transition: color 0.3s ease;
@@ -342,7 +344,7 @@
 }
 
 .form-footer a:hover {
-  color: #ffd700;
+  color: #d4af37;
   text-decoration: underline;
 }
 
