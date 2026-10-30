@@ -181,21 +181,21 @@
 .form-label {
   font-size: 14px;
   font-weight: 600;
-  color: #ffffff;
+  color: #ffffff !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   font-family: Arial, sans-serif;
 }
 
 .form-group.focused .form-label {
-  color: #ffffff;
+  color: #ffffff !important;
 }
 
 .input-field {
   border-radius: 10px;
   font-size: 15px;
   background: rgba(255, 255, 255, 0.12) !important;
-  border: 2px solid rgba(212, 175, 55, 0.3) !important;
+  border: 2px solid rgba(255, 255, 255, 0.2) !important;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   padding: 13px 16px;
   font-family: Arial, sans-serif;
@@ -223,14 +223,14 @@
 }
 
 .input-field:hover {
-  border-color: rgba(212, 175, 55, 0.6) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .input-field:focus {
   background: rgba(255, 255, 255, 0.18) !important;
-  border-color: #d4af37 !important;
-  box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.25);
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
 }
 
 .input-field:focus input {
@@ -291,17 +291,17 @@
 }
 
 .login-button {
-  background: linear-gradient(135deg, #d4af37 0%, #c99a2e 100%);
-  color: #1b2a4a;
+  background: linear-gradient(135deg, #2d5a7b 0%, #1a3a52 100%);
+  color: #ffffff;
   font-weight: 700;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 10px;
   padding: 13px 24px;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   margin-top: 8px;
-  box-shadow: 0 8px 20px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
   animation: slideInUp 0.6s ease-out;
   animation-delay: 0.3s;
   animation-fill-mode: both;
@@ -310,9 +310,10 @@
 
 .login-button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.45);
-  background: linear-gradient(135deg, #e5c158 0%, #d4af37 100%);
-  color: #1b2a4a;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+  background: linear-gradient(135deg, #3d6a8b 0%, #2a4a62 100%);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #ffffff;
 }
 
 .login-button:active {
@@ -333,7 +334,7 @@
   content: '';
   flex: 1;
   height: 1px;
-  background: rgba(212, 175, 55, 0.2);
+  background: rgba(255, 255, 255, 0.15);
 }
 
 .demo-info {
