@@ -76,7 +76,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
 
     const interval = setInterval(() => {
       setCurrentImageIndex((prev) => (prev + 1) % images.length)
-    }, 5000)
+    }, 30000)
 
     return () => clearInterval(interval)
   }, [currentImageIndex])
