@@ -12,7 +12,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const [loading, setLoading] = useState(false)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [currentImageIndex, setCurrentImageIndex] = useState(3)
   const [dominantColor, setDominantColor] = useState({ r: 102, g: 126, b: 234 })
   const [isDarkImage, setIsDarkImage] = useState(false)
   const canvasRef = useRef(null)
