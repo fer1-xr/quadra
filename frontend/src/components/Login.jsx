@@ -232,11 +232,11 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                       e.preventDefault()
                       onSwitchToForgotPassword()
                     }}
-                    style={{ color: '#666', textDecoration: 'underline', cursor: 'pointer', marginRight: '16px' }}
+                    style={{ color: '#ffffff', textDecoration: 'underline', cursor: 'pointer', marginRight: '16px' }}
                   >
                     ¿Olvidaste tu contraseña?
                   </a>
-                  <a href="#help" style={{ color: '#666', textDecoration: 'underline', cursor: 'pointer' }}>Contáctanos</a>
+                  <a href="#help" style={{ color: '#ffffff', textDecoration: 'underline', cursor: 'pointer' }}>Contáctanos</a>
                 </p>
               </div>
             </CardBody>
