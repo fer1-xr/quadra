@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
 import '../styles/Login.css'
 
@@ -9,6 +9,76 @@ function Login({ onLogin }) {
   const [loading, setLoading] = useState(false)
   const [emailFocused, setEmailFocused] = useState(false)
   const [passwordFocused, setPasswordFocused] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [dominantColor, setDominantColor] = useState({ r: 102, g: 126, b: 234 })
+  const [isDarkImage, setIsDarkImage] = useState(false)
+  const canvasRef = useRef(null)
+
+  const images = [
+    '/login-images/1.jpg',
+    '/login-images/2.jpg',
+    '/login-images/3.jpg',
+    '/login-images/4.jpg',
+    '/login-images/5.jpg',
+    '/login-images/6.jpg',
+    '/login-images/7.jpg',
+    '/login-images/8.jpg',
+    '/login-images/9.jpg',
+    '/login-images/10.jpg'
+  ]
+
+  // Detectar color dominante de la imagen
+  const getDominantColor = (imageSrc) => {
+    return new Promise((resolve) => {
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const canvas = canvasRef.current
+        if (!canvas) resolve({ r: 102, g: 126, b: 234 })
+
+        const ctx = canvas.getContext('2d')
+        canvas.width = img.width
+        canvas.height = img.height
+        ctx.drawImage(img, 0, 0)
+
+        const imageData = ctx.getImageData(0, 0, img.width, img.height)
+        const data = imageData.data
+
+        let r = 0, g = 0, b = 0
+        const pixelCount = data.length / 4
+
+        for (let i = 0; i < data.length; i += 4) {
+          r += data[i]
+          g += data[i + 1]
+          b += data[i + 2]
+        }
+
+        r = Math.floor(r / pixelCount)
+        g = Math.floor(g / pixelCount)
+        b = Math.floor(b / pixelCount)
+
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000
+        const isDark = brightness < 128
+
+        setDominantColor({ r, g, b })
+        setIsDarkImage(isDark)
+        resolve({ r, g, b, isDark })
+      }
+      img.onerror = () => resolve({ r: 102, g: 126, b: 234 })
+      img.src = imageSrc
+    })
+  }
+
+  // Carrusel de imágenes
+  useEffect(() => {
+    getDominantColor(images[currentImageIndex])
+
+    const interval = setInterval(() => {
+      setCurrentImageIndex((prev) => (prev + 1) % images.length)
+    }, 5000)
+
+    return () => clearInterval(interval)
+  }, [currentImageIndex])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -38,43 +108,32 @@ function Login({ onLogin }) {
   }
 
   return (
-    <div className="login-wrapper">
+    <div
+      className="login-wrapper"
+      style={{
+        background: isDarkImage
+          ? `linear-gradient(135deg, rgb(${Math.max(dominantColor.r - 40, 0)}, ${Math.max(dominantColor.g - 40, 0)}, ${Math.max(dominantColor.b - 40, 0)}) 0%, rgb(${Math.max(dominantColor.r - 60, 0)}, ${Math.max(dominantColor.g - 60, 0)}, ${Math.max(dominantColor.b - 60, 0)}) 100%)`
+          : `linear-gradient(135deg, rgb(${Math.min(dominantColor.r + 30, 255)}, ${Math.min(dominantColor.g + 30, 255)}, ${Math.min(dominantColor.b + 30, 255)}) 0%, rgb(${Math.min(dominantColor.r + 10, 255)}, ${Math.min(dominantColor.g + 10, 255)}, ${Math.min(dominantColor.b + 10, 255)}) 100%)`
+      }}
+    >
+      <canvas ref={canvasRef} style={{ display: 'none' }} />
       <div className="login-container">
-        {/* Lado izquierdo - Branding */}
-        <div className="login-branding">
-          <div className="branding-content">
-            <div className="branding-icon">
-              <svg width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <rect width="80" height="80" rx="20" fill="url(#grad1)" />
-                <path d="M25 35L40 50L55 35" stroke="white" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
-                <defs>
-                  <linearGradient id="grad1" x1="0" y1="0" x2="80" y2="80">
-                    <stop offset="0%" stopColor="#667eea" />
-                    <stop offset="100%" stopColor="#764ba2" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </div>
-            <h1 className="branding-title">QUADRA</h1>
-            <p className="branding-subtitle">Sistema de Conciliación Contable</p>
-
-            <div className="benefits">
-              <div className="benefit-item">
-                <span className="benefit-icon">✓</span>
-                <p>Gestión integral de datos contables</p>
-              </div>
-              <div className="benefit-item">
-                <span className="benefit-icon">✓</span>
-                <p>Reportes en tiempo real</p>
-              </div>
-              <div className="benefit-item">
-                <span className="benefit-icon">✓</span>
-                <p>Seguridad y cumplimiento normativo</p>
-              </div>
-            </div>
-          </div>
-          <div className="branding-footer">
-            <p>© 2024 QUADRA. Todos los derechos reservados.</p>
+        {/* Lado izquierdo - Carrusel de imágenes */}
+        <div className="login-branding image-carousel">
+          <img
+            src={images[currentImageIndex]}
+            alt="Fondo de login"
+            className="carousel-image"
+            key={currentImageIndex}
+          />
+          <div className="carousel-indicators">
+            {images.map((_, idx) => (
+              <div
+                key={idx}
+                className={`indicator ${idx === currentImageIndex ? 'active' : ''}`}
+                onClick={() => setCurrentImageIndex(idx)}
+              />
+            ))}
           </div>
         </div>
 
