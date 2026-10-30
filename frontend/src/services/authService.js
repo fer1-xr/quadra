@@ -1,5 +1,7 @@
-// Usa URLs relativas para que el proxy de Vite funcione en desarrollo
-const API_URL = '/api';
+// Usa URL absoluta para desarrollo local, relativa en producción
+const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+  ? 'http://localhost:3000/api'
+  : '/api';
 
 export const authService = {
   // Registro de nuevo usuario

@@ -10,14 +10,14 @@
 .login-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  height: 100vh;
-  max-height: 100vh;
-  width: 100%;
+  height: 550px;
+  width: 90%;
+  max-width: 1000px;
   background: white;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   overflow: hidden;
-  max-width: 1200px;
+  margin: auto;
 }
 
 /* ===== LADO IZQUIERDO - CARRUSEL DE IMÁGENES ===== */
