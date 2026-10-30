@@ -1,11 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
+import { Eye, EyeOff } from 'lucide-react'
 import { authService } from '../services/authService'
 import '../styles/Login.css'
 
 function ResetPassword({ token, onBackToLogin }) {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -193,17 +196,27 @@ function ResetPassword({ token, onBackToLogin }) {
               <form onSubmit={handleSubmit} className="login-form">
                 <div className="form-group">
                   <label htmlFor="newPassword" className="form-label">Nueva Contraseña</label>
-                  <Input
-                    id="newPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={newPassword}
-                    onChange={handlePasswordChange}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="password-input-wrapper">
+                    <Input
+                      id="newPassword"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={handlePasswordChange}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle-btn"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {newPassword && (
                     <div style={{ marginTop: '8px', fontSize: '12px' }}>
                       <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
@@ -232,17 +245,27 @@ function ResetPassword({ token, onBackToLogin }) {
 
                 <div className="form-group">
                   <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="password-input-wrapper">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="password-toggle-btn"
+                      aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (

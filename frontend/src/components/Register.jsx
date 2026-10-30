@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
+import { Eye, EyeOff } from 'lucide-react'
 import { authService } from '../services/authService'
 import '../styles/Login.css'
 
@@ -8,6 +9,8 @@ function Register({ onRegister, onSwitchToLogin }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
@@ -242,17 +245,27 @@ function Register({ onRegister, onSwitchToLogin }) {
 
                 <div className="form-group">
                   <label htmlFor="password" className="form-label">Contraseña</label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="password-input-wrapper">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={handlePasswordChange}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle-btn"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {password && (
                     <div style={{ marginTop: '8px', fontSize: '12px' }}>
                       <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
@@ -281,17 +294,27 @@ function Register({ onRegister, onSwitchToLogin }) {
 
                 <div className="form-group">
                   <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                  <Input
-                    id="confirmPassword"
-                    type="password"
-                    placeholder="••••••••"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="password-input-wrapper">
+                    <Input
+                      id="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="password-toggle-btn"
+                      aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (

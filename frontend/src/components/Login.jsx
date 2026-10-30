@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
+import { Eye, EyeOff } from 'lucide-react'
 import { authService } from '../services/authService'
 import '../styles/Login.css'
 
 function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [emailFocused, setEmailFocused] = useState(false)
@@ -161,19 +163,29 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
 
                 <div className={`form-group ${passwordFocused ? 'focused' : ''}`}>
                   <label htmlFor="password" className="form-label">Contraseña</label>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    onFocus={() => setPasswordFocused(true)}
-                    onBlur={() => setPasswordFocused(false)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="password-input-wrapper">
+                    <Input
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      onFocus={() => setPasswordFocused(true)}
+                      onBlur={() => setPasswordFocused(false)}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="password-toggle-btn"
+                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (

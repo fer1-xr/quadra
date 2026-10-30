@@ -10,14 +10,16 @@
 .login-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  height: 550px;
+  height: auto;
+  min-height: 600px;
   width: 90%;
-  max-width: 1000px;
+  max-width: 1100px;
   background: white;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
   border-radius: 20px;
   overflow: hidden;
   margin: auto;
+  aspect-ratio: 16/9;
 }
 
 /* ===== LADO IZQUIERDO - CARRUSEL DE IMÁGENES ===== */
@@ -85,12 +87,14 @@
 
 /* ===== LADO DERECHO - FORMULARIO ===== */
 .login-form-section {
-  padding: 60px 50px;
+  padding: 4vw;
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
   position: relative;
   overflow: hidden;
+  min-height: 600px;
 }
 
 .login-form-section::before {
@@ -205,6 +209,38 @@
   box-shadow: 0 0 0 3px rgba(26, 58, 82, 0.1);
 }
 
+/* ===== PASSWORD TOGGLE ===== */
+.password-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-toggle-btn {
+  position: absolute;
+  right: 12px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #718096;
+  padding: 4px;
+  transition: color 0.3s ease;
+  z-index: 10;
+  font-family: Arial, sans-serif;
+}
+
+.password-toggle-btn:hover {
+  color: #1a3a52;
+}
+
+.password-toggle-btn:focus {
+  outline: none;
+}
+
 .error-message {
   display: flex;
   align-items: center;
@@ -313,11 +349,13 @@
 @media (max-width: 1024px) {
   .login-container {
     grid-template-columns: 1fr;
+    aspect-ratio: auto;
+    min-height: auto;
   }
 
   .login-branding {
     padding: 40px 30px;
-    min-height: 300px;
+    min-height: 350px;
   }
 
   .branding-title {
@@ -325,7 +363,12 @@
   }
 
   .login-form-section {
-    padding: 40px 30px;
+    padding: 3vw;
+    min-height: 400px;
+  }
+
+  .login-card {
+    max-width: 90%;
   }
 }
 
@@ -335,28 +378,99 @@
     max-width: 100%;
     border-radius: 0;
     margin: 0;
+    width: 100%;
+    aspect-ratio: auto;
   }
 
-  .login-branding {
-    padding: 30px 20px;
-    min-height: 250px;
-  }
-
-  .branding-title {
-    font-size: 28px;
-  }
-
-  .login-form-section {
-    padding: 30px 20px;
+  .login-wrapper {
+    padding: 20px 0;
     min-height: auto;
   }
 
-  .form-title {
+  .login-branding {
+    padding: 25px 15px;
+    min-height: 280px;
+    display: none;
+  }
+
+  .branding-title {
     font-size: 24px;
+  }
+
+  .login-form-section {
+    padding: 2vw 4vw;
+    min-height: auto;
+    border-radius: 20px;
+    margin: 20px;
+    background: white;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  }
+
+  .form-title {
+    font-size: 26px;
+  }
+
+  .form-subtitle {
+    font-size: 14px;
   }
 
   .login-card {
     max-width: 100%;
+  }
+
+  .form-header {
+    margin-bottom: 24px;
+  }
+
+  .login-form {
+    gap: 10px;
+  }
+
+  .form-group {
+    gap: 6px;
+  }
+
+  .input-field {
+    font-size: 14px;
+    padding: 10px 12px;
+  }
+
+  .password-toggle-btn {
+    right: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login-form-section {
+    padding: 20px;
+    margin: 15px;
+  }
+
+  .form-title {
+    font-size: 22px;
+    margin-bottom: 4px;
+  }
+
+  .form-subtitle {
+    font-size: 12px;
+  }
+
+  .form-header {
+    margin-bottom: 20px;
+  }
+
+  .login-button {
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+
+  .form-label {
+    font-size: 12px;
+  }
+
+  .input-field {
+    padding: 8px 10px;
+    font-size: 13px;
   }
 }
 
