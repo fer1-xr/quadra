@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { Button, Input, Card, CardBody } from '@heroui/react'
-import { Eye, EyeOff } from 'lucide-react'
+import { Eye, EyeOff, Mail } from 'lucide-react'
 import { authService } from '../services/authService'
 import '../styles/Login.css'
 
@@ -18,16 +18,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const canvasRef = useRef(null)
 
   const images = [
-    '/login-images/1.jpg',
-    '/login-images/2.jpg',
-    '/login-images/3.jpg',
-    '/login-images/4.jpg',
-    '/login-images/5.jpg',
-    '/login-images/6.jpg',
-    '/login-images/7.jpg',
-    '/login-images/8.jpg',
-    '/login-images/9.jpg',
-    '/login-images/10.jpg'
+    'https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=1200&h=800&fit=crop'
   ]
 
   // Detectar color dominante de la imagen
@@ -123,15 +114,6 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
             className="carousel-image"
             key={currentImageIndex}
           />
-          <div className="carousel-indicators">
-            {images.map((_, idx) => (
-              <div
-                key={idx}
-                className={`indicator ${idx === currentImageIndex ? 'active' : ''}`}
-                onClick={() => setCurrentImageIndex(idx)}
-              />
-            ))}
-          </div>
         </div>
 
         {/* Lado derecho - Formulario */}
@@ -139,6 +121,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
           <Card className="login-card">
             <CardBody className="login-card-body">
               <div className="form-header">
+                <p className="form-welcome">Bienvenido a Quadra</p>
                 <h2 className="form-title">Bienvenido</h2>
                 <p className="form-subtitle">Inicia sesión en tu cuenta</p>
               </div>
@@ -146,24 +129,27 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
               <form onSubmit={handleSubmit} className="login-form">
                 <div className={`form-group ${emailFocused ? 'focused' : ''}`}>
                   <label htmlFor="email" className="form-label">Correo electrónico</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    onFocus={() => setEmailFocused(true)}
-                    onBlur={() => setEmailFocused(false)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
+                  <div className="input-with-icon">
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="tu@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      onFocus={() => setEmailFocused(true)}
+                      onBlur={() => setEmailFocused(false)}
+                      required
+                      fullWidth
+                      className="input-field"
+                      variant="bordered"
+                    />
+                    <Mail size={18} className="input-icon" />
+                  </div>
                 </div>
 
                 <div className={`form-group ${passwordFocused ? 'focused' : ''}`}>
                   <label htmlFor="password" className="form-label">Contraseña</label>
-                  <div className="password-input-wrapper">
+                  <div className="input-with-icon">
                     <Input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
@@ -180,7 +166,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="password-toggle-btn"
+                      className="password-toggle-icon"
                       aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
                       {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
