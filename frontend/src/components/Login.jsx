@@ -121,8 +121,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
           <Card className="login-card">
             <CardBody className="login-card-body">
               <div className="form-header">
-                <p className="form-welcome">Bienvenido a Quadra</p>
-                <h2 className="form-title">Bienvenido</h2>
+                <h2 className="form-title">Bienvenido a Quadra</h2>
                 <p className="form-subtitle">Inicia sesión en tu cuenta</p>
               </div>
 
