@@ -30,13 +30,17 @@ const TOL = 1;
 const RAZON_SOCIAL_ES_ERROR = false;
 
 // ==================== AUTH ====================
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
   if (!token) return res.status(401).json({ error: 'No autorizado' });
   try {
-    req.user = jwt.verify(token, process.env.JWT_SECRET);
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+    if (error || !user) {
+      return res.status(401).json({ error: 'Token inválido' });
+    }
+    req.user = { id: user.id, email: user.email };
     next();
-  } catch {
+  } catch (err) {
     res.status(401).json({ error: 'Token inválido' });
   }
 };
