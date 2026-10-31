@@ -35,13 +35,19 @@ const verifyToken = async (req, res, next) => {
   if (!token) return res.status(401).json({ error: 'No autorizado' });
   try {
     const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error || !user) {
+    if (error) {
+      console.error('🔴 Supabase auth error:', error);
+      return res.status(401).json({ error: 'Token inválido', details: error.message });
+    }
+    if (!user) {
+      console.error('🔴 No user found for token');
       return res.status(401).json({ error: 'Token inválido' });
     }
     req.user = { id: user.id, email: user.email };
     next();
   } catch (err) {
-    res.status(401).json({ error: 'Token inválido' });
+    console.error('🔴 verifyToken exception:', err);
+    res.status(401).json({ error: 'Token inválido', details: err.message });
   }
 };
 
