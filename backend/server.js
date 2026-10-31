@@ -30,25 +30,29 @@ const TOL = 1;
 const RAZON_SOCIAL_ES_ERROR = false;
 
 // ==================== AUTH ====================
-const verifyToken = async (req, res, next) => {
+const verifyToken = (req, res, next) => {
   const token = req.headers.authorization?.split(' ')[1];
+  console.log('🔵 verifyToken called, token present:', !!token);
   if (!token) return res.status(401).json({ error: 'No autorizado' });
-  try {
-    const { data: { user }, error } = await supabase.auth.getUser(token);
-    if (error) {
-      console.error('🔴 Supabase auth error:', error);
-      return res.status(401).json({ error: 'Token inválido', details: error.message });
-    }
-    if (!user) {
-      console.error('🔴 No user found for token');
-      return res.status(401).json({ error: 'Token inválido' });
-    }
-    req.user = { id: user.id, email: user.email };
-    next();
-  } catch (err) {
-    console.error('🔴 verifyToken exception:', err);
-    res.status(401).json({ error: 'Token inválido', details: err.message });
-  }
+
+  supabase.auth.getUser(token)
+    .then(({ data: { user }, error }) => {
+      if (error) {
+        console.error('🔴 Supabase auth error:', error);
+        return res.status(401).json({ error: 'Token inválido', details: error.message });
+      }
+      if (!user) {
+        console.error('🔴 No user found for token');
+        return res.status(401).json({ error: 'Token inválido' });
+      }
+      console.log('✅ Token verified for user:', user.email);
+      req.user = { id: user.id, email: user.email };
+      next();
+    })
+    .catch((err) => {
+      console.error('🔴 verifyToken exception:', err);
+      res.status(401).json({ error: 'Token inválido', details: err.message });
+    });
 };
 
 // ==================== VALIDACIONES DE AUTENTICACIÓN ====================
