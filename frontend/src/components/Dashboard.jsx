@@ -91,7 +91,7 @@ function Dashboard({ user, onLogout }) {
       }
       const token = localStorage.getItem('quaedra_token')
       const response = await axios.post(`${API_BASE_URL}/api/reconciliation`,
-        { monthlyData, marangatuData },
+        { rg90Data: monthlyData, libroData: marangatuData },
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setDiscrepancies(response.data.discrepancies)
