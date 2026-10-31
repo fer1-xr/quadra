@@ -233,10 +233,16 @@ html, body {
   right: 0;
   color: #4db4d6;
   pointer-events: none;
-  font-size: 18px;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  min-height: 16px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ===== PASSWORD TOGGLE ===== */
