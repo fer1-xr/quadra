@@ -129,7 +129,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                 <div className={`form-group ${emailFocused ? 'focused' : ''}`}>
                   <label htmlFor="email" className="form-label">Correo electrónico</label>
                   <div className="input-with-icon">
-                    <Input
+                    <input
                       id="email"
                       type="email"
                       placeholder="tu@email.com"
@@ -138,18 +138,16 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                       onFocus={() => setEmailFocused(true)}
                       onBlur={() => setEmailFocused(false)}
                       required
-                      fullWidth
                       className="input-field"
-                      variant="bordered"
                     />
-                    <Mail size={18} className="input-icon" />
+                    <Mail size={16} className="input-icon" />
                   </div>
                 </div>
 
                 <div className={`form-group ${passwordFocused ? 'focused' : ''}`}>
                   <label htmlFor="password" className="form-label">Contraseña</label>
                   <div className="input-with-icon">
-                    <Input
+                    <input
                       id="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="••••••••"
@@ -158,9 +156,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                       onFocus={() => setPasswordFocused(true)}
                       onBlur={() => setPasswordFocused(false)}
                       required
-                      fullWidth
                       className="input-field"
-                      variant="bordered"
                     />
                     <button
                       type="button"
@@ -168,7 +164,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
                       className="password-toggle-icon"
                       aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                     >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
