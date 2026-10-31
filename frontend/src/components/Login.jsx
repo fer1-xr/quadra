@@ -18,7 +18,7 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const canvasRef = useRef(null)
 
   const images = [
-    'https://images.unsplash.com/photo-1633356122544-f134324ef6db?w=1200&h=800&fit=crop'
+    '/login-images/4.jpg'
   ]
 
   // Detectar color dominante de la imagen
