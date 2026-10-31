@@ -1,141 +1,138 @@
-// Usa URL absoluta para desarrollo local, relativa en producción
-const API_URL = typeof window !== 'undefined' && window.location.hostname === 'localhost'
-  ? 'http://localhost:3000/api'
-  : '/api';
+import { supabase } from './supabaseClient'
 
 export const authService = {
   // Registro de nuevo usuario
   signup: async (email, password, name) => {
     try {
-      const response = await fetch(`${API_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Registrar con Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: name,
+          },
         },
-        body: JSON.stringify({ email, password, name }),
-      });
+      })
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error en el registro');
+      if (authError) {
+        throw new Error(authError.message)
       }
 
-      // Guardar token y usuario
-      localStorage.setItem('quaedra_token', data.token);
-      localStorage.setItem('quaedra_user', JSON.stringify(data.user));
+      // Guardar información en localStorage
+      if (authData.session) {
+        localStorage.setItem('quaedra_token', authData.session.access_token)
+        localStorage.setItem('quaedra_user', JSON.stringify({
+          id: authData.user.id,
+          email: authData.user.email,
+          name: name,
+        }))
+      }
 
-      return data;
+      return authData
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw new Error('Error en la respuesta del servidor');
-      }
-      throw new Error(error.message || 'Error al registrarse');
+      throw new Error(error.message || 'Error al registrarse')
     }
   },
 
   // Login
   login: async (email, password) => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
 
-      let data;
-      const contentType = response.headers.get('content-type');
-
-      if (contentType && contentType.includes('application/json')) {
-        data = await response.json();
-      } else {
-        throw new Error('El servidor no está disponible. Por favor, contacta al soporte.');
+      if (error) {
+        throw new Error(error.message)
       }
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Error en el inicio de sesión');
+      // Guardar sesión
+      if (data.session) {
+        localStorage.setItem('quaedra_token', data.session.access_token)
+        localStorage.setItem('quaedra_user', JSON.stringify({
+          id: data.user.id,
+          email: data.user.email,
+          name: data.user.user_metadata?.name || email.split('@')[0],
+        }))
       }
 
-      // Guardar token y usuario
-      localStorage.setItem('quaedra_token', data.token);
-      localStorage.setItem('quaedra_user', JSON.stringify(data.user));
-
-      return data;
+      return data
     } catch (error) {
-      if (error instanceof SyntaxError) {
-        throw new Error('El servidor no está disponible. Por favor, contacta al soporte.');
-      }
-      throw new Error(error.message || 'Error al iniciar sesión');
+      throw new Error(error.message || 'Error al iniciar sesión')
     }
   },
 
   // Solicitar recuperación de contraseña
   forgotPassword: async (email) => {
     try {
-      const response = await fetch(`${API_URL}/auth/forgot-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email }),
-      });
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      })
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al enviar el email');
+      if (error) {
+        throw new Error(error.message)
       }
 
-      return data;
+      return data
     } catch (error) {
-      throw new Error(error.message || 'Error al enviar el email de recuperación');
+      throw new Error(error.message || 'Error al enviar el email de recuperación')
     }
   },
 
   // Restablecer contraseña con token
   resetPassword: async (token, newPassword) => {
     try {
-      const response = await fetch(`${API_URL}/auth/reset-password`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, newPassword }),
-      });
+      const { data, error } = await supabase.auth.updateUser({
+        password: newPassword,
+      })
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al restablecer contraseña');
+      if (error) {
+        throw new Error(error.message)
       }
 
-      return data;
+      return data
     } catch (error) {
-      throw new Error(error.message || 'Error al restablecer la contraseña');
+      throw new Error(error.message || 'Error al restablecer la contraseña')
     }
   },
 
   // Logout
-  logout: () => {
-    localStorage.removeItem('quaedra_token');
-    localStorage.removeItem('quaedra_user');
+  logout: async () => {
+    try {
+      await supabase.auth.signOut()
+      localStorage.removeItem('quaedra_token')
+      localStorage.removeItem('quaedra_user')
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error)
+    }
   },
 
   // Obtener token
   getToken: () => {
-    return localStorage.getItem('quaedra_token');
+    return localStorage.getItem('quaedra_token')
   },
 
   // Obtener usuario
   getUser: () => {
-    const user = localStorage.getItem('quaedra_user');
-    return user ? JSON.parse(user) : null;
+    const user = localStorage.getItem('quaedra_user')
+    return user ? JSON.parse(user) : null
   },
 
   // Verificar si está autenticado
   isAuthenticated: () => {
-    return !!localStorage.getItem('quaedra_token');
+    return !!localStorage.getItem('quaedra_token')
   },
-};
+
+  // Obtener sesión actual
+  getCurrentSession: async () => {
+    try {
+      const { data, error } = await supabase.auth.getSession()
+      if (error) throw error
+      return data.session
+    } catch (error) {
+      console.error('Error al obtener sesión:', error)
+      return null
+    }
+  },
+}
