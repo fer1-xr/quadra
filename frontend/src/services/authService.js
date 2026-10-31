@@ -45,7 +45,14 @@ export const authService = {
         body: JSON.stringify({ email, password }),
       });
 
-      const data = await response.json();
+      let data;
+      const contentType = response.headers.get('content-type');
+
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        throw new Error('El servidor no está disponible. Por favor, contacta al soporte.');
+      }
 
       if (!response.ok) {
         throw new Error(data.error || 'Error en el inicio de sesión');
@@ -57,6 +64,9 @@ export const authService = {
 
       return data;
     } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw new Error('El servidor no está disponible. Por favor, contacta al soporte.');
+      }
       throw new Error(error.message || 'Error al iniciar sesión');
     }
   },
