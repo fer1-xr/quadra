@@ -16,12 +16,13 @@ export const authService = {
       })
 
       if (authError) {
-        throw new Error(authError.message)
+        console.error('Supabase signup error:', authError)
+        throw new Error(authError.message || 'Error al registrarse')
       }
 
       // Guardar información en localStorage
-      if (authData.session) {
-        localStorage.setItem('quaedra_token', authData.session.access_token)
+      if (authData.user) {
+        localStorage.setItem('quaedra_token', authData.session?.access_token || '')
         localStorage.setItem('quaedra_user', JSON.stringify({
           id: authData.user.id,
           email: authData.user.email,
@@ -31,6 +32,7 @@ export const authService = {
 
       return authData
     } catch (error) {
+      console.error('Signup error:', error)
       throw new Error(error.message || 'Error al registrarse')
     }
   },
