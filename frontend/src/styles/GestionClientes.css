@@ -1,5 +1,5 @@
 .gestion-clientes {
-  background: white;
+  background: var(--q-surface, white);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -24,7 +24,7 @@
 .clientes-titulo h3 {
   margin: 0;
   font-size: 18px;
-  color: #333;
+  color: var(--q-ink, #333);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -34,7 +34,7 @@
 .clientes-subtitulo {
   margin: 3px 0 0 0;
   font-size: 12px;
-  color: #999;
+  color: var(--q-ink-3, #999);
 }
 
 .clientes-stats {
@@ -46,9 +46,9 @@
 .stat-box {
   text-align: center;
   padding: 8px 12px;
-  background: #f8f9fa;
+  background: var(--q-surface-2, #f8f9fa);
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   min-width: 100px;
   flex: 1;
 }
@@ -57,14 +57,14 @@
   display: block;
   font-size: 18px;
   font-weight: 700;
-  color: #4ECDC4;
+  color: var(--q-brand, #1747d1);
   line-height: 1.2;
 }
 
 .stat-label {
   display: block;
   font-size: 10px;
-  color: #666;
+  color: var(--q-ink-3, #666);
   text-transform: uppercase;
   margin-top: 3px;
   letter-spacing: 0.3px;
@@ -72,7 +72,7 @@
 
 /* Formulario */
 .clientes-form {
-  background: #f8f9fa;
+  background: var(--q-surface-2, #f8f9fa);
   border-radius: 8px;
   padding: 14px;
   margin-bottom: 12px;
@@ -84,7 +84,7 @@
 .clientes-form h4 {
   margin: 0 0 16px 0;
   font-size: 15px;
-  color: #333;
+  color: var(--q-ink, #333);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -98,7 +98,7 @@
   display: block;
   font-size: 12px;
   font-weight: 600;
-  color: #333;
+  color: var(--q-ink, #333);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -109,18 +109,18 @@
 .form-group select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--q-line, #ddd);
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
   transition: border-color 0.3s;
-  background: white;
+  background: var(--q-surface, white);
 }
 
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
 }
 
@@ -146,7 +146,7 @@
   right: 12px;
   font-size: 12px;
   font-weight: 600;
-  color: #666;
+  color: var(--q-ink-3, #666);
   pointer-events: none;
 }
 
@@ -163,16 +163,16 @@
   gap: 8px;
   cursor: pointer;
   padding: 8px 10px;
-  background: white;
+  background: var(--q-surface, white);
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   transition: all 0.3s;
   font-size: 14px;
-  color: #333;
+  color: var(--q-ink, #333);
 }
 
 .checkbox-label:hover {
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
   background: #f0fffe;
 }
 
@@ -180,7 +180,7 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #4ECDC4;
+  accent-color: var(--q-brand, #1747d1);
   flex-shrink: 0;
 }
 
@@ -197,7 +197,7 @@
 }
 
 .btn-export {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--q-action, #0a1a2f);
   color: white;
   border: none;
   padding: 8px 12px;
@@ -217,7 +217,7 @@
 }
 
 .btn-export-excel {
-  background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  background: var(--q-ok, #0b8a63);
 }
 
 .btn-export-excel:hover {
@@ -225,7 +225,7 @@
 }
 
 .btn-export-pdf {
-  background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+  background: var(--q-err, #b4372b);
 }
 
 .btn-export-pdf:hover {
@@ -233,7 +233,7 @@
 }
 
 .btn-add-cliente {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
   border: none;
   padding: 9px 14px;
@@ -261,7 +261,7 @@
 }
 
 .btn-primary {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
 }
 
@@ -271,7 +271,7 @@
 
 .btn-secondary {
   background: #e0e0e0;
-  color: #333;
+  color: var(--q-ink, #333);
 }
 
 .btn-secondary:hover {
@@ -287,7 +287,7 @@
 .busqueda-box input {
   width: 100%;
   padding: 9px 12px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   border-radius: 6px;
   font-size: 13px;
   transition: border-color 0.3s;
@@ -295,7 +295,7 @@
 
 .busqueda-box input:focus {
   outline: none;
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
 }
 
@@ -304,7 +304,7 @@
   overflow: auto;
   margin-bottom: 12px;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   flex: 1;
   min-height: 0;
 }
@@ -316,15 +316,15 @@
 }
 
 .clientes-table thead {
-  background: #f8f9fa;
-  border-bottom: 2px solid #e0e0e0;
+  background: var(--q-surface-2, #f8f9fa);
+  border-bottom: 2px solid var(--q-line, #e0e0e0);
 }
 
 .clientes-table th {
   padding: 10px 12px;
   text-align: left;
   font-weight: 600;
-  color: #333;
+  color: var(--q-ink, #333);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   white-space: nowrap;
@@ -338,7 +338,7 @@
 }
 
 .clientes-table tbody tr:hover {
-  background: #f8f9fa;
+  background: var(--q-surface-2, #f8f9fa);
 }
 
 .clientes-table tbody tr.al-dia {
@@ -356,23 +356,23 @@
 
 .numero {
   font-weight: 600;
-  color: #999;
+  color: var(--q-ink-3, #999);
   width: 40px;
 }
 
 .razon-social {
   font-weight: 600;
-  color: #333;
+  color: var(--q-ink, #333);
   max-width: 200px;
 }
 
 .ruc {
-  font-family: 'Courier New', monospace;
-  color: #666;
+  font-family: var(--q-mono, monospace);
+  color: var(--q-ink-3, #666);
 }
 
 .sena {
-  color: #999;
+  color: var(--q-ink-3, #999);
   font-size: 12px;
 }
 
@@ -384,7 +384,7 @@
   display: inline-block;
   padding: 4px 10px;
   background: #e8f5f2;
-  color: #4ECDC4;
+  color: var(--q-brand, #1747d1);
   border-radius: 4px;
   font-weight: 600;
   font-size: 11px;
@@ -435,7 +435,7 @@
 
 .honorarios {
   font-weight: 600;
-  color: #333;
+  color: var(--q-ink, #333);
   text-align: right;
 }
 
@@ -446,7 +446,7 @@
 
 .btn-accion {
   background: none;
-  border: 1px solid #ddd;
+  border: 1px solid var(--q-line, #ddd);
   border-radius: 4px;
   padding: 6px 8px;
   cursor: pointer;
@@ -456,8 +456,8 @@
 }
 
 .btn-editar {
-  color: #4ECDC4;
-  border-color: #4ECDC4;
+  color: var(--q-brand, #1747d1);
+  border-color: var(--q-brand, #1747d1);
 }
 
 .btn-editar:hover {
@@ -465,8 +465,8 @@
 }
 
 .btn-eliminar {
-  color: #ff6b6b;
-  border-color: #ff6b6b;
+  color: var(--q-brand, #1747d1);
+  border-color: var(--q-brand, #1747d1);
 }
 
 .btn-eliminar:hover {
@@ -479,13 +479,13 @@
   padding: 40px 20px;
   background: #f0fffe;
   border-radius: 8px;
-  color: #666;
+  color: var(--q-ink-3, #666);
   font-size: 15px;
 }
 
 /* Resumen */
 .clientes-resumen {
-  background: #f8f9fa;
+  background: var(--q-surface-2, #f8f9fa);
   border-radius: 8px;
   padding: 12px 16px;
   border: 1px solid rgba(78, 205, 196, 0.3);
@@ -500,15 +500,15 @@
   justify-content: space-between;
   align-items: center;
   padding: 8px 10px;
-  background: white;
+  background: var(--q-surface, white);
   border-radius: 6px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
 }
 
 .resumen-label {
   font-size: 11px;
   font-weight: 600;
-  color: #666;
+  color: var(--q-ink-3, #666);
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
@@ -516,7 +516,7 @@
 .resumen-valor {
   font-size: 14px;
   font-weight: 700;
-  color: #4ECDC4;
+  color: var(--q-brand, #1747d1);
 }
 
 /* Responsive */

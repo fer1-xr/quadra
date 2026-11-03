@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
-import { Plus, Edit2, Trash2, Download, Users } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, Users, X, Pencil } from 'lucide-react'
 import '../styles/GestionClientes.css'
 
 const TIPOS_IMPUESTO = [
@@ -216,7 +216,7 @@ function GestionClientes() {
     <div className="gestion-clientes">
       <div className="clientes-header">
         <div className="clientes-titulo">
-          <h3>👥 Gestión de Clientes</h3>
+          <h3>Gestión de Clientes</h3>
           <p className="clientes-subtitulo">Administra tu listado de clientes y servicios</p>
         </div>
         {clientes.length > 0 && (
@@ -226,14 +226,14 @@ function GestionClientes() {
               onClick={exportarAExcel}
               title="Descargar en formato Excel"
             >
-              📊 Excel
+              Excel
             </button>
             <button
               className="btn-export btn-export-pdf"
               onClick={exportarAPDF}
               title="Descargar en formato PDF"
             >
-              📄 PDF
+              PDF
             </button>
           </div>
         )}
@@ -369,7 +369,7 @@ function GestionClientes() {
         <div className="busqueda-box">
           <input
             type="text"
-            placeholder="🔍 Buscar por razón social o RUC..."
+            placeholder="Buscar por razón social o RUC..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
           />
@@ -379,7 +379,7 @@ function GestionClientes() {
       {/* Tabla de clientes */}
       {clientesFiltrados.length === 0 ? (
         <div className="clientes-vacio">
-          <p>📭 {clientes.length === 0 ? 'No hay clientes registrados' : 'No se encontraron resultados'}</p>
+          <p>{clientes.length === 0 ? 'No hay clientes registrados' : 'No se encontraron resultados'}</p>
         </div>
       ) : (
         <div className="clientes-table-wrapper">
@@ -444,14 +444,14 @@ function GestionClientes() {
                       onClick={() => editarCliente(cliente)}
                       title="Editar cliente"
                     >
-                      ✎
+                      <Pencil size={14} strokeWidth={1.8} />
                     </button>
                     <button
                       className="btn-accion btn-eliminar"
                       onClick={() => eliminarCliente(cliente.id)}
                       title="Eliminar cliente"
                     >
-                      ✕
+                      <X size={14} strokeWidth={1.8} />
                     </button>
                   </td>
                 </tr>

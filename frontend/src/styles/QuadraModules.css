@@ -1,0 +1,624 @@
+/* ─────────────────────────────────────────────
+   QUADRA · Capa de tema para los módulos
+   Unifica Lección, TO DO, Metas, Importar, Control de Pagos,
+   Liquidación, Activo Fijo, Cotización y Clientes con el lenguaje
+   de quadra-landing. Se carga después de la CSS de cada módulo y
+   usa los tokens definidos en .q-app (Dashboard.css).
+   ───────────────────────────────────────────── */
+
+/* ── base tipográfica ───────────────────────── */
+
+:where(.q-app .q-content) :where(h1, h2, h3, h4, h5) {
+  font-family: var(--q-sans);
+  color: var(--q-ink);
+  letter-spacing: -0.02em;
+}
+
+:where(.q-app .q-content) :where(p, li, td, label, small, strong, dd, dt) { font-family: var(--q-sans); }
+
+:where(.q-app .q-content) :where(label) { color: var(--q-ink-2); }
+
+/* ── contenedores raíz: sin fondos propios ───── */
+
+.q-app .q-content :is(
+  .leccion-del-dia-container, .todo-del-dia, .metas-anuales, .importar-documentos,
+  .control-pagos, .liquidacion-container, .venta-activo-fijo-container,
+  .cotizacion-container, .gestion-clientes
+) {
+  max-width: 1120px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  color: var(--q-ink);
+  animation: q-rise 420ms var(--q-ease) both;
+}
+
+/* ── superficies (tarjetas) ─────────────────── */
+
+.q-app .q-content :is(
+  .leccion-blog,
+  .todo-header, .dia-card, .todo-form,
+  .metas-header, .meta-form, .graficos-section, .meta-card, .metas-vacio,
+  .importar-documentos .card, .control-pagos .card,
+  .liquidacion-container > .card, .venta-activo-fijo-container > .card,
+  .cotizacion-card,
+  .clientes-header, .clientes-form, .clientes-table-wrapper, .clientes-resumen, .clientes-vacio
+) {
+  background: var(--q-surface);
+  border: 1px solid var(--q-line);
+  border-radius: 18px;
+  box-shadow: var(--q-shadow);
+  color: var(--q-ink);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.q-app .q-content :is(.todo-header, .metas-header, .clientes-header) { padding: 26px 30px; }
+
+.q-app .q-content :is(.todo-form, .meta-form, .clientes-form) { padding: 26px 30px; margin-bottom: 20px; }
+
+.q-app .q-content :is(.importar-documentos .card, .control-pagos .card, .cotizacion-card) { padding: 30px; }
+
+.q-app .q-content :is(.liquidacion-container > .card, .venta-activo-fijo-container > .card) {
+  max-width: none;
+  margin: 0;
+  padding: 30px;
+  overflow: hidden;
+}
+
+/* superficies internas: un escalón más sutil */
+.q-app .q-content :is(
+  .stat-box, .estadistica-box, .grafico-container, .ahorro-desglose,
+  .review-section, .validation-box, .document-info, .preview-table,
+  .form-section, .resultado-card, .datos-card, .normas-card, .modo-calculo-card,
+  .marco-legal-card, .cotizacion-item, .cotizacion-info, .cotizacion-resultado, .historico-section,
+  .resumen-item, .tareas-principales, .tareas-restantes, .file-item, .leyes-footer, .leccion-footer
+) {
+  background: var(--q-surface-2);
+  border: 1px solid var(--q-line-2);
+  border-radius: 14px;
+  box-shadow: none;
+  color: var(--q-ink);
+}
+
+:root[data-theme="dark"] .q-app .q-content :is(
+  .stat-box, .estadistica-box, .grafico-container, .ahorro-desglose,
+  .review-section, .validation-box, .document-info, .preview-table,
+  .form-section, .resultado-card, .datos-card, .normas-card, .modo-calculo-card,
+  .marco-legal-card, .cotizacion-item, .cotizacion-info, .cotizacion-resultado, .historico-section,
+  .resumen-item, .tareas-principales, .tareas-restantes, .file-item, .leyes-footer, .leccion-footer
+) { background: rgba(255, 255, 255, 0.03); }
+
+/* ── títulos de página ──────────────────────── */
+
+.q-app .q-content :is(
+  .todo-titulo h3, .metas-titulo h3, .clientes-titulo h3, .cotizacion-header h2,
+  .importar-documentos h1, .control-pagos h1,
+  .liquidacion-container > .card > h2, .venta-activo-fijo-container > .card > h2
+) {
+  margin: 0;
+  padding: 0;
+  background: none;
+  font-size: 26px;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--q-ink);
+}
+
+.q-app .q-content :is(
+  .todo-subtitulo, .metas-subtitulo, .clientes-subtitulo, .cotizacion-header p,
+  .importar-documentos > .card > .header > p, .control-pagos > .card > .header > p,
+  .liquidacion-container .subtitle, .venta-activo-fijo-container .subtitle
+) {
+  margin: 6px 0 0;
+  padding: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--q-ink-3);
+}
+
+.q-app .q-content :is(.cotizacion-header, .importar-documentos .header, .control-pagos .header) {
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content .venta-activo-fijo-container .subtitle { margin-bottom: 8px; }
+
+/* encabezados de sección dentro de las tarjetas */
+.q-app .q-content :is(
+  .form-section h3, .resultado-section h3, .resultado-header h3, .review-section h3,
+  .grafico-container h4, .clientes-form h4, .historico-section h3, .cotizacion-resultado h3,
+  .resultado-card h4, .preview-header h2, .review-header h2, .ahorro-desglose h5, .footer-section h3
+) {
+  margin-top: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--q-ink);
+}
+
+.q-app .q-content .resultado-section h3 { margin-bottom: 14px; font-size: 17px; }
+
+/* ── botones: píldoras de la landing ────────── */
+
+.q-app .q-content :is(
+  .btn, .btn-add-task, .btn-add-meta, .btn-add-cliente, .btn-exportar, .btn-export, .btn-remove
+) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 40px;
+  padding: 0 18px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-family: var(--q-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-transform: none;
+  box-shadow: none;
+  cursor: pointer;
+  transition: transform 160ms var(--q-ease), background-color 180ms ease, border-color 180ms ease, color 180ms ease;
+}
+
+.q-app .q-content :is(.btn, .btn-add-task, .btn-add-meta, .btn-add-cliente, .btn-exportar, .btn-export):hover:not(:disabled) {
+  transform: none;
+  box-shadow: none;
+}
+
+.q-app .q-content :is(.btn, .btn-add-task, .btn-add-meta, .btn-add-cliente, .btn-exportar, .btn-export):active:not(:disabled) { transform: scale(0.97); }
+
+.q-app .q-content :is(.btn, .btn-add-task, .btn-add-meta, .btn-add-cliente, .btn-exportar, .btn-export, .btn-accion, .btn-opciones):focus-visible {
+  outline: 2px solid var(--q-brand);
+  outline-offset: 2px;
+}
+
+.q-app .q-content :is(.btn, .btn-add-task, .btn-add-meta, .btn-add-cliente):disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* principal */
+.q-app .q-content :is(.btn-primary, .btn-add-task, .btn-add-meta, .btn-add-cliente) {
+  background: var(--q-action);
+  color: var(--q-action-fg);
+}
+
+.q-app .q-content :is(.btn-primary, .btn-add-task, .btn-add-meta, .btn-add-cliente):hover:not(:disabled) {
+  background: var(--q-action-hover);
+  color: var(--q-action-fg);
+}
+
+/* secundario / contorno */
+.q-app .q-content :is(.btn-secondary, .btn-info, .btn-exportar, .btn-export) {
+  background: var(--q-surface);
+  color: var(--q-ink);
+  border-color: var(--q-line);
+}
+
+.q-app .q-content :is(.btn-secondary, .btn-info, .btn-exportar, .btn-export):hover:not(:disabled) {
+  background: var(--q-surface);
+  color: var(--q-ink);
+  border-color: var(--q-ink-3);
+}
+
+/* éxito */
+.q-app .q-content :is(.btn-success, .btn-export-excel) {
+  background: var(--q-ok-bg);
+  color: var(--q-ok);
+  border-color: var(--q-ok-line);
+}
+
+.q-app .q-content :is(.btn-success, .btn-export-excel):hover:not(:disabled) {
+  background: var(--q-ok-bg);
+  color: var(--q-ok);
+  border-color: var(--q-ok);
+}
+
+/* peligro */
+.q-app .q-content :is(.btn-danger, .btn-export-pdf) {
+  background: var(--q-err-bg);
+  color: var(--q-err);
+  border-color: var(--q-err-line);
+}
+
+.q-app .q-content :is(.btn-danger, .btn-export-pdf):hover:not(:disabled) {
+  background: var(--q-err-bg);
+  color: var(--q-err);
+  border-color: var(--q-err);
+}
+
+/* botones de ícono en filas */
+.q-app .q-content :is(.btn-eliminar, .btn-accion, .btn-opciones, .btn-remove) {
+  min-height: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--q-ink-3);
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.q-app .q-content :is(.btn-eliminar, .btn-remove):hover { color: var(--q-err); background: var(--q-err-bg); border-color: var(--q-err-line); }
+.q-app .q-content :is(.btn-editar, .btn-opciones):hover { color: var(--q-brand); background: var(--q-accent-bg); border-color: transparent; }
+
+/* ── pestañas (TO DO, Metas) ────────────────── */
+
+.q-app .q-content :is(.todo-pestanas, .periodo-selector) {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--q-surface-2);
+  border: 1px solid var(--q-line-2);
+}
+
+:root[data-theme="dark"] .q-app .q-content :is(.todo-pestanas, .periodo-selector) { background: rgba(255, 255, 255, 0.04); }
+
+.q-app .q-content :is(.pestaña, .periodo-btn) {
+  min-height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--q-ink-2);
+  font-family: var(--q-sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.q-app .q-content :is(.pestaña, .periodo-btn):hover { color: var(--q-ink); background: transparent; }
+
+.q-app .q-content :is(.pestaña.activa, .periodo-btn.activo) {
+  background: var(--q-action);
+  color: var(--q-action-fg);
+  border-color: transparent;
+}
+
+/* ── campos ─────────────────────────────────── */
+
+.q-app .q-content :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([data-slot]),
+  select:not([data-slot]),
+  textarea:not([data-slot])
+) {
+  font-family: var(--q-sans);
+  font-size: 14px;
+  color: var(--q-ink);
+  background-color: var(--q-field);
+  border: 1px solid var(--q-line);
+  border-radius: 10px;
+  box-shadow: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.q-app .q-content :is(input, select, textarea)::placeholder { color: var(--q-ink-3); }
+
+.q-app .q-content :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([data-slot]),
+  select:not([data-slot]),
+  textarea:not([data-slot])
+):focus {
+  outline: none;
+  border-color: var(--q-brand);
+  box-shadow: 0 0 0 4px var(--q-accent-bg);
+}
+
+:root[data-theme="dark"] .q-app .q-content :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([data-slot]):focus,
+  select:not([data-slot]):focus,
+  textarea:not([data-slot]):focus
+) { box-shadow: 0 0 0 4px rgba(126, 232, 196, 0.14); }
+
+:root[data-theme="dark"] .q-app .q-content select:not([data-slot]) option { background: #0b182b; color: #e7edf5; }
+
+.q-app .q-content :is(input[type="checkbox"], input[type="radio"]) { accent-color: var(--q-emerald); }
+
+.q-app .q-content input[type="number"],
+.q-app .q-content .input-number { font-family: var(--q-mono); font-variant-numeric: tabular-nums; }
+
+/* ── zonas de carga ─────────────────────────── */
+
+.q-app .q-content .drop-zone {
+  border: 1.5px dashed var(--q-line);
+  border-radius: 16px;
+  color: var(--q-ink-2);
+  background:
+    linear-gradient(var(--q-grid) 1px, transparent 1px) 0 0 / 18px 18px,
+    linear-gradient(90deg, var(--q-grid) 1px, transparent 1px) 0 0 / 18px 18px,
+    var(--q-surface-2);
+  transition: border-color 160ms ease, background-color 160ms ease;
+}
+
+:root[data-theme="dark"] .q-app .q-content .drop-zone { background-color: rgba(255, 255, 255, 0.02); }
+
+.q-app .q-content :is(.drop-zone:hover, .drop-zone.active) { border-color: var(--q-brand); }
+
+.q-app .q-content .drop-zone h3 { font-size: 17px; font-weight: 600; color: var(--q-ink); }
+.q-app .q-content :is(.drop-zone > p, .drop-zone .file-types) { color: var(--q-ink-3); }
+.q-app .q-content .drop-zone .file-types { font-family: var(--q-mono); font-size: 12px; }
+
+.q-app .q-content .drop-icon {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 14px;
+  border-radius: 14px;
+  color: var(--q-brand);
+  background: var(--q-accent-bg);
+  font-size: 0;
+}
+
+:root[data-theme="dark"] .q-app .q-content .drop-icon { background: rgba(126, 232, 196, 0.12); }
+
+/* ── tablas ─────────────────────────────────── */
+
+.q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) {
+  width: 100%;
+  border-collapse: collapse;
+  background: transparent;
+}
+
+.q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) thead { background: transparent; }
+
+.q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) th {
+  padding: 12px 14px;
+  font-family: var(--q-sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--q-ink-3);
+  background: var(--q-surface-2);
+  border-bottom: 1px solid var(--q-line);
+  white-space: nowrap;
+}
+
+:root[data-theme="dark"] .q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) th { background: rgba(255, 255, 255, 0.03); }
+
+.q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) td {
+  padding: 12px 14px;
+  font-size: 13.5px;
+  color: var(--q-ink);
+  border-bottom: 1px solid var(--q-line-2);
+  background: transparent;
+}
+
+.q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) tbody tr:hover td { background: var(--q-surface-2); }
+:root[data-theme="dark"] .q-app .q-content :is(.clientes-table, .historico-table, .preview-table table) tbody tr:hover td { background: rgba(255, 255, 255, 0.03); }
+
+.q-app .q-content :is(.ruc, .numero, .honorarios, .amount, .valor-comprador, .valor-vendedor, .valor-diferencia, .stat-number, .estadistica-valor, .resumen-valor, .desglose-monto, .iva-monto, .tarea-hora, .file-size) {
+  font-family: var(--q-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── chips y estados ────────────────────────── */
+
+.q-app .q-content :is(.categoria-badge, .meta-type-badge, .badge, .contador, .leccion-dia) {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border: 0;
+  border-radius: 999px;
+  font-family: var(--q-sans);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--q-brand);
+  background: var(--q-accent-bg);
+}
+
+:root[data-theme="dark"] .q-app .q-content :is(.categoria-badge, .meta-type-badge, .badge, .contador, .leccion-dia) { background: rgba(126, 232, 196, 0.14); }
+
+.q-app .q-content :is(.status-badge.si, .status.paid, .validation-status.valid) { color: var(--q-ok); background: var(--q-ok-bg); border-color: var(--q-ok-line); }
+.q-app .q-content :is(.status-badge.no, .status.overdue, .validation-status.invalid) { color: var(--q-err); background: var(--q-err-bg); border-color: var(--q-err-line); }
+.q-app .q-content .status.pending { color: var(--q-warn); background: rgba(201, 138, 18, 0.12); }
+
+.q-app .q-content :is(.alert, .error-message) { border-radius: 12px; font-size: 14px; }
+.q-app .q-content :is(.alert-error, .error-message) { color: var(--q-err); background: var(--q-err-bg); border: 1px solid var(--q-err-line); }
+.q-app .q-content .alert-success { color: var(--q-ok); background: var(--q-ok-bg); border: 1px solid var(--q-ok-line); }
+
+/* ── cifras destacadas ──────────────────────── */
+
+.q-app .q-content :is(.stat-number, .estadistica-valor, .resumen-valor) {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--q-ink);
+}
+
+.q-app .q-content :is(.stat-label, .estadistica-label, .resumen-label, .detalle-label, .desglose-label) {
+  font-family: var(--q-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--q-ink-3);
+}
+
+/* ── texto secundario heredado ──────────────── */
+
+.q-app .q-content :is(
+  .tareas-vacio, .metas-vacio, .clientes-vacio, .meta-descripcion, .info-text, .tarea-meta,
+  .processing .subtitle, .review-header p, .fecha-resultado, .form-group small, .leyes-list li
+) { color: var(--q-ink-3); }
+
+.q-app .q-content :is(.dato-row span, .resultado-item span, .detalle-item) { color: var(--q-ink-2); }
+.q-app .q-content :is(.dato-row strong, .resultado-item strong, .detalle-valor) { color: var(--q-ink); }
+.q-app .q-content :is(.dato-row, .resultado-item, .detalle-item) { border-color: var(--q-line-2); }
+
+/* ── Lección del Día ────────────────────────── */
+
+.q-app .q-content .leccion-blog { overflow: hidden; }
+.q-app .q-content .leccion-header { height: 340px; background-color: #0a1a2f; }
+
+.q-app .q-content .leccion-header-overlay {
+  padding: 40px 44px;
+  background:
+    linear-gradient(180deg, rgba(6, 17, 31, 0.1) 0%, rgba(6, 17, 31, 0.86) 100%),
+    radial-gradient(60% 80% at 85% 0%, rgba(18, 184, 134, 0.22) 0%, transparent 65%);
+}
+
+.q-app .q-content .leccion-header .leccion-dia { color: #06111f; background: var(--q-mint); }
+
+.q-app .q-content .leccion-titulo {
+  margin-top: 14px;
+  font-size: clamp(28px, 3.2vw, 42px);
+  font-weight: 500;
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  color: #fff;
+  text-wrap: balance;
+}
+
+.q-app .q-content .leccion-body { padding: 32px 44px 40px; }
+.q-app .q-content .leccion-meta { border-color: var(--q-line-2); color: var(--q-ink-3); }
+.q-app .q-content .meta-item { font-family: var(--q-mono); font-size: 12px; color: var(--q-ink-3); }
+
+.q-app .q-content .leccion-content { max-width: 70ch; font-size: 16px; line-height: 1.7; color: var(--q-ink-2); }
+
+.q-app .q-content .leccion-content h2 {
+  margin: 32px 0 12px;
+  padding: 0;
+  border: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--q-ink);
+}
+
+.q-app .q-content .leccion-content h3 { margin: 24px 0 8px; font-size: 17px; font-weight: 600; color: var(--q-ink); }
+.q-app .q-content .leccion-content strong { color: var(--q-ink); }
+.q-app .q-content .leccion-content li::marker { color: var(--q-emerald); }
+
+/* ── TO DO del Día ──────────────────────────── */
+
+.q-app .q-content .todo-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+
+.q-app .q-content .dias-grid { gap: 14px; }
+
+.q-app .q-content .dia-card { padding: 16px; border-radius: 16px; }
+
+.q-app .q-content .dia-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content .dia-header h4 { font-size: 14px; font-weight: 600; color: var(--q-ink); }
+
+.q-app .q-content .tarea-item {
+  border: 1px solid var(--q-line-2);
+  border-radius: 10px;
+  background: var(--q-surface);
+}
+
+.q-app .q-content .tarea-titulo { color: var(--q-ink); }
+.q-app .q-content .tarea-item.completada .tarea-titulo { color: var(--q-ink-3); }
+.q-app .q-content :is(.label-principales, .label-restantes) { color: var(--q-ink-2); font-size: 12px; font-weight: 600; }
+
+/* ── Metas Anuales ──────────────────────────── */
+
+.q-app .q-content .metas-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+
+.q-app .q-content .stat-box { padding: 12px 18px; min-width: 110px; text-align: left; }
+
+.q-app .q-content .meta-card { overflow: hidden; transition: transform 240ms var(--q-ease), border-color 240ms ease; }
+.q-app .q-content .meta-card:hover { transform: translateY(-2px); border-color: var(--q-ink-3); box-shadow: var(--q-shadow-lift); }
+.q-app .q-content .meta-card.completada { border-color: var(--q-ok-line); }
+.q-app .q-content .meta-content { background: transparent; }
+.q-app .q-content .meta-header-content h4 { font-size: 16px; font-weight: 600; color: var(--q-ink); }
+
+.q-app .q-content .meta-imagen-placeholder {
+  background:
+    radial-gradient(70% 90% at 85% 0%, rgba(18, 184, 134, 0.3) 0%, transparent 65%),
+    linear-gradient(180deg, #0a1a2f 0%, #071425 100%);
+  color: #e7edf5;
+}
+
+/* ── Liquidación y Activo Fijo ──────────────── */
+
+.q-app .q-content .form-section { padding: 22px 24px; margin-bottom: 18px; }
+
+.q-app .q-content :is(.neto-card, .modo-facturacion.debe-facturar) {
+  border: 1px solid rgba(126, 232, 196, 0.18);
+  border-radius: 16px;
+  color: #e7edf5;
+  background:
+    radial-gradient(80% 90% at 100% 0%, rgba(18, 184, 134, 0.22) 0%, transparent 65%),
+    #0e2340;
+}
+
+.q-app .q-content :is(.neto-card, .modo-facturacion.debe-facturar) :is(h4, span, strong, p, .modo-principal) { color: #e7edf5; }
+
+.q-app .q-content .modo-facturacion.no-facturar {
+  border: 1px solid var(--q-line);
+  border-radius: 16px;
+  background: var(--q-surface-2);
+  color: var(--q-ink);
+}
+
+.q-app .q-content .advertencia-card {
+  border: 1px solid rgba(201, 138, 18, 0.35);
+  border-radius: 14px;
+  background: rgba(201, 138, 18, 0.08);
+  color: var(--q-warn);
+}
+
+.q-app .q-content .advertencia-card p { color: var(--q-ink-2); }
+
+.q-app .q-content .resultado-item.total { border-top: 1px solid var(--q-line); }
+
+/* ── Cotización ─────────────────────────────── */
+
+.q-app .q-content .cotizacion-item .valor {
+  font-family: var(--q-sans);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--q-ink);
+}
+
+.q-app .q-content .cotizacion-item .label { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--q-ink-3); }
+
+/* ── Gestión de Clientes ────────────────────── */
+
+.q-app .q-content .clientes-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin-bottom: 20px; }
+.q-app .q-content .clientes-table-wrapper { overflow-x: auto; padding: 0; }
+.q-app .q-content .clientes-table tbody tr.atrasado td { background: var(--q-err-bg); }
+
+.q-app .q-content .busqueda-box input { border-radius: 999px; padding-left: 18px; }
+
+/* ── HeroUI dentro de los módulos ───────────── */
+
+.q-app .q-content .control-pagos [data-slot="base"].bg-content1,
+.q-app .q-content .space-y-6 > .bg-content1 {
+  background: var(--q-surface);
+  border: 1px solid var(--q-line);
+  border-radius: 18px;
+  box-shadow: var(--q-shadow);
+}
+
+/* ── responsive ─────────────────────────────── */
+
+@media (max-width: 600px) {
+  .q-app .q-content :is(.todo-header, .metas-header, .clientes-header, .todo-form, .meta-form, .clientes-form,
+    .importar-documentos .card, .control-pagos .card, .cotizacion-card,
+    .liquidacion-container > .card, .venta-activo-fijo-container > .card) { padding: 20px; }
+  .q-app .q-content .leccion-header { height: 260px; }
+  .q-app .q-content .leccion-header-overlay { padding: 24px; }
+  .q-app .q-content .leccion-body { padding: 24px 20px 28px; }
+}
+
+.q-app .q-content .btn-add-cliente { width: auto; }
+
+.q-app .q-content :is(.form-section, .form-group, .field-group, .cotizacion-form, .type-selector, .checkbox-group, .checkbox-label) label,
+.q-app .q-content .checkbox-label { color: var(--q-ink-2); }

@@ -61,7 +61,7 @@
 .leccion-dia {
   display: inline-block;
   background: rgba(212, 175, 55, 0.9);
-  color: #1b2a4a;
+  color: var(--q-ink, #1b2a4a);
   padding: 8px 16px;
   border-radius: 6px;
   font-weight: 600;
@@ -113,7 +113,7 @@
   font-weight: 700;
   margin-top: 32px;
   margin-bottom: 16px;
-  color: #1b2a4a;
+  color: var(--q-ink, #1b2a4a);
   border-left: 4px solid #d4af37;
   padding-left: 16px;
 }
@@ -162,7 +162,7 @@
   font-size: 18px;
   font-weight: 600;
   margin-bottom: 12px;
-  color: #1b2a4a;
+  color: var(--q-ink, #1b2a4a);
 }
 
 .footer-section p {
@@ -190,8 +190,8 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #d4af37 0%, #b8941e 100%);
-  color: #1b2a4a;
+  background: var(--q-action, #0a1a2f);
+  color: var(--q-ink, #1b2a4a);
 }
 
 .btn-primary:hover {

@@ -5,7 +5,7 @@
 }
 
 .cotizacion-card {
-  background: linear-gradient(135deg, #1a2433 0%, #0f1a27 100%);
+  background: var(--q-surface, #fff);
   border: 1px solid rgba(212, 175, 55, 0.15);
   border-radius: 16px;
   padding: 32px;
@@ -119,7 +119,7 @@
 .error-message {
   background: rgba(255, 107, 107, 0.1);
   border: 1px solid rgba(255, 107, 107, 0.3);
-  color: #ff6b6b;
+  color: var(--q-brand, #1747d1);
   padding: 16px;
   border-radius: 8px;
   margin-bottom: 24px;
@@ -247,12 +247,12 @@
 }
 
 .valor-comprador {
-  color: #4ecdc4;
+  color: var(--q-brand, #1747d1);
   font-weight: 600;
 }
 
 .valor-vendedor {
-  color: #ff6b6b;
+  color: var(--q-brand, #1747d1);
   font-weight: 600;
 }
 

@@ -3,8 +3,8 @@ import axios from 'axios'
 import { utils, writeFile } from 'xlsx'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
-import { Card, CardBody, CardHeader, Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, RadioGroup, Radio, Chip } from '@heroui/react'
-import { Upload, FileText, Download, CheckCircle } from 'lucide-react'
+import { Card, CardBody, CardHeader, Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
+import { Upload, FileText, Download, CheckCircle, X } from 'lucide-react'
 import '../styles/ControlPagos.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -96,7 +96,7 @@ function ControlPagos() {
 
       setPaymentData(response.data)
       setStep('preview')
-      setSuccess('✅ Archivo procesado correctamente')
+      setSuccess('Archivo procesado correctamente')
     } catch (err) {
       setError(err.response?.data?.error || 'Error al procesar archivo. Intenta de nuevo.')
       setStep('upload')
@@ -156,33 +156,38 @@ function ControlPagos() {
 
   const renderUploadStep = () => (
     <div className="space-y-6">
-      <div className="space-y-3">
-        <label className="block text-sm font-semibold text-primary">Tipo de Documento</label>
-        <RadioGroup
-          value={documentType}
-          onValueChange={setDocumentType}
-          orientation="horizontal"
-        >
-          <Radio value="poliza">🛡️ Póliza de Seguros</Radio>
-          <Radio value="prestamo">💰 Liquidación de Préstamo</Radio>
-        </RadioGroup>
+      <div className="flex flex-col items-start gap-3">
+        <span className="q-label">Tipo de Documento</span>
+        <div className="periodo-selector" role="radiogroup" aria-label="Tipo de Documento">
+          {[
+            { value: 'poliza', label: 'Póliza de Seguros' },
+            { value: 'prestamo', label: 'Liquidación de Préstamo' }
+          ].map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              role="radio"
+              aria-checked={documentType === opt.value}
+              className={`periodo-btn ${documentType === opt.value ? 'activo' : ''}`}
+              onClick={() => setDocumentType(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div
-        className={`border-2 border-dashed rounded-lg p-8 text-center transition cursor-pointer ${
-          dragActive
-            ? 'border-accent bg-accent bg-opacity-10'
-            : 'border-border hover:border-accent'
-        }`}
+        className={`drop-zone p-8 text-center cursor-pointer ${dragActive ? 'active' : ''}`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <Upload className="w-12 h-12 mx-auto mb-3 text-accent" />
-        <h3 className="text-lg font-semibold text-primary mb-1">Arrastra el documento aquí</h3>
-        <p className="text-text-secondary mb-2">o haz clic para seleccionar un archivo</p>
-        <p className="text-xs text-text-secondary mb-4">Soporta: PDF, JPG, PNG, Excel</p>
+        <div className="drop-icon"><Upload size={24} strokeWidth={1.6} /></div>
+        <h3 className="mb-1">Arrastra el documento aquí</h3>
+        <p className="mb-2">o haz clic para seleccionar un archivo</p>
+        <p className="file-types mb-4">Soporta: PDF, JPG, PNG, Excel</p>
         <input
           type="file"
           accept=".pdf,.jpg,.jpeg,.png,.gif,.xlsx,.xls"
@@ -191,14 +196,7 @@ function ControlPagos() {
           id="file-input"
         />
         <label htmlFor="file-input" className="cursor-pointer">
-          <Button
-            as="span"
-            color="primary"
-            variant="bordered"
-            size="sm"
-          >
-            Seleccionar Archivo
-          </Button>
+          <span className="btn btn-secondary">Seleccionar Archivo</span>
         </label>
       </div>
 
@@ -218,7 +216,7 @@ function ControlPagos() {
               size="sm"
               onClick={removeFile}
             >
-              ✕
+              <X size={14} strokeWidth={1.8} />
             </Button>
           </CardBody>
         </Card>
@@ -253,11 +251,11 @@ function ControlPagos() {
       <div className="space-y-6">
         <Card>
           <CardHeader className="flex flex-col items-start gap-3">
-            <h2 className="text-xl font-bold text-primary">📊 Planilla de Control de Pagos</h2>
+            <h2 className="text-xl font-bold text-primary">Planilla de Control de Pagos</h2>
             <div className="flex flex-wrap gap-4 w-full">
               <div>
                 <p className="text-sm text-text-secondary">Tipo de Documento</p>
-                <p className="font-semibold text-primary">{documentType === 'poliza' ? '🛡️ Póliza de Seguros' : '💰 Liquidación de Préstamo'}</p>
+                <p className="font-semibold text-primary">{documentType === 'poliza' ? 'Póliza de Seguros' : 'Liquidación de Préstamo'}</p>
               </div>
               {paymentData.documentNumber && (
                 <div>
@@ -350,7 +348,7 @@ function ControlPagos() {
               setFile(null)
             }}
           >
-            ➕ Procesar otro archivo
+            Procesar otro archivo
           </Button>
         </div>
       </div>
@@ -370,18 +368,18 @@ function ControlPagos() {
           setPaymentData(null)
         }}
       >
-        ➕ Procesar otro archivo
+        Procesar otro archivo
       </Button>
     </div>
   )
 
   return (
-    <Card className="max-w-4xl">
-      <CardHeader className="flex flex-col items-start gap-2">
-        <h1 className="text-2xl font-bold text-primary">💳 Control de Pagos</h1>
-        <p className="text-text-secondary">Carga facturas electrónicas de pólizas o liquidaciones de préstamos y obtén una planilla de control</p>
+    <Card className="q-card max-w-4xl" shadow="none">
+      <CardHeader className="flex flex-col items-start gap-1 px-[30px] pt-[28px] pb-2">
+        <h1 className="q-card__title">Control de Pagos</h1>
+        <p className="q-card__sub">Carga facturas electrónicas de pólizas o liquidaciones de préstamos y obtén una planilla de control</p>
       </CardHeader>
-      <CardBody className="gap-6">
+      <CardBody className="gap-6 px-[30px] pb-[30px]">
         {error && (
           <div className="bg-red-100 dark:bg-red-950 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg">
             {error}

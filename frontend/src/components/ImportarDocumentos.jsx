@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Spinner, Progress, Chip } from '@heroui/react'
-import { Upload, File } from 'lucide-react'
+import { Upload, File, X, FileUp, CheckCircle2, Paperclip } from 'lucide-react'
 import '../styles/ImportarDocumentos.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -98,7 +98,7 @@ function ImportarDocumentos() {
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
-      setSuccess(`✅ ${files.length} archivo(s) procesados correctamente`)
+      setSuccess(`${files.length} archivo(s) procesados correctamente`)
       setStep('complete')
       setFiles([])
     } catch (err) {
@@ -120,7 +120,7 @@ function ImportarDocumentos() {
         onDragOver={handleDrag}
         onDrop={handleDrop}
       >
-        <div className="drop-icon">📄</div>
+        <div className="drop-icon"><FileUp size={24} strokeWidth={1.6} /></div>
         <h3>Arrastra archivos aquí</h3>
         <p>o haz clic para seleccionar múltiples archivos</p>
         <p className="file-types">Soporta: JPG, PNG, GIF, BMP</p>
@@ -139,7 +139,7 @@ function ImportarDocumentos() {
           <div className="files-items">
             {files.map((file, idx) => (
               <div key={idx} className="file-item">
-                <span className="file-icon">📎</span>
+                <span className="file-icon"><Paperclip size={15} strokeWidth={1.6} /></span>
                 <span className="file-name">{file.name}</span>
                 <span className="file-size">({(file.size / 1024).toFixed(1)} KB)</span>
                 <button
@@ -147,7 +147,7 @@ function ImportarDocumentos() {
                   onClick={() => removeFile(idx)}
                   title="Eliminar archivo"
                 >
-                  ✕
+                  <X size={14} strokeWidth={1.8} />
                 </button>
               </div>
             ))}
@@ -159,7 +159,7 @@ function ImportarDocumentos() {
               onClick={processFiles}
               disabled={loading || files.length === 0}
             >
-              {loading ? '⏳ Procesando...' : `📥 Procesar ${files.length} archivo(s)`}
+              {loading ? 'Procesando...' : `Procesar ${files.length} archivo(s)`}
             </button>
           </div>
         </div>
@@ -169,7 +169,7 @@ function ImportarDocumentos() {
 
   const renderCompleteStep = () => (
     <div className="complete-container">
-      <div className="complete-icon">✅</div>
+      <div className="complete-icon"><CheckCircle2 size={28} strokeWidth={1.6} /></div>
       <h2>¡Listo!</h2>
       <p>Tu archivo Excel ha sido descargado automáticamente</p>
       <button
@@ -179,7 +179,7 @@ function ImportarDocumentos() {
           setSuccess('')
         }}
       >
-        ➕ Procesar más archivos
+        Procesar más archivos
       </button>
     </div>
   )
@@ -188,7 +188,7 @@ function ImportarDocumentos() {
     <div className="importar-documentos">
       <div className="card">
         <div className="header">
-          <h1>📄 Importar Documentos</h1>
+          <h1>Importar Documentos</h1>
           <p>Sube imágenes o PDFs de facturas - Se extraerán automáticamente a Excel</p>
         </div>
 

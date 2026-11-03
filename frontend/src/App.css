@@ -61,8 +61,7 @@ body {
 .dashboard {
   min-height: 100vh;
   display: flex;
-  flex-direction: column;
-  background-color: var(--bg-light);
+  flex-direction: row;
 }
 
 .dashboard-content {

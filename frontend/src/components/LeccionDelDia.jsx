@@ -164,9 +164,9 @@ function LeccionDelDia() {
           {/* Contenido */}
           <div className="leccion-body">
             <div className="leccion-meta">
-              <span className="meta-item">📅 {leccion.dia}</span>
-              <span className="meta-item">👤 Quadra Academy</span>
-              <span className="meta-item">⏱️ 5 min de lectura</span>
+              <span className="meta-item">{leccion.dia}</span>
+              <span className="meta-item">Quadra Academy</span>
+              <span className="meta-item">5 min de lectura</span>
             </div>
 
             <div className="leccion-content" dangerouslySetInnerHTML={{ __html: leccion.contenido }} />
@@ -178,8 +178,8 @@ function LeccionDelDia() {
               </div>
 
               <div className="footer-actions">
-                <button className="btn btn-primary">Guardar como favorito ⭐</button>
-                <button className="btn btn-secondary">Compartir 📤</button>
+                <button className="btn btn-primary">Guardar como favorito </button>
+                <button className="btn btn-secondary">Compartir </button>
               </div>
             </div>
           </div>

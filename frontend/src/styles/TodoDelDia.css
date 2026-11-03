@@ -1,5 +1,5 @@
 .todo-del-dia {
-  background: white;
+  background: var(--q-surface, white);
   border-radius: 12px;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -20,7 +20,7 @@
 .todo-titulo h3 {
   margin: 0;
   font-size: 20px;
-  color: #333;
+  color: var(--q-ink, #333);
   display: flex;
   align-items: center;
   gap: 8px;
@@ -29,7 +29,7 @@
 .todo-subtitulo {
   margin: 5px 0 0 0;
   font-size: 13px;
-  color: #999;
+  color: var(--q-ink-3, #999);
 }
 
 .todo-pestanas {
@@ -39,34 +39,34 @@
 
 .pestaña {
   padding: 8px 16px;
-  border: 1px solid #ddd;
-  background: white;
+  border: 1px solid var(--q-line, #ddd);
+  background: var(--q-surface, white);
   border-radius: 6px;
   font-size: 13px;
   font-weight: 600;
-  color: #666;
+  color: var(--q-ink-3, #666);
   cursor: pointer;
   transition: all 0.3s;
 }
 
 .pestaña:hover {
-  border-color: #4ECDC4;
-  color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
+  color: var(--q-brand, #1747d1);
 }
 
 .pestaña.activa {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
 }
 
 /* Formulario */
 .todo-form {
-  background: #f8f9fa;
+  background: var(--q-surface-2, #f8f9fa);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
-  border-top: 2px solid #4ECDC4;
+  border-top: 2px solid var(--q-brand, #1747d1);
   box-shadow: inset 0 1px 0 rgba(78, 205, 196, 0.1);
 }
 
@@ -78,7 +78,7 @@
   display: block;
   font-size: 13px;
   font-weight: 600;
-  color: #333;
+  color: var(--q-ink, #333);
   margin-bottom: 6px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -89,7 +89,7 @@
 .form-group select {
   width: 100%;
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--q-line, #ddd);
   border-radius: 6px;
   font-size: 14px;
   font-family: inherit;
@@ -99,7 +99,7 @@
 .form-group input:focus,
 .form-group select:focus {
   outline: none;
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
   box-shadow: 0 0 0 3px rgba(78, 205, 196, 0.1);
 }
 
@@ -126,7 +126,7 @@
 }
 
 .btn-primary {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
 }
 
@@ -136,7 +136,7 @@
 
 .btn-secondary {
   background: #e0e0e0;
-  color: #333;
+  color: var(--q-ink, #333);
 }
 
 .btn-secondary:hover {
@@ -144,7 +144,7 @@
 }
 
 .btn-add-task {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
   border: none;
   padding: 10px 16px;
@@ -168,8 +168,8 @@
 }
 
 .dia-card {
-  background: #f8f9fa;
-  border: 1px solid #e0e0e0;
+  background: var(--q-surface-2, #f8f9fa);
+  border: 1px solid var(--q-line, #e0e0e0);
   border-radius: 8px;
   padding: 12px;
   display: flex;
@@ -179,7 +179,7 @@
 }
 
 .dia-card:hover {
-  border-color: #4ECDC4;
+  border-color: var(--q-brand, #1747d1);
   box-shadow: 0 2px 8px rgba(78, 205, 196, 0.1);
 }
 
@@ -189,18 +189,18 @@
   align-items: center;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 2px solid #4ECDC4;
+  border-bottom: 2px solid var(--q-brand, #1747d1);
 }
 
 .dia-header h4 {
   margin: 0;
   font-size: 14px;
   font-weight: 700;
-  color: #333;
+  color: var(--q-ink, #333);
 }
 
 .contador {
-  background: #4ECDC4;
+  background: var(--q-brand, #1747d1);
   color: white;
   padding: 2px 8px;
   border-radius: 12px;
@@ -211,7 +211,7 @@
 .tareas-vacio {
   text-align: center;
   padding: 20px 10px;
-  color: #999;
+  color: var(--q-ink-3, #999);
   font-size: 12px;
 }
 
@@ -224,7 +224,7 @@
   display: block;
   font-size: 11px;
   font-weight: 700;
-  color: #FF6B6B;
+  color: var(--q-brand, #1747d1);
   text-transform: uppercase;
   margin-bottom: 6px;
   letter-spacing: 0.5px;
@@ -235,10 +235,10 @@
   align-items: flex-start;
   gap: 8px;
   padding: 8px;
-  background: white;
+  background: var(--q-surface, white);
   border-radius: 4px;
   margin-bottom: 6px;
-  border-top: 1px solid #4ECDC4;
+  border-top: 1px solid var(--q-brand, #1747d1);
   box-shadow: inset 0 1px 0 rgba(78, 205, 196, 0.1);
   font-size: 12px;
 }
@@ -251,7 +251,7 @@
   width: 16px;
   height: 16px;
   cursor: pointer;
-  accent-color: #4ECDC4;
+  accent-color: var(--q-brand, #1747d1);
   flex-shrink: 0;
   margin-top: 2px;
 }
@@ -263,7 +263,7 @@
 
 .tarea-titulo {
   display: block;
-  color: #333;
+  color: var(--q-ink, #333);
   font-weight: 600;
   word-break: break-word;
   margin-bottom: 3px;
@@ -271,7 +271,7 @@
 
 .tarea-item.completada .tarea-titulo {
   text-decoration: line-through;
-  color: #999;
+  color: var(--q-ink-3, #999);
 }
 
 .tarea-meta {
@@ -285,7 +285,7 @@
 .categoria-badge {
   display: inline-block;
   padding: 2px 6px;
-  background: #f0f0f0;
+  background: var(--q-surface-2, #f0f0f0);
   border-left: 2px solid;
   border-radius: 2px;
   font-weight: 600;
@@ -294,7 +294,7 @@
 }
 
 .tarea-hora {
-  color: #666;
+  color: var(--q-ink-3, #666);
 }
 
 .btn-eliminar {
@@ -309,7 +309,7 @@
 }
 
 .btn-eliminar:hover {
-  color: #ff6b6b;
+  color: var(--q-brand, #1747d1);
 }
 
 /* Tareas restantes */
@@ -321,7 +321,7 @@
   display: block;
   font-size: 11px;
   font-weight: 700;
-  color: #666;
+  color: var(--q-ink-3, #666);
   text-transform: uppercase;
   padding: 6px 8px;
   cursor: pointer;

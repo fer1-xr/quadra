@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Button, Divider } from '@heroui/react'
-import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
+import '../styles/Sidebar.css'
 
-function Sidebar({ currentView, onNavigate, user, onLogout }) {
-  const [isHovered, setIsHovered] = useState(false)
+function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onClose }) {
   const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
@@ -58,93 +57,125 @@ function Sidebar({ currentView, onNavigate, user, onLogout }) {
     applyTheme(newDarkMode)
   }
 
-  const menuItems = [
-    { id: 'inicio', label: 'INICIO', icon: Home },
-    { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
-    { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
-    { id: 'metas', label: 'Metas Anuales', icon: Target },
-    { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
-    { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
-    { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
-    { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard },
-    { id: 'liquidacion', label: 'Liquidación Salarial', icon: Calculator },
-    { id: 'activofijo', label: 'Activo Fijo', icon: Building2 },
-    { id: 'flujo', label: 'Flujo de Caja', icon: TrendingUp },
-    { id: 'cotizacion', label: 'Cotización', icon: TrendingUp },
-    { id: 'clientes', label: 'Gestión de Clientes', icon: Users }
+  const menuGroups = [
+    {
+      label: 'General',
+      items: [
+        { id: 'inicio', label: 'Inicio', icon: Home }
+      ]
+    },
+    {
+      label: 'Agenda',
+      items: [
+        { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
+        { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
+        { id: 'metas', label: 'Metas Anuales', icon: Target }
+      ]
+    },
+    {
+      label: 'Conciliación',
+      items: [
+        { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
+        { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
+        { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
+        { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard }
+      ]
+    },
+    {
+      label: 'Cálculo',
+      items: [
+        { id: 'liquidacion', label: 'Liquidación Salarial', icon: Calculator },
+        { id: 'activofijo', label: 'Activo Fijo', icon: Building2 },
+        { id: 'flujo', label: 'Flujo de Caja', icon: TrendingUp },
+        { id: 'cotizacion', label: 'Cotización', icon: LineChart }
+      ]
+    },
+    {
+      label: 'Gestión',
+      items: [
+        { id: 'clientes', label: 'Gestión de Clientes', icon: Users }
+      ]
+    }
   ]
 
   const handleNavigate = (viewId) => {
     onNavigate(viewId)
+    if (onClose) onClose()
   }
 
+  const isActive = (id) => currentView === id || (id === 'rg90' && currentView === 'rg90-results')
+  const displayName = user?.name || user?.email || ''
+  const initial = displayName.trim().charAt(0).toUpperCase() || 'Q'
+
   return (
-    <aside className="w-64 h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 flex flex-col overflow-y-auto">
-      {/* Logo */}
-      <div className="p-6 border-b border-gray-200 dark:border-slate-700">
-        <h1 className="text-2xl font-bold text-primary">QUΔDRA</h1>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">v1.0</p>
-      </div>
-
-      {/* Menu Navigation */}
-      <nav className="flex-1 overflow-y-auto p-4">
-        <div className="space-y-2">
-          {menuItems.map((item) => {
-            const IconComponent = item.icon
-            const isActive = currentView === item.id
-
-            return (
-              <Button
-                key={item.id}
-                fullWidth
-                className={`justify-start gap-3 font-medium transition-all ${
-                  isActive
-                    ? 'bg-gradient-to-r from-primary to-accent text-white shadow-md'
-                    : 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800'
-                }`}
-                onClick={() => handleNavigate(item.id)}
-                startContent={<IconComponent size={20} strokeWidth={1.5} />}
-              >
-                {item.label}
-              </Button>
-            )
-          })}
+    <>
+      <div className={`q-sidebar-scrim ${isOpen ? 'is-open' : ''}`} onClick={onClose} aria-hidden="true" />
+      <aside className={`q-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="Navegación principal">
+        <div className="q-sidebar__brand">
+          <svg className="q-sidebar__mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+            <rect className="q-sidebar__mark-a" x="1" y="1" width="11.5" height="11.5" rx="2.5" />
+            <rect x="15.5" y="1" width="11.5" height="11.5" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="1" y="15.5" width="11.5" height="11.5" rx="2.5" stroke="currentColor" strokeWidth="1.5" />
+            <rect x="15.5" y="15.5" width="11.5" height="11.5" rx="2.5" fill="currentColor" />
+          </svg>
+          <div>
+            <p className="q-sidebar__name">Quadra</p>
+            <p className="q-sidebar__tag">Σ debe = Σ haber</p>
+          </div>
         </div>
-      </nav>
 
-      {/* Divider */}
-      <Divider className="my-4" />
+        <nav className="q-sidebar__nav">
+          {menuGroups.map((group) => (
+            <div key={group.label} className="q-nav-group">
+              <p className="q-nav-group__label">{group.label}</p>
+              <ul>
+                {group.items.map((item) => {
+                  const IconComponent = item.icon
+                  const active = isActive(item.id)
+                  return (
+                    <li key={item.id}>
+                      <button
+                        type="button"
+                        className={`q-nav-item ${active ? 'is-active' : ''}`}
+                        aria-current={active ? 'page' : undefined}
+                        onClick={() => handleNavigate(item.id)}
+                      >
+                        <IconComponent size={17} strokeWidth={1.6} />
+                        <span>{item.label}</span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
 
-      {/* Footer Actions */}
-      <div className="p-4 space-y-2 border-t border-gray-200 dark:border-slate-700">
-        <Button
-          fullWidth
-          className="justify-start gap-3 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 font-medium"
-          onClick={toggleTheme}
-          startContent={isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-        >
-          {isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}
-        </Button>
-
-        <Button
-          fullWidth
-          className="justify-start gap-3 bg-transparent text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-800 font-medium"
-          onClick={() => handleNavigate('cuenta')}
-          startContent={<User size={20} />}
-        >
-          Mi Cuenta
-        </Button>
-
-        <Button
-          fullWidth
-          className="justify-start gap-3 bg-transparent text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-slate-800 font-medium"
-          onClick={onLogout}
-          startContent={<LogOut size={20} />}
-        >
-          Cerrar Sesión
-        </Button>
-      </div>
-    </aside>
+        <div className="q-sidebar__footer">
+          <button
+            type="button"
+            className={`q-nav-item ${currentView === 'cuenta' ? 'is-active' : ''}`}
+            onClick={() => handleNavigate('cuenta')}
+          >
+            <span className="q-avatar" aria-hidden="true">{initial}</span>
+            <span className="q-sidebar__user">
+              <span>Mi Cuenta</span>
+              {displayName && <small>{displayName}</small>}
+            </span>
+          </button>
+          <div className="q-sidebar__actions">
+            <button type="button" className="q-icon-btn" onClick={toggleTheme} title={isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}>
+              {isDarkMode ? <Sun size={16} strokeWidth={1.6} /> : <Moon size={16} strokeWidth={1.6} />}
+              <span>{isDarkMode ? 'Modo Claro' : 'Modo Oscuro'}</span>
+            </button>
+            <button type="button" className="q-icon-btn q-icon-btn--danger" onClick={onLogout} title="Cerrar Sesión">
+              <LogOut size={16} strokeWidth={1.6} />
+              <span>Salir</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   )
 }
 

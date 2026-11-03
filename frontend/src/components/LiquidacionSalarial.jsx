@@ -206,7 +206,7 @@ function LiquidacionSalarial() {
   return (
     <div className="liquidacion-container">
       <div className="card">
-        <h2>💰 Calculadora de Liquidación Salarial</h2>
+        <h2>Calculadora de Liquidación Salarial</h2>
         <p className="subtitle">Calcula liquidaciones de nómina según regulaciones de Paraguay</p>
 
         {error && <div className="error-message">{error}</div>}
@@ -215,7 +215,7 @@ function LiquidacionSalarial() {
           <form className="liquidacion-form">
             {/* Sección: Datos del Empleado */}
             <section className="form-section">
-              <h3>👤 Datos del Empleado</h3>
+              <h3>Datos del Empleado</h3>
               <div className="form-grid">
                 <div>
                   <label>Nombre del Empleado *</label>
@@ -254,7 +254,7 @@ function LiquidacionSalarial() {
 
             {/* Sección: Periodo de Liquidación */}
             <section className="form-section">
-              <h3>📅 Período de Liquidación</h3>
+              <h3>Período de Liquidación</h3>
               <div className="form-grid">
                 <div>
                   <label>Salario Mensual *</label>
@@ -314,7 +314,7 @@ function LiquidacionSalarial() {
 
             {/* Sección: Complementos */}
             <section className="form-section">
-              <h3>➕ Complementos Salariales</h3>
+              <h3>Complementos Salariales</h3>
               <div className="form-grid">
                 <div>
                   <label>Horas Extras (cantidad)</label>
@@ -362,7 +362,7 @@ function LiquidacionSalarial() {
 
             {/* Sección: Descuentos */}
             <section className="form-section">
-              <h3>📉 Descuentos</h3>
+              <h3>Descuentos</h3>
               <div className="checkbox-group">
                 <label>
                   <input
@@ -391,7 +391,7 @@ function LiquidacionSalarial() {
               className="btn btn-primary"
               onClick={calcularLiquidacion}
             >
-              🧮 Calcular Liquidación
+              Calcular Liquidación
             </button>
           </form>
         ) : (
@@ -492,25 +492,25 @@ function LiquidacionSalarial() {
                 onClick={descargarExcel}
                 disabled={loading}
               >
-                📊 Descargar Excel
+                Descargar Excel
               </button>
               <button
                 className="btn btn-danger"
                 onClick={descargarPDF}
                 disabled={loading}
               >
-                📄 Descargar PDF
+                Descargar PDF
               </button>
               <button
                 className="btn btn-secondary"
                 onClick={() => setResultado(null)}
               >
-                🔄 Nueva Liquidación
+                Nueva Liquidación
               </button>
             </div>
 
             <div className="leyes-footer">
-              <p><strong>⚖️ Marco Legal:</strong></p>
+              <p><strong>Marco Legal:</strong></p>
               <ul className="leyes-list">
                 <li>Código Laboral de Paraguay (Ley Nº 213/1993) - Artículos 65-67: Despido, Retiro Justificado y Renuncia</li>
                 <li>Artículo 88: Decimotercera remuneración proporcional</li>

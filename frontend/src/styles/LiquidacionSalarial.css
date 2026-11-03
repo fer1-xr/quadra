@@ -10,15 +10,15 @@
 }
 
 .form-section {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   border-radius: 8px;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--q-surface-2, #f9f9f9);
 }
 
 .form-section h3 {
   margin: 0 0 15px 0;
-  color: #333;
+  color: var(--q-ink, #333);
   font-size: 16px;
   font-weight: 600;
 }
@@ -37,14 +37,14 @@
 .form-section label {
   font-weight: 600;
   margin-bottom: 8px;
-  color: #333;
+  color: var(--q-ink, #333);
   font-size: 14px;
 }
 
 .form-section input,
 .form-section select {
   padding: 10px;
-  border: 1px solid #ddd;
+  border: 1px solid var(--q-line, #ddd);
   border-radius: 4px;
   font-size: 14px;
   font-family: inherit;
@@ -80,7 +80,7 @@
 }
 
 .info-text {
-  color: #666;
+  color: var(--q-ink-3, #666);
   font-size: 13px;
   margin-top: 10px;
   font-style: italic;
@@ -93,11 +93,11 @@
 }
 
 .resultado-section h3 {
-  color: #2c3e50;
+  color: var(--q-ink, #2c3e50);
   font-size: 18px;
   margin: 0;
   padding: 15px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--q-action, #0a1a2f);
   color: white;
   border-radius: 8px;
 }
@@ -109,20 +109,20 @@
 }
 
 .resultado-card {
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--q-line, #e0e0e0);
   border-radius: 8px;
   padding: 20px;
-  background-color: #f9f9f9;
+  background-color: var(--q-surface-2, #f9f9f9);
 }
 
 .resultado-card h4 {
   margin: 0 0 15px 0;
-  color: #2c3e50;
+  color: var(--q-ink, #2c3e50);
   font-size: 14px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-bottom: 2px solid #667eea;
+  border-bottom: 2px solid var(--q-brand, #1747d1);
   padding-bottom: 10px;
 }
 
@@ -130,7 +130,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--q-line, #e0e0e0);
   font-size: 14px;
 }
 
@@ -139,12 +139,12 @@
 }
 
 .resultado-item span {
-  color: #666;
+  color: var(--q-ink-3, #666);
   font-weight: 500;
 }
 
 .resultado-item strong {
-  color: #2c3e50;
+  color: var(--q-ink, #2c3e50);
   font-weight: 600;
 }
 
@@ -158,12 +158,12 @@
   font-size: 16px;
   font-weight: 700;
   padding: 15px 0;
-  border-top: 2px solid #e0e0e0;
+  border-top: 2px solid var(--q-line, #e0e0e0);
   border-bottom: none;
 }
 
 .resultado-item.total span {
-  color: #2c3e50;
+  color: var(--q-ink, #2c3e50);
 }
 
 .resultado-item.total strong {
@@ -200,7 +200,7 @@
 }
 
 .btn-primary {
-  background-color: #667eea;
+  background-color: var(--q-brand, #1747d1);
   color: white;
 }
 
@@ -251,21 +251,21 @@
 .leyes-footer {
   margin-top: 30px;
   padding: 20px;
-  background-color: #f0f0f0;
+  background-color: var(--q-surface-2, #f0f0f0);
   border-radius: 4px;
-  box-shadow: inset 0 0 0 1px #667eea;
+  box-shadow: inset 0 0 0 1px var(--q-brand, #1747d1);
 }
 
 .leyes-footer p {
   margin: 0 0 10px 0;
   font-weight: 600;
-  color: #2c3e50;
+  color: var(--q-ink, #2c3e50);
 }
 
 .leyes-list {
   margin: 0;
   padding-left: 20px;
-  color: #666;
+  color: var(--q-ink-3, #666);
   font-size: 13px;
   line-height: 1.8;
 }
@@ -285,7 +285,7 @@
 }
 
 .subtitle {
-  color: #666;
+  color: var(--q-ink-3, #666);
   margin: 5px 0 20px 0;
   font-size: 14px;
 }

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Card, CardBody, CardHeader, Button, Input, Checkbox, Chip, Divider } from '@heroui/react'
-import { Plus, Trash2, CheckCircle2 } from 'lucide-react'
+import { Plus, Trash2, CheckCircle2, X } from 'lucide-react'
 import '../styles/TodoDelDia.css'
 
 const CATEGORIAS = [
@@ -136,7 +136,7 @@ function TodoDelDia() {
     <div className="todo-del-dia">
       <div className="todo-header">
         <div className="todo-titulo">
-          <h3>📋 TO DO de la Semana</h3>
+          <h3>TO DO de la Semana</h3>
           <p className="todo-subtitulo">Organiza tus tareas por día (Lunes a Viernes)</p>
         </div>
         <div className="todo-pestanas">
@@ -253,7 +253,7 @@ function TodoDelDia() {
                   {/* Tareas principales (3 primeras) */}
                   {principales.length > 0 && (
                     <div className="tareas-principales">
-                      <span className="label-principales">⭐ Prioritarias</span>
+                      <span className="label-principales">Prioritarias</span>
                       {principales.map(tarea => {
                         const categoriaInfo = getCategoriaInfo(tarea.categoria)
                         return (
@@ -269,14 +269,14 @@ function TodoDelDia() {
                                 <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
                                   {categoriaInfo?.label}
                                 </span>
-                                <span className="tarea-hora">⏰ {tarea.hora}</span>
+                                <span className="tarea-hora">{tarea.hora}</span>
                               </div>
                             </div>
                             <button
                               className="btn-eliminar"
                               onClick={() => eliminarTarea(tarea.id)}
                             >
-                              ✕
+                              <X size={14} strokeWidth={1.8} />
                             </button>
                           </div>
                         )
@@ -304,14 +304,14 @@ function TodoDelDia() {
                                   <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
                                     {categoriaInfo?.label}
                                   </span>
-                                  <span className="tarea-hora">⏰ {tarea.hora}</span>
+                                  <span className="tarea-hora">{tarea.hora}</span>
                                 </div>
                               </div>
                               <button
                                 className="btn-eliminar"
                                 onClick={() => eliminarTarea(tarea.id)}
                               >
-                                ✕
+                                <X size={14} strokeWidth={1.8} />
                               </button>
                             </div>
                           )

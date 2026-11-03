@@ -714,14 +714,14 @@ const VentaActivoFijo = () => {
   const getModoFacturacion = () => {
     if (!resultado) return ''
     return resultado.debe_facturar ?
-      '✅ DEBE FACTURAR LA VENTA' :
-      '❌ NO REQUIERE FACTURACIÓN OBLIGATORIA'
+      'DEBE FACTURAR LA VENTA' :
+      'NO REQUIERE FACTURACIÓN OBLIGATORIA'
   }
 
   return (
     <div className="venta-activo-fijo-container">
       <div className="card">
-        <h2>🏢 Calculadora de Venta de Activo Fijo</h2>
+        <h2>Calculadora de Venta de Activo Fijo</h2>
         <p className="subtitle">Determina la modalidad de facturación según normativa tributaria paraguaya</p>
 
         {error && <div className="error-message">{error}</div>}
@@ -730,7 +730,7 @@ const VentaActivoFijo = () => {
           <form className="venta-form">
             {/* Tipo de Bien */}
             <section className="form-section">
-              <h3>📦 Tipo de Bien</h3>
+              <h3>Tipo de Bien</h3>
               <div className="form-group">
                 <label>Seleccionar tipo de bien *</label>
                 <select
@@ -747,7 +747,7 @@ const VentaActivoFijo = () => {
 
             {/* Tipo de Contribuyente */}
             <section className="form-section">
-              <h3>👤 Tipo de Contribuyente / Vendedor</h3>
+              <h3>Tipo de Contribuyente / Vendedor</h3>
               <div className="form-group">
                 <label>Seleccionar régimen tributario *</label>
                 <select
@@ -768,7 +768,7 @@ const VentaActivoFijo = () => {
             {/* ¿Es Activo de la Empresa? */}
             {formData.tipoContribuyente !== 'playa-vehiculos' && (
               <section className="form-section">
-                <h3>🏭 ¿Es Activo de la Empresa?</h3>
+                <h3>¿Es Activo de la Empresa?</h3>
                 <div className="form-group">
                   <label>Condición del bien *</label>
                   <select
@@ -788,7 +788,7 @@ const VentaActivoFijo = () => {
             {/* Estado del Vehículo */}
             {formData.tipoBien === 'vehiculo' && (
               <section className="form-section">
-                <h3>🚗 Estado del Vehículo</h3>
+                <h3>Estado del Vehículo</h3>
                 <div className="form-group">
                   <label>Condición del vehículo *</label>
                   <select
@@ -806,7 +806,7 @@ const VentaActivoFijo = () => {
 
             {/* Monto */}
             <section className="form-section">
-              <h3>💰 Monto de la Venta</h3>
+              <h3>Monto de la Venta</h3>
               <div className="form-group">
                 <label>Monto en Guaraníes (₲) *</label>
                 <input
@@ -828,7 +828,7 @@ const VentaActivoFijo = () => {
               className="btn btn-primary"
               onClick={calcular}
             >
-              🧮 Calcular
+              Calcular
             </button>
           </form>
         ) : (
@@ -839,7 +839,7 @@ const VentaActivoFijo = () => {
 
             {/* Resumen de Datos */}
             <div className="resultado-card datos-card">
-              <h4>📋 Datos de la Consulta</h4>
+              <h4>Datos de la Consulta</h4>
               <div className="dato-row">
                 <span>Tipo de Bien:</span>
                 <strong>{resultado.tipoBien === 'inmueble' ? 'Inmueble' : 'Vehículo'}</strong>
@@ -862,7 +862,7 @@ const VentaActivoFijo = () => {
 
             {/* Modo de Facturación Principal */}
             <div className={`resultado-card modo-facturacion ${resultado.debe_facturar ? 'debe-facturar' : 'no-facturar'}`}>
-              <h4>📄 Modalidad de Facturación</h4>
+              <h4>Modalidad de Facturación</h4>
               <div className="modo-principal">
                 {getModoFacturacion()}
               </div>
@@ -871,7 +871,7 @@ const VentaActivoFijo = () => {
             {/* Modo de Cálculo */}
             {resultado.debe_facturar && (
               <div className="resultado-card modo-calculo-card">
-                <h4>🧮 Modo de Cálculo</h4>
+                <h4>Modo de Cálculo</h4>
                 <div className="modo-calculo-content">
                   <p className="modo-calculo-titulo">{resultado.modo_calculo}</p>
                   <p className="modo-calculo-tasa">Tasa de IVA: <strong>{resultado.tasa_iva}</strong></p>
@@ -901,7 +901,7 @@ const VentaActivoFijo = () => {
 
             {/* Normativas y Requisitos */}
             <div className="resultado-card normas-card">
-              <h4>⚖️ Normas y Requisitos Aplicables</h4>
+              <h4>Normas y Requisitos Aplicables</h4>
               <ul className="normas-list">
                 {resultado.normas && resultado.normas.map((norma, idx) => (
                   <li key={idx}>{norma}</li>
@@ -911,7 +911,7 @@ const VentaActivoFijo = () => {
 
             {/* Marco Legal */}
             <div className="resultado-card marco-legal-card">
-              <h4>📜 Marco Legal</h4>
+              <h4>Marco Legal</h4>
               <p><strong>Decreto/Ley:</strong></p>
               <p className="decreto">{resultado.decreto}</p>
               <p><strong>Fuente:</strong></p>
@@ -923,7 +923,7 @@ const VentaActivoFijo = () => {
             {/* Advertencia */}
             <div className="resultado-card advertencia-card">
               <p>
-                <strong>⚠️ ADVERTENCIA LEGAL:</strong> Esta calculadora proporciona información orientativa basada en la normativa tributaria paraguaya vigente.
+                <strong>ADVERTENCIA LEGAL:</strong> Esta calculadora proporciona información orientativa basada en la normativa tributaria paraguaya vigente.
                 Se recomienda consultar con un asesor tributario profesional antes de realizar la operación,
                 ya que cada caso puede tener particularidades que afecten el tratamiento fiscal aplicable.
               </p>
@@ -935,7 +935,7 @@ const VentaActivoFijo = () => {
                 className="btn btn-secondary"
                 onClick={resetForm}
               >
-                🔄 Nueva Consulta
+                Nueva Consulta
               </button>
             </div>
           </div>

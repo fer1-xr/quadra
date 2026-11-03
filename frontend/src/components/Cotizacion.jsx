@@ -72,7 +72,7 @@ function Cotizacion() {
     <div className="cotizacion-container">
       <div className="card cotizacion-card">
         <div className="cotizacion-header">
-          <h2>💱 Cotización DNIT</h2>
+          <h2>Cotización DNIT</h2>
           <p>Consulta tipos de cambio del DNIT por fecha, moneda y cálculo de comprador/vendedor</p>
         </div>
 
@@ -114,14 +114,14 @@ function Cotizacion() {
                 onClick={handleConsultar}
                 disabled={loading}
               >
-                {loading ? '⏳ Consultando...' : '🔍 Consultar Cotización'}
+                {loading ? 'Consultando...' : 'Consultar Cotización'}
               </button>
               <button
                 className="btn btn-secondary"
                 onClick={handleLimpiar}
                 disabled={loading}
               >
-                🔄 Limpiar
+                Limpiar
               </button>
             </div>
           </div>
@@ -129,7 +129,7 @@ function Cotizacion() {
 
         {error && (
           <div className="error-message">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 

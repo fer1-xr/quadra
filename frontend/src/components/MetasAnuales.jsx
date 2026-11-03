@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
-import { Plus, Trash2, Download, Target } from 'lucide-react'
+import { Plus, Trash2, Download, Target, X, GraduationCap, Briefcase, Wallet } from 'lucide-react'
 import '../styles/MetasAnuales.css'
 import Toast from './Toast'
 
 const TIPOS_META = [
-  { id: 'educativo', label: 'Educativo', icon: '🎓', color: '#4ECDC4' },
-  { id: 'profesional', label: 'Profesional', icon: '💼', color: '#FF6B6B' },
-  { id: 'financiero', label: 'Financiero', icon: '💰', color: '#95E1D3' }
+  { id: 'educativo', label: 'Educativo', icon: GraduationCap, color: '#12B886' },
+  { id: 'profesional', label: 'Profesional', icon: Briefcase, color: '#1747D1' },
+  { id: 'financiero', label: 'Financiero', icon: Wallet, color: '#6B97FF' }
 ]
 
 const PERIODOS = [
@@ -193,7 +193,7 @@ function MetasAnuales() {
       if (m.id === id) {
         const nuevaCompletada = !m.completada
         if (nuevaCompletada) {
-          mostrarNotificacion('¡Felicitaciones! Meta completada 🎉', 'success')
+          mostrarNotificacion('¡Felicitaciones! Meta completada', 'success')
         }
         return { ...m, completada: nuevaCompletada, progreso: nuevaCompletada ? 100 : m.progreso }
       }
@@ -240,7 +240,7 @@ function MetasAnuales() {
 
       <div className="metas-header">
         <div className="metas-titulo">
-          <h3>🎯 Metas {periodo === 'anual' ? 'Anuales' : 'Mensuales'}</h3>
+          <h3>Metas {periodo === 'anual' ? 'Anuales' : 'Mensuales'}</h3>
           <p className="metas-subtitulo">Establece y alcanza tus objetivos</p>
         </div>
         <div className="metas-stats">
@@ -269,7 +269,7 @@ function MetasAnuales() {
           ))}
         </div>
         <button className="btn btn-exportar" onClick={exportarPDF}>
-          📄 Exportar PDF
+          Exportar PDF
         </button>
       </div>
 
@@ -456,15 +456,15 @@ function MetasAnuales() {
                 {meta.imagenUrl && (
                   <div className="meta-imagen">
                     <img src={meta.imagenUrl} alt={meta.titulo} />
-                    <div className="meta-type-badge" style={{ backgroundColor: tipo.color }}>
-                      <span>{tipo.icon} {tipo.label}</span>
+                    <div className="meta-type-badge">
+                      <span><tipo.icon size={13} strokeWidth={1.8} /> {tipo.label}</span>
                     </div>
                   </div>
                 )}
 
                 {!meta.imagenUrl && (
-                  <div className="meta-imagen-placeholder" style={{ backgroundColor: tipo.color + '15', borderTop: `2px solid ${tipo.color}` }}>
-                    <span className="placeholder-icon">{tipo.icon}</span>
+                  <div className="meta-imagen-placeholder">
+                    <span className="placeholder-icon"><tipo.icon size={30} strokeWidth={1.4} /></span>
                     <span className="placeholder-label">{tipo.label}</span>
                   </div>
                 )}
@@ -478,7 +478,7 @@ function MetasAnuales() {
                         eliminarMeta(meta.id)
                       }
                     }}>
-                      ✕
+                      <X size={14} strokeWidth={1.8} />
                     </button>
                   </div>
 
@@ -487,11 +487,11 @@ function MetasAnuales() {
                   {/* Detalles SMART */}
                   <div className="meta-detalles">
                     <div className="detalle-item">
-                      <span className="detalle-label">📅 Fecha Límite:</span>
+                      <span className="detalle-label">Fecha Límite:</span>
                       <span className="detalle-valor">{new Date(meta.fechaLimite).toLocaleDateString('es-PY')}</span>
                     </div>
                     <div className="detalle-item">
-                      <span className="detalle-label">🎯 Estrategia:</span>
+                      <span className="detalle-label">Estrategia:</span>
                       <span className="detalle-valor">{meta.comoSeAlcanzara}</span>
                     </div>
                   </div>
@@ -499,7 +499,7 @@ function MetasAnuales() {
                   {/* Cálculo de ahorro para metas financieras */}
                   {ahorroData && !ahorroData.error && (
                     <div className="ahorro-desglose">
-                      <h5>💵 Plan de Ahorro</h5>
+                      <h5>Plan de Ahorro</h5>
                       <div className="ahorro-grid">
                         <div className="ahorro-item">
                           <span className="ahorro-label">Monto Total</span>
@@ -559,13 +559,13 @@ function MetasAnuales() {
                       className="btn btn-small btn-completar"
                       onClick={() => completarMeta(meta.id)}
                     >
-                      {meta.completada ? '↩ Reactivar' : '✓ Completar'}
+                      {meta.completada ? 'Reactivar' : 'Completar'}
                     </button>
                     <button
                       className="btn btn-small btn-editar"
                       onClick={() => editarMeta(meta)}
                     >
-                      ✎ Editar
+                      Editar
                     </button>
                   </div>
                 </div>
