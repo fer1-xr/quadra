@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Button, Input, Card, CardBody } from '@heroui/react'
-import { Eye, EyeOff, Mail } from 'lucide-react'
+import React, { useState } from 'react'
+import { Eye, EyeOff, Mail, Lock, ArrowRight, ShieldCheck, FileCheck2, Landmark } from 'lucide-react'
 import { authService } from '../services/authService'
-import '../styles/Login.css'
+import AuthShell from './AuthShell'
 
 function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const [email, setEmail] = useState('')
@@ -10,69 +9,6 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [emailFocused, setEmailFocused] = useState(false)
-  const [passwordFocused, setPasswordFocused] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(3)
-  const [dominantColor, setDominantColor] = useState({ r: 102, g: 126, b: 234 })
-  const [isDarkImage, setIsDarkImage] = useState(false)
-  const canvasRef = useRef(null)
-
-  const images = [
-    '/login-images/4.jpg'
-  ]
-
-  // Detectar color dominante de la imagen
-  const getDominantColor = (imageSrc) => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        const canvas = canvasRef.current
-        if (!canvas) resolve({ r: 102, g: 126, b: 234 })
-
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-
-        const imageData = ctx.getImageData(0, 0, img.width, img.height)
-        const data = imageData.data
-
-        let r = 0, g = 0, b = 0
-        const pixelCount = data.length / 4
-
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i]
-          g += data[i + 1]
-          b += data[i + 2]
-        }
-
-        r = Math.floor(r / pixelCount)
-        g = Math.floor(g / pixelCount)
-        b = Math.floor(b / pixelCount)
-
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000
-        const isDark = brightness < 128
-
-        setDominantColor({ r, g, b })
-        setIsDarkImage(isDark)
-        resolve({ r, g, b, isDark })
-      }
-      img.onerror = () => resolve({ r: 102, g: 126, b: 234 })
-      img.src = imageSrc
-    })
-  }
-
-  // Carrusel de imágenes
-  useEffect(() => {
-    getDominantColor(images[currentImageIndex])
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length)
-    }, 30000)
-
-    return () => clearInterval(interval)
-  }, [currentImageIndex])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -96,135 +32,122 @@ function Login({ onLogin, onSwitchToRegister, onSwitchToForgotPassword }) {
   }
 
   return (
-    <div
-      className="login-wrapper"
-      style={{
-        background: isDarkImage
-          ? `linear-gradient(135deg, rgb(${Math.max(dominantColor.r - 40, 0)}, ${Math.max(dominantColor.g - 40, 0)}, ${Math.max(dominantColor.b - 40, 0)}) 0%, rgb(${Math.max(dominantColor.r - 60, 0)}, ${Math.max(dominantColor.g - 60, 0)}, ${Math.max(dominantColor.b - 60, 0)}) 100%)`
-          : `linear-gradient(135deg, rgb(${Math.min(dominantColor.r + 30, 255)}, ${Math.min(dominantColor.g + 30, 255)}, ${Math.min(dominantColor.b + 30, 255)}) 0%, rgb(${Math.min(dominantColor.r + 10, 255)}, ${Math.min(dominantColor.g + 10, 255)}, ${Math.min(dominantColor.b + 10, 255)}) 100%)`
-      }}
-    >
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      <div className="login-container">
-        {/* Lado izquierdo - Carrusel de imágenes */}
-        <div className="login-branding image-carousel">
-          <img
-            src={images[currentImageIndex]}
-            alt="Fondo de login"
-            className="carousel-image"
-            key={currentImageIndex}
-          />
+    <AuthShell>
+      <section className="ql-hero">
+        <p className="ql-eyebrow">Conciliación contable · Paraguay</p>
+        <h1 className="ql-title">
+          Cada guaraní,<br />
+          <span className="ql-serif">conciliado.</span>
+        </h1>
+        <p className="ql-sub">
+          Extractos bancarios, documentos de SIFEN y registros contables, cruzados en un solo lugar.
+          El cierre mensual con evidencia, no con planillas.
+        </p>
+        <ul className="ql-meta">
+          <li><Landmark size={15} /> Extractos bancarios</li>
+          <li><FileCheck2 size={15} /> Documentos SIFEN</li>
+          <li><ShieldCheck size={15} /> Datos cifrados</li>
+        </ul>
+      </section>
+
+      <section className="ql-card" aria-labelledby="ql-card-title">
+        <div className="ql-card__head">
+          <h2 id="ql-card-title">Bienvenido de nuevo</h2>
+          <p>Inicia sesión en tu cuenta de Quadra.</p>
         </div>
 
-        {/* Lado derecho - Formulario */}
-        <div className="login-form-section">
-          <Card className="login-card">
-            <CardBody className="login-card-body">
-              <div className="form-header">
-                <h2 className="form-title">Bienvenido a Quadra</h2>
-                <p className="form-subtitle">Inicia sesión en tu cuenta</p>
-              </div>
+        <form onSubmit={handleSubmit} className="ql-form" noValidate>
+          <div className="ql-field">
+            <label htmlFor="email">Correo electrónico</label>
+            <div className="ql-input">
+              <Mail size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="tu@empresa.com.py"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
 
-              <form onSubmit={handleSubmit} className="login-form">
-                <div className={`form-group ${emailFocused ? 'focused' : ''}`}>
-                  <label htmlFor="email" className="form-label">Correo electrónico</label>
-                  <div className="input-with-icon">
-                    <input
-                      id="email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      onFocus={() => setEmailFocused(true)}
-                      onBlur={() => setEmailFocused(false)}
-                      required
-                      className="input-field"
-                    />
-                    <Mail size={16} className="input-icon" />
-                  </div>
-                </div>
+          <div className="ql-field">
+            <div className="ql-field__row">
+              <label htmlFor="password">Contraseña</label>
+              <a
+                href="#forgot"
+                className="ql-link"
+                onClick={(e) => {
+                  e.preventDefault()
+                  onSwitchToForgotPassword()
+                }}
+              >
+                ¿La olvidaste?
+              </a>
+            </div>
+            <div className="ql-input">
+              <Lock size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="current-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="ql-input__toggle"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+          </div>
 
-                <div className={`form-group ${passwordFocused ? 'focused' : ''}`}>
-                  <label htmlFor="password" className="form-label">Contraseña</label>
-                  <div className="input-with-icon">
-                    <input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      onFocus={() => setPasswordFocused(true)}
-                      onBlur={() => setPasswordFocused(false)}
-                      required
-                      className="input-field"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="password-toggle-icon"
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    >
-                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
-                  </div>
-                </div>
+          {error && (
+            <div className="ql-error" role="alert">
+              {error}
+            </div>
+          )}
 
-                {error && (
-                  <div className="error-message">
-                    <span className="error-icon">⚠</span>
-                    {error}
-                  </div>
-                )}
+          <button type="submit" className="ql-btn ql-btn--primary" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="ql-spinner" aria-hidden="true" />
+                Iniciando sesión…
+              </>
+            ) : (
+              <>
+                Iniciar sesión
+                <ArrowRight size={16} />
+              </>
+            )}
+          </button>
 
-                <Button
-                  type="submit"
-                  className="login-button"
-                  isLoading={loading}
-                  fullWidth
-                  size="lg"
-                >
-                  {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-                </Button>
+          <div className="ql-divider"><span>¿Nuevo en Quadra?</span></div>
 
-                <div className="form-divider">
-                  <span>o</span>
-                </div>
+          <button
+            type="button"
+            className="ql-btn ql-btn--line"
+            onClick={(e) => {
+              e.preventDefault()
+              onSwitchToRegister()
+            }}
+          >
+            Crear cuenta
+          </button>
+        </form>
 
-                <Button
-                  type="button"
-                  className="login-button"
-                  variant="bordered"
-                  fullWidth
-                  size="lg"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    onSwitchToRegister()
-                  }}
-                >
-                  Crear Cuenta
-                </Button>
-              </form>
-
-              <div className="form-footer">
-                <p>
-                  <a
-                    href="#forgot"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      onSwitchToForgotPassword()
-                    }}
-                    style={{ color: '#ffffff', textDecoration: 'underline', cursor: 'pointer', marginRight: '16px' }}
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </a>
-                  <a href="#help" style={{ color: '#ffffff', textDecoration: 'underline', cursor: 'pointer' }}>Contáctanos</a>
-                </p>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    </div>
+        <p className="ql-foot">
+          ¿Necesitas ayuda? <a href="#help" className="ql-link">Contáctanos</a>
+        </p>
+      </section>
+    </AuthShell>
   )
 }
 

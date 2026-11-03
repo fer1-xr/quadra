@@ -23,6 +23,18 @@
         "value": "arial",
         "createdAt": "2026-10-19T21:49:35.177Z",
         "reason": "user requested Arial as primary font"
+      },
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-11-03T02:24:21.829Z",
+        "reason": "brand typeface: quadra-landing-two.vercel.app ships Geist + Instrument Serif, user asked the app to match that landing"
+      },
+      {
+        "rule": "overused-font",
+        "value": "instrument serif",
+        "createdAt": "2026-11-03T02:24:22.393Z",
+        "reason": "brand typeface: quadra-landing-two.vercel.app ships Geist + Instrument Serif, user asked the app to match that landing"
       }
     ]
   }

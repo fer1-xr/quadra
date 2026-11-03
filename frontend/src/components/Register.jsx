@@ -1,8 +1,17 @@
-import React, { useState, useEffect, useRef } from 'react'
-import { Button, Input, Card, CardBody } from '@heroui/react'
-import { Eye, EyeOff } from 'lucide-react'
+import React, { useState } from 'react'
+import { Eye, EyeOff, Mail, Lock, User, ArrowRight, Check } from 'lucide-react'
 import { authService } from '../services/authService'
-import '../styles/Login.css'
+import AuthShell from './AuthShell'
+
+const PASSWORD_RULES = [
+  { label: '8+ caracteres', test: (p) => p.length >= 8 },
+  { label: 'Una minúscula', test: (p) => /[a-z]/.test(p) },
+  { label: 'Una mayúscula', test: (p) => /[A-Z]/.test(p) },
+  { label: 'Un número', test: (p) => /\d/.test(p) },
+  { label: 'Un símbolo (@$!%*?&)', test: (p) => /[@$!%*?&]/.test(p) }
+]
+
+const STRENGTH_LABELS = ['Muy débil', 'Muy débil', 'Débil', 'Regular', 'Fuerte', 'Muy fuerte']
 
 function Register({ onRegister, onSwitchToLogin }) {
   const [name, setName] = useState('')
@@ -13,113 +22,9 @@ function Register({ onRegister, onSwitchToLogin }) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [dominantColor, setDominantColor] = useState({ r: 102, g: 126, b: 234 })
-  const [isDarkImage, setIsDarkImage] = useState(false)
-  const [passwordStrength, setPasswordStrength] = useState(0)
-  const canvasRef = useRef(null)
 
-  const images = [
-    '/login-images/1.jpg',
-    '/login-images/2.jpg',
-    '/login-images/3.jpg',
-    '/login-images/4.jpg',
-    '/login-images/5.jpg',
-    '/login-images/6.jpg',
-    '/login-images/7.jpg',
-    '/login-images/8.jpg',
-    '/login-images/9.jpg',
-    '/login-images/10.jpg'
-  ]
-
-  // Detectar color dominante
-  const getDominantColor = (imageSrc) => {
-    return new Promise((resolve) => {
-      const img = new Image()
-      img.crossOrigin = 'anonymous'
-      img.onload = () => {
-        const canvas = canvasRef.current
-        if (!canvas) resolve({ r: 102, g: 126, b: 234 })
-
-        const ctx = canvas.getContext('2d')
-        canvas.width = img.width
-        canvas.height = img.height
-        ctx.drawImage(img, 0, 0)
-
-        const imageData = ctx.getImageData(0, 0, img.width, img.height)
-        const data = imageData.data
-
-        let r = 0, g = 0, b = 0
-        const pixelCount = data.length / 4
-
-        for (let i = 0; i < data.length; i += 4) {
-          r += data[i]
-          g += data[i + 1]
-          b += data[i + 2]
-        }
-
-        r = Math.floor(r / pixelCount)
-        g = Math.floor(g / pixelCount)
-        b = Math.floor(b / pixelCount)
-
-        const brightness = (r * 299 + g * 587 + b * 114) / 1000
-        const isDark = brightness < 128
-
-        setDominantColor({ r, g, b })
-        setIsDarkImage(isDark)
-        resolve({ r, g, b, isDark })
-      }
-      img.onerror = () => resolve({ r: 102, g: 126, b: 234 })
-      img.src = imageSrc
-    })
-  }
-
-  // Carrusel de imágenes
-  useEffect(() => {
-    getDominantColor(images[currentImageIndex])
-
-    const interval = setInterval(() => {
-      setCurrentImageIndex((prev) => (prev + 1) % images.length)
-    }, 5000)
-
-    return () => clearInterval(interval)
-  }, [currentImageIndex])
-
-  // Evaluar fortaleza de contraseña
-  const evaluatePasswordStrength = (pwd) => {
-    let strength = 0
-    if (!pwd) return 0
-
-    if (pwd.length >= 8) strength++
-    if (/[a-z]/.test(pwd)) strength++
-    if (/[A-Z]/.test(pwd)) strength++
-    if (/\d/.test(pwd)) strength++
-    if (/[@$!%*?&]/.test(pwd)) strength++
-
-    return strength
-  }
-
-  const handlePasswordChange = (e) => {
-    const pwd = e.target.value
-    setPassword(pwd)
-    setPasswordStrength(evaluatePasswordStrength(pwd))
-  }
-
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 1) return 'red'
-    if (passwordStrength <= 2) return 'orange'
-    if (passwordStrength <= 3) return 'yellow'
-    if (passwordStrength <= 4) return 'lime'
-    return 'green'
-  }
-
-  const getPasswordStrengthText = () => {
-    if (passwordStrength <= 1) return 'Muy débil'
-    if (passwordStrength <= 2) return 'Débil'
-    if (passwordStrength <= 3) return 'Regular'
-    if (passwordStrength <= 4) return 'Fuerte'
-    return 'Muy fuerte'
-  }
+  const passwordStrength = PASSWORD_RULES.filter((rule) => rule.test(password)).length
+  const passwordsMismatch = confirmPassword.length > 0 && password !== confirmPassword
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -151,7 +56,7 @@ function Register({ onRegister, onSwitchToLogin }) {
       return
     }
 
-    if (passwordStrength < 5) {
+    if (passwordStrength < PASSWORD_RULES.length) {
       setError('La contraseña debe tener: 8+ caracteres, mayúsculas, minúsculas, números y símbolos especiales')
       return
     }
@@ -174,193 +79,176 @@ function Register({ onRegister, onSwitchToLogin }) {
   }
 
   return (
-    <div
-      className="login-wrapper"
-      style={{
-        background: isDarkImage
-          ? `linear-gradient(135deg, rgb(${Math.max(dominantColor.r - 40, 0)}, ${Math.max(dominantColor.g - 40, 0)}, ${Math.max(dominantColor.b - 40, 0)}) 0%, rgb(${Math.max(dominantColor.r - 60, 0)}, ${Math.max(dominantColor.g - 60, 0)}, ${Math.max(dominantColor.b - 60, 0)}) 100%)`
-          : `linear-gradient(135deg, rgb(${Math.min(dominantColor.r + 30, 255)}, ${Math.min(dominantColor.g + 30, 255)}, ${Math.min(dominantColor.b + 30, 255)}) 0%, rgb(${Math.min(dominantColor.r + 10, 255)}, ${Math.min(dominantColor.g + 10, 255)}, ${Math.min(dominantColor.b + 10, 255)}) 100%)`
-      }}
-    >
-      <canvas ref={canvasRef} style={{ display: 'none' }} />
-      <div className="login-container">
-        {/* Lado izquierdo - Carrusel de imágenes */}
-        <div className="login-branding image-carousel">
-          <img
-            src={images[currentImageIndex]}
-            alt="Fondo de registro"
-            className="carousel-image"
-            key={currentImageIndex}
-          />
-          <div className="carousel-indicators">
-            {images.map((_, idx) => (
-              <div
-                key={idx}
-                className={`indicator ${idx === currentImageIndex ? 'active' : ''}`}
-                onClick={() => setCurrentImageIndex(idx)}
+    <AuthShell>
+      <section className="ql-hero">
+        <p className="ql-eyebrow">Crea tu espacio de trabajo</p>
+        <h1 className="ql-title">
+          Tu cierre,<br />
+          <span className="ql-serif">sin planillas.</span>
+        </h1>
+        <p className="ql-sub">
+          Abre tu cuenta y empieza a conciliar extractos, comprobantes de SIFEN y libros contables
+          desde un mismo lugar.
+        </p>
+        <ol className="ql-steps">
+          <li><span>01</span> Crea tu cuenta</li>
+          <li><span>02</span> Importa tus extractos y documentos</li>
+          <li><span>03</span> Concilia y cierra el mes con evidencia</li>
+        </ol>
+      </section>
+
+      <section className="ql-card" aria-labelledby="ql-card-title">
+        <div className="ql-card__head">
+          <h2 id="ql-card-title">Crear cuenta</h2>
+          <p>Regístrate para acceder a Quadra.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="ql-form" noValidate>
+          <div className="ql-field">
+            <label htmlFor="name">Nombre completo</label>
+            <div className="ql-input">
+              <User size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="name"
+                type="text"
+                autoComplete="name"
+                placeholder="Tu nombre"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
               />
-            ))}
+            </div>
           </div>
-        </div>
 
-        {/* Lado derecho - Formulario */}
-        <div className="login-form-section">
-          <Card className="login-card">
-            <CardBody className="login-card-body">
-              <div className="form-header">
-                <h2 className="form-title">Crear Cuenta</h2>
-                <p className="form-subtitle">Regístrate para acceder a QUADRA</p>
+          <div className="ql-field">
+            <label htmlFor="email">Correo electrónico</label>
+            <div className="ql-input">
+              <Mail size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                placeholder="tu@empresa.com.py"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="ql-field">
+            <label htmlFor="password">Contraseña</label>
+            <div className="ql-input">
+              <Lock size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                aria-describedby="password-rules"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="ql-input__toggle"
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+
+            {password && (
+              <div className="ql-strength" data-level={passwordStrength}>
+                <div className="ql-strength__bar" aria-hidden="true">
+                  {PASSWORD_RULES.map((_, i) => (
+                    <span key={i} className={i < passwordStrength ? 'is-on' : ''} />
+                  ))}
+                </div>
+                <span className="ql-strength__label">{STRENGTH_LABELS[passwordStrength]}</span>
               </div>
+            )}
 
-              <form onSubmit={handleSubmit} className="login-form">
-                <div className="form-group">
-                  <label htmlFor="name" className="form-label">Nombre Completo</label>
-                  <Input
-                    id="name"
-                    type="text"
-                    placeholder="Tu nombre"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
-                </div>
+            <ul id="password-rules" className="ql-rules">
+              {PASSWORD_RULES.map((rule) => {
+                const ok = rule.test(password)
+                return (
+                  <li key={rule.label} className={ok ? 'is-ok' : ''}>
+                    <Check size={12} aria-hidden="true" />
+                    {rule.label}
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
 
-                <div className="form-group">
-                  <label htmlFor="email" className="form-label">Correo Electrónico</label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    fullWidth
-                    className="input-field"
-                    variant="bordered"
-                  />
-                </div>
+          <div className="ql-field">
+            <label htmlFor="confirmPassword">Confirmar contraseña</label>
+            <div className={`ql-input ${passwordsMismatch ? 'is-invalid' : ''}`}>
+              <Lock size={16} className="ql-input__icon" aria-hidden="true" />
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? 'text' : 'password'}
+                autoComplete="new-password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                aria-invalid={passwordsMismatch}
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="ql-input__toggle"
+                aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
+            </div>
+            {passwordsMismatch && <p className="ql-hint ql-hint--err">Las contraseñas no coinciden.</p>}
+          </div>
 
-                <div className="form-group">
-                  <label htmlFor="password" className="form-label">Contraseña</label>
-                  <div className="password-input-wrapper">
-                    <Input
-                      id="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      required
-                      fullWidth
-                      className="input-field"
-                      variant="bordered"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="password-toggle-btn"
-                      aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                  {password && (
-                    <div style={{ marginTop: '8px', fontSize: '12px' }}>
-                      <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                        {[...Array(5)].map((_, i) => (
-                          <div
-                            key={i}
-                            style={{
-                              height: '4px',
-                              flex: 1,
-                              backgroundColor: i < passwordStrength ? getPasswordStrengthColor() : '#e0e0e0',
-                              borderRadius: '2px',
-                              transition: 'background-color 0.3s'
-                            }}
-                          />
-                        ))}
-                      </div>
-                      <span style={{ color: getPasswordStrengthColor() }}>
-                        Fortaleza: {getPasswordStrengthText()}
-                      </span>
-                      <p style={{ color: '#666', fontSize: '11px', margin: '4px 0 0 0' }}>
-                        Debe tener: 8+ caracteres, mayúsculas, minúsculas, números y símbolos (@$!%*?&)
-                      </p>
-                    </div>
-                  )}
-                </div>
+          {error && (
+            <div className="ql-error" role="alert">
+              {error}
+            </div>
+          )}
 
-                <div className="form-group">
-                  <label htmlFor="confirmPassword" className="form-label">Confirmar Contraseña</label>
-                  <div className="password-input-wrapper">
-                    <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      fullWidth
-                      className="input-field"
-                      variant="bordered"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="password-toggle-btn"
-                      aria-label={showConfirmPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                    >
-                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                  </div>
-                </div>
+          <button type="submit" className="ql-btn ql-btn--primary" disabled={loading}>
+            {loading ? (
+              <>
+                <span className="ql-spinner" aria-hidden="true" />
+                Creando cuenta…
+              </>
+            ) : (
+              <>
+                Crear cuenta
+                <ArrowRight size={16} />
+              </>
+            )}
+          </button>
 
-                {error && (
-                  <div className="error-message">
-                    <span className="error-icon">⚠</span>
-                    {error}
-                  </div>
-                )}
+          <div className="ql-divider"><span>¿Ya tienes cuenta?</span></div>
 
-                <Button
-                  type="submit"
-                  className="login-button"
-                  isLoading={loading}
-                  fullWidth
-                  size="lg"
-                >
-                  {loading ? 'Registrando...' : 'Crear Cuenta'}
-                </Button>
+          <button
+            type="button"
+            className="ql-btn ql-btn--line"
+            onClick={(e) => {
+              e.preventDefault()
+              onSwitchToLogin()
+            }}
+          >
+            Iniciar sesión
+          </button>
+        </form>
 
-                <div className="form-divider">
-                  <span>o</span>
-                </div>
-
-                <p style={{ textAlign: 'center', margin: 0, fontSize: '14px' }}>
-                  ¿Ya tienes cuenta?{' '}
-                  <a
-                    href="#login"
-                    onClick={(e) => {
-                      e.preventDefault()
-                      onSwitchToLogin()
-                    }}
-                    style={{ color: '#666', textDecoration: 'underline', cursor: 'pointer' }}
-                  >
-                    Inicia sesión
-                  </a>
-                </p>
-              </form>
-
-              <div className="form-footer">
-                <p>¿Problemas para registrarte? <a href="#help">Contáctanos</a></p>
-              </div>
-            </CardBody>
-          </Card>
-        </div>
-      </div>
-    </div>
+        <p className="ql-foot">
+          ¿Problemas para registrarte? <a href="#help" className="ql-link">Contáctanos</a>
+        </p>
+      </section>
+    </AuthShell>
   )
 }
 
