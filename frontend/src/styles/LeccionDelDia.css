@@ -88,7 +88,6 @@
   gap: 24px;
   margin-bottom: 40px;
   padding-bottom: 24px;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
   flex-wrap: wrap;
 }
 
@@ -149,11 +148,17 @@
 .leccion-footer {
   margin-top: 48px;
   padding-top: 32px;
-  border-top: 2px solid rgba(212, 175, 55, 0.2);
 }
 
 .footer-section {
   margin-bottom: 32px;
+}
+
+.leccion-aviso-legal {
+  margin-top: 16px;
+  font-size: 13px;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 .footer-section h3 {
@@ -202,7 +207,6 @@
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
 }
 
 .leccion-tab {
@@ -227,7 +231,7 @@
 
 .leccion-tab.active {
   color: var(--q-ink, #1b2a4a);
-  border-bottom-color: #d4af37;
+  border-bottom-color: var(--q-ink, #1b2a4a);
 }
 
 .leccion-tab-count {
@@ -245,7 +249,7 @@
   padding: 10px 14px;
   border-radius: 6px;
   background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
+  border: none;
   color: var(--q-ink, #1b2a4a);
   font-size: 14px;
 }
@@ -368,7 +372,7 @@
   gap: 10px;
   padding: 48px 24px;
   text-align: center;
-  border: 2px dashed rgba(212, 175, 55, 0.3);
+  background: var(--card-bg, #ffffff);
   border-radius: 12px;
   color: var(--text-secondary, #6b7280);
 }
@@ -411,6 +415,11 @@
   transform: translateY(-2px);
 }
 
+/* Dentro del módulo, los botones secundarios no llevan borde dorado */
+.leccion-del-dia-container .btn-secondary {
+  border: none;
+}
+
 /* Modo oscuro */
 @media (prefers-color-scheme: dark) {
   [data-theme="dark"] .leccion-blog {
@@ -438,13 +447,6 @@
     color: #a0a0a0;
   }
 
-  [data-theme="dark"] .leccion-meta {
-    border-bottom-color: rgba(212, 175, 55, 0.3);
-  }
-
-  [data-theme="dark"] .leccion-footer {
-    border-top-color: rgba(212, 175, 55, 0.3);
-  }
 }
 
 /* Responsive */

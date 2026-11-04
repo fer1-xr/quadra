@@ -6,14 +6,11 @@ El módulo "Lección del Día" proporciona capacitación diaria automática a lo
 
 ## Características Principales
 
-### 1. **Lecciones Rotativas**
-- **Lunes**: Ley 6380 - Decreto Reglamentario de Sociedades Mercantiles
-- **Martes**: NIIF 1 - Adopción por Primera Vez de las NIIF
-- **Miércoles**: NIIF 8 - Segmentos de Operación
-- **Jueves**: Ley 6380 - Derechos y Deberes de Accionistas
-- **Viernes**: NIIF 15 - Ingresos de Actividades Ordinarias
-
-**Fin de semana**: Muestra la lección del viernes
+### 1. **Lecciones Diarias Automáticas**
+- Cada día del calendario muestra una lección distinta, generada desde el catálogo `frontend/src/services/leccionesCatalogo.js`.
+- El catálogo incluye Ley 6380, NIIF/NIC y finanzas (36 lecciones en total).
+- El orden se mezcla con una semilla fija: todos los usuarios ven la misma lección el mismo día.
+- Al agotarse el catálogo (36 días), el ciclo vuelve a empezar.
 
 ### 2. **Diseño Tipo Blog**
 ```
@@ -148,23 +145,21 @@ if (hora === 7 && diaSemana >= 1 && diaSemana <= 5) {
 
 ### Agregar una Nueva Lección
 
-1. Editar `LeccionDelDia.jsx`
-2. Agregar objeto en array `lecciones`:
+1. Editar `frontend/src/services/leccionesCatalogo.js`
+2. Agregar objeto en el array `LECCIONES` (el `id` debe ser único):
 ```javascript
 {
-  dia: 'Día',
-  diaNumero: 6, // 0=Dom, 1=Lun, ..., 6=Sab
-  titulo: 'Título de la Lección',
-  imagen: 'https://ejemplo.com/imagen.jpg',
-  contenido: `
-    <h2>Sección Principal</h2>
-    <p>Contenido...</p>
-    <ul>
-      <li>Punto 1</li>
-    </ul>
-  `
+  id: 'nic-ejemplo',
+  categoria: CATEGORIAS.NIIF, // o LEY_6380 / FINANZAS
+  titulo: 'NIC X: Título de la Lección',
+  resumen: 'Resumen de una o dos frases.',
+  secciones: [
+    { titulo: 'Sección', texto: 'Párrafo explicativo.' },
+    { titulo: 'Puntos clave', puntos: ['Punto 1', 'Punto 2'] },
+  ],
 }
 ```
+La imagen se asigna automáticamente y el HTML se genera a partir de `secciones`.
 
 ### Cambiar Horario de Notificación
 

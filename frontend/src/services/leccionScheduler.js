@@ -1,4 +1,6 @@
 // Servicio para gestionar la programación de lecciones a las 07:00 AM
+import { obtenerLeccionDelDia } from './leccionesCatalogo'
+
 class LeccionScheduler {
   constructor() {
     this.hasShownTodayNotification = false
@@ -51,15 +53,7 @@ class LeccionScheduler {
     const ahora = new Date()
     const diaSemana = diasNombre[ahora.getDay()]
 
-    const lecciones = {
-      'Lunes': 'Ley 6380: Decreto Reglamentario de Sociedades Mercantiles',
-      'Martes': 'NIIF 1: Adopción por Primera Vez de las NIIF',
-      'Miércoles': 'NIIF 8: Segmentos de Operación',
-      'Jueves': 'Ley 6380: Derechos y Deberes de Accionistas',
-      'Viernes': 'NIIF 15: Ingresos de Actividades Ordinarias'
-    }
-
-    const titulo = lecciones[diaSemana] || 'Nueva Lección del Día'
+    const titulo = obtenerLeccionDelDia(ahora).titulo
 
     // Usar la Notification API del navegador si está disponible
     if ('Notification' in window) {
