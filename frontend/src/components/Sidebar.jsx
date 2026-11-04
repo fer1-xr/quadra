@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, User, LogOut, CheckSquare, Target, FileText, Users } from 'lucide-react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History } from 'lucide-react'
 import '../styles/Sidebar.css'
 
-function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onClose }) {
+function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onClose, contribuyente = null, onCambiarContribuyente }) {
   const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
@@ -57,46 +57,59 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
     applyTheme(newDarkMode)
   }
 
-  const menuGroups = [
-    {
-      label: 'General',
-      items: [
-        { id: 'inicio', label: 'Inicio', icon: Home }
+  const agenda = {
+    label: 'Agenda',
+    items: [
+      { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
+      { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
+      { id: 'metas', label: 'Metas Anuales', icon: Target }
+    ]
+  }
+
+  const gestion = {
+    label: 'Gestión',
+    items: [
+      { id: 'clientes', label: 'Gestión de Clientes', icon: Users }
+    ]
+  }
+
+  // Sin contribuyente: panel general simplificado.
+  // Con contribuyente: espacio de trabajo completo sobre ese cliente.
+  const menuGroups = contribuyente
+    ? [
+        {
+          label: 'General',
+          items: [
+            { id: 'inicio', label: 'Inicio', icon: Home },
+            { id: 'historial', label: 'Historial', icon: History }
+          ]
+        },
+        {
+          label: 'Conciliación',
+          items: [
+            { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
+            { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
+            { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
+            { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard }
+          ]
+        },
+        {
+          label: 'Cálculo',
+          items: [
+            { id: 'liquidacion', label: 'Liquidación Salarial', icon: Calculator },
+            { id: 'activofijo', label: 'Activo Fijo', icon: Building2 },
+            { id: 'flujo', label: 'Flujo de Caja', icon: TrendingUp },
+            { id: 'cotizacion', label: 'Cotización', icon: LineChart }
+          ]
+        },
+        agenda,
+        gestion
       ]
-    },
-    {
-      label: 'Agenda',
-      items: [
-        { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
-        { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
-        { id: 'metas', label: 'Metas Anuales', icon: Target }
+    : [
+        { label: 'Trabajo', items: [{ id: 'seleccionar', label: 'Clientes', icon: Briefcase }] },
+        agenda,
+        gestion
       ]
-    },
-    {
-      label: 'Conciliación',
-      items: [
-        { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
-        { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
-        { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
-        { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard }
-      ]
-    },
-    {
-      label: 'Cálculo',
-      items: [
-        { id: 'liquidacion', label: 'Liquidación Salarial', icon: Calculator },
-        { id: 'activofijo', label: 'Activo Fijo', icon: Building2 },
-        { id: 'flujo', label: 'Flujo de Caja', icon: TrendingUp },
-        { id: 'cotizacion', label: 'Cotización', icon: LineChart }
-      ]
-    },
-    {
-      label: 'Gestión',
-      items: [
-        { id: 'clientes', label: 'Gestión de Clientes', icon: Users }
-      ]
-    }
-  ]
 
   const handleNavigate = (viewId) => {
     onNavigate(viewId)
@@ -123,6 +136,21 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
             <p className="q-sidebar__tag">Σ debe = Σ haber</p>
           </div>
         </div>
+
+        {contribuyente && (
+          <div className="q-sidebar__client">
+            <p className="q-sidebar__client-label">Trabajando en</p>
+            <p className="q-sidebar__client-name" title={contribuyente.razonSocial}>{contribuyente.razonSocial}</p>
+            <p className="q-sidebar__client-meta">RUC {contribuyente.ruc} · {contribuyente.ejercicio}</p>
+            <button
+              type="button"
+              className="q-sidebar__client-switch"
+              onClick={() => { onCambiarContribuyente?.(); if (onClose) onClose() }}
+            >
+              <ArrowLeftRight size={14} strokeWidth={1.8} /> Cambiar contribuyente
+            </button>
+          </div>
+        )}
 
         <nav className="q-sidebar__nav">
           {menuGroups.map((group) => (

@@ -6,22 +6,23 @@ import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
 import { Card, CardBody, CardHeader, Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
 import { Upload, FileText, Download, CheckCircle, X } from 'lucide-react'
+import GuardarEnNube from './GuardarEnNube'
 import '../styles/ControlPagos.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
   : 'https://quadra-45d6.onrender.com'
 
-function ControlPagos() {
+function ControlPagos({ restaurar = null }) {
   const [dragActive, setDragActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [file, setFile] = useState(null)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
-  const [step, setStep] = useState('upload') // upload, processing, preview, complete
+  const [step, setStep] = useState(restaurar?.paymentData ? 'preview' : 'upload') // upload, processing, preview, complete
   const [processingProgress, setProcessingProgress] = useState('')
-  const [paymentData, setPaymentData] = useState(null)
-  const [documentType, setDocumentType] = useState('poliza') // poliza or prestamo
+  const [paymentData, setPaymentData] = useState(restaurar?.paymentData || null)
+  const [documentType, setDocumentType] = useState(restaurar?.documentType || 'poliza') // poliza or prestamo
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -325,7 +326,13 @@ function ControlPagos() {
           </Table>
         </div>
 
-        <div className="flex gap-3 flex-wrap">
+        <div className="flex gap-3 flex-wrap items-center">
+          <GuardarEnNube
+            modulo="control-pagos"
+            titulo={`Control de pagos · ${documentType === 'prestamo' ? 'Préstamo' : 'Póliza'}${file?.name ? ` · ${file.name}` : ''}`}
+            resumen={{ Cuotas: paymentData?.payments?.length || 0, Total: paymentData?.totalAmount }}
+            datos={{ documentType, archivo: file?.name || restaurar?.archivo || null, paymentData }}
+          />
           <Button
             color="success"
             startContent={<Download size={18} />}
