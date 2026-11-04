@@ -408,7 +408,7 @@ function Dashboard({ user, onLogout }) {
                   <div className="q-hero__copy">
                     <p className="q-hero__eyebrow">{saludo}{nombreCorto ? `, ${nombreCorto}` : ''}</p>
                     <h1 className="q-hero__title">Bienvenido a <em>Quadra.</em></h1>
-                    <p className="q-hero__lede">Elegí por dónde empezar: un cliente para trabajar, tu lección y tareas del día, o el seguimiento de tus metas y tu cartera.</p>
+                    <p className="q-hero__lede">Elegí por dónde empezar: un cliente para trabajar, una lección, tareas del día, o el seguimiento de tus metas y tu cartera.</p>
                   </div>
                   <p className="q-hero__formula" aria-hidden="true">
                     <span>Σ</span><i>Debe</i> − <span>Σ</span><i>Haber</i> = 0
