@@ -114,8 +114,6 @@
   margin-top: 32px;
   margin-bottom: 16px;
   color: var(--q-ink, #1b2a4a);
-  border-left: 4px solid #d4af37;
-  padding-left: 16px;
 }
 
 .leccion-content h3 {
