@@ -14,8 +14,10 @@ import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
 import LeccionDelDia from './LeccionDelDia'
 import GestionClientes from './GestionClientes'
+import PageHead, { Figures } from './PageHead'
 import '../styles/Dashboard.css'
 import '../styles/QuadraModules.css'
+import '../styles/QuadraLedger.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
@@ -202,6 +204,14 @@ function Dashboard({ user, onLogout }) {
     cuenta: 'Mi Cuenta'
   }
 
+  const viewGroups = {
+    leccion: 'Agenda', todo: 'Agenda', metas: 'Agenda',
+    rg90: 'Conciliación', 'rg90-results': 'Conciliación', bancaria: 'Conciliación',
+    'importar-documentos': 'Conciliación', 'control-pagos': 'Conciliación',
+    liquidacion: 'Cálculo', activofijo: 'Cálculo', flujo: 'Cálculo', cotizacion: 'Cálculo',
+    clientes: 'Gestión'
+  }
+
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
   const secondaryModules = [
@@ -231,7 +241,10 @@ function Dashboard({ user, onLogout }) {
             </button>
             <div>
               <p className="q-topbar__date">{today}</p>
-              <h2 className="q-topbar__title">{viewTitles[view] || 'QUADRA'}</h2>
+              <h2 className="q-topbar__title">
+                {viewGroups[view] && <span className="q-topbar__crumb">{viewGroups[view]}</span>}
+                {viewTitles[view] || 'QUADRA'}
+              </h2>
             </div>
           </div>
           <div className="q-topbar__meta">
@@ -344,14 +357,14 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'rg90' && (
-              <Card className="q-card max-w-4xl" shadow="none">
-                <CardHeader className="q-card__head">
-                  <span className="q-card__icon"><BarChart3 size={20} strokeWidth={1.6} /></span>
-                  <div>
-                    <h2 className="q-card__title">Conciliación RG90</h2>
-                    <p className="q-card__sub">Libro Maragnatu frente a reportes de compras, ventas y notas de crédito</p>
-                  </div>
-                </CardHeader>
+              <div className="q-sheet">
+              <PageHead
+                title="Conciliación RG90"
+                lede="Libro Maragnatu frente a reportes de compras, ventas y notas de crédito."
+                equation={[{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }]}
+                caption="tolerancia ± 1,00 por concepto"
+              />
+              <Card className="q-card" shadow="none">
                 <CardBody className="q-card__body">
                   {error && (
                     <div className="q-alert" role="alert">
@@ -417,26 +430,24 @@ function Dashboard({ user, onLogout }) {
                   </button>
                 </CardBody>
               </Card>
+              </div>
             )}
 
             {view === 'rg90-results' && discrepancies.length > 0 && (
-              <Card className="q-card max-w-6xl" shadow="none">
-                <CardHeader className="q-card__head q-card__head--split">
-                  <div>
-                    <h2 className="q-card__title">Resultados de Conciliación</h2>
-                    <p className="q-card__sub">Tolerancia de ± 1,00 por concepto</p>
-                  </div>
-                  <div className="q-tally">
-                    <div className="q-tally__item q-tally__item--ok">
-                      <span className="q-tally__label"><Check size={14} strokeWidth={2} /> Coinciden</span>
-                      <span className="q-tally__value">{totalCoincidencias}</span>
-                    </div>
-                    <div className="q-tally__item q-tally__item--err">
-                      <span className="q-tally__label"><X size={14} strokeWidth={2} /> Discrepancias</span>
-                      <span className="q-tally__value">{totalErrors}</span>
-                    </div>
-                  </div>
-                </CardHeader>
+              <div className="q-sheet q-sheet--wide">
+              <PageHead
+                title="Resultados de conciliación"
+                lede="Cada fila compara el libro con la RG90. Las cifras fuera de tolerancia se marcan en rojo."
+                equation={[{ op: '|' }, { v: 'Libro' }, { op: '−' }, { v: 'RG90' }, { op: '|' }, { op: '≤' }, { n: '1,00' }]}
+                caption="criterio de coincidencia"
+              />
+              <Figures items={[
+                { label: 'Comprobantes', value: discrepancies.length },
+                { label: 'Coinciden', value: totalCoincidencias, tone: 'ok' },
+                { label: 'Discrepancias', value: totalErrors, tone: totalErrors ? 'err' : undefined },
+                { label: 'Exactitud', value: `${((totalCoincidencias / discrepancies.length) * 100).toLocaleString('es-PY', { maximumFractionDigits: 1 })} %` }
+              ]} />
+              <Card className="q-card" shadow="none">
                 <CardBody className="q-card__body overflow-x-auto">
                   <Table
                     aria-label="Resultados de conciliación"
@@ -497,14 +508,37 @@ function Dashboard({ user, onLogout }) {
                   </div>
                 </CardBody>
               </Card>
+              </div>
             )}
 
             {view === 'bancaria' && (
-              <section className="q-panel">
-                <span className="q-card__icon"><Landmark size={20} strokeWidth={1.6} /></span>
-                <h2 className="q-card__title">Conciliación Bancaria</h2>
-                <p className="q-card__sub">Esta funcionalidad está en desarrollo.</p>
-              </section>
+              <div className="q-sheet">
+                <PageHead
+                  title="Conciliación Bancaria"
+                  lede="Explica la diferencia entre el extracto del banco y el saldo contable, partida por partida."
+                  equation={[{ v: 'S', sub: 'banco' }, { op: '±' }, { v: 'P', sub: 'tránsito' }, { op: '=' }, { v: 'S', sub: 'libro' }]}
+                  caption="en desarrollo"
+                />
+                <section className="q-card q-recon" aria-label="Estructura de la conciliación bancaria">
+                  <div className="q-recon__head">
+                    <h2 className="q-card__title">Estructura de la conciliación</h2>
+                    <span className="q-tag">En desarrollo</span>
+                  </div>
+                  <table className="q-recon__table">
+                    <thead>
+                      <tr><th scope="col">Concepto</th><th scope="col">Importe</th></tr>
+                    </thead>
+                    <tbody>
+                      <tr><th scope="row"><span className="q-recon__op" /> Saldo según extracto bancario</th><td /></tr>
+                      <tr><th scope="row"><span className="q-recon__op">+</span> Depósitos en tránsito</th><td /></tr>
+                      <tr><th scope="row"><span className="q-recon__op">−</span> Cheques emitidos no cobrados</th><td /></tr>
+                      <tr><th scope="row"><span className="q-recon__op">±</span> Débitos y créditos bancarios no registrados</th><td /></tr>
+                      <tr className="is-total"><th scope="row"><span className="q-recon__op">=</span> Saldo según libros</th><td /></tr>
+                    </tbody>
+                  </table>
+                  <p className="q-recon__note">La carga de extractos y el cruce automático con el libro banco estarán disponibles en una próxima versión.</p>
+                </section>
+              </div>
             )}
 
             {view === 'calculadora' && (
@@ -555,10 +589,14 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'flujo' && (
+              <div className="q-sheet">
+              <PageHead
+                title="Flujo de Caja"
+                lede="Proyecta y analiza tu flujo de efectivo mensual."
+                equation={[{ v: 'S', sub: 'final' }, { op: '=' }, { v: 'S', sub: '0' }, { op: '+' }, { v: 'I' }, { op: '−' }, { v: 'E' }]}
+                caption="saldo inicial, ingresos y egresos"
+              />
               <section className="q-panel">
-                <span className="q-card__icon"><TrendingUp size={20} strokeWidth={1.6} /></span>
-                <h2 className="q-card__title">Flujo de Caja</h2>
-                <p className="q-card__sub">Proyecta y analiza tu flujo de efectivo mensual</p>
                 <div className="q-form-grid">
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-periodo">Mes/Período</label>
@@ -587,6 +625,7 @@ function Dashboard({ user, onLogout }) {
                 </div>
                 <button type="button" className="q-btn q-btn--primary">Calcular Flujo de Caja</button>
               </section>
+              </div>
             )}
 
             {view === 'cuenta' && (

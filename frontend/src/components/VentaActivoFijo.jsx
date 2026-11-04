@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PageHead, { Figures } from './PageHead'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner } from '@heroui/react'
 import { Download } from 'lucide-react'
 import '../styles/VentaActivoFijo.css'
@@ -720,9 +721,13 @@ const VentaActivoFijo = () => {
 
   return (
     <div className="venta-activo-fijo-container">
+      <PageHead
+        title="Venta de Activo Fijo"
+        lede="Determina la modalidad de facturación según la normativa tributaria paraguaya."
+        equation={[{ v: 'f' }, { op: '(' }, { v: 'bien' }, { op: ',' }, { v: 'régimen' }, { op: ')' }, { op: '→' }, { v: 'Factura' }]}
+        caption="modalidad de facturación"
+      />
       <div className="card">
-        <h2>Calculadora de Venta de Activo Fijo</h2>
-        <p className="subtitle">Determina la modalidad de facturación según normativa tributaria paraguaya</p>
 
         {error && <div className="error-message">{error}</div>}
 

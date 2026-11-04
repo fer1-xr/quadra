@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Checkbox, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react'
 import { Download } from 'lucide-react'
@@ -205,9 +206,13 @@ function LiquidacionSalarial() {
 
   return (
     <div className="liquidacion-container">
+      <PageHead
+        title="Liquidación Salarial"
+        lede="Calcula liquidaciones de nómina según regulaciones de Paraguay."
+        equation={[{ v: 'Neto' }, { op: '=' }, { v: 'Haberes' }, { op: '−' }, { v: 'Deducciones' }]}
+        caption="liquidación por empleado"
+      />
       <div className="card">
-        <h2>Calculadora de Liquidación Salarial</h2>
-        <p className="subtitle">Calcula liquidaciones de nómina según regulaciones de Paraguay</p>
 
         {error && <div className="error-message">{error}</div>}
 

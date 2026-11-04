@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Divider } from '@heroui/react'
 import { DollarSign, TrendingUp, Copy, Download } from 'lucide-react'
@@ -70,11 +71,13 @@ function Cotizacion() {
 
   return (
     <div className="cotizacion-container">
+      <PageHead
+        title="Cotización DNIT"
+        lede="Consulta tipos de cambio del DNIT por fecha y moneda, con valores comprador y vendedor."
+        equation={[{ v: 'PYG' }, { op: '=' }, { v: 'Monto' }, { op: '×' }, { v: 'TC', sub: 'DNIT' }]}
+        caption="tipo de cambio oficial"
+      />
       <div className="card cotizacion-card">
-        <div className="cotizacion-header">
-          <h2>Cotización DNIT</h2>
-          <p>Consulta tipos de cambio del DNIT por fecha, moneda y cálculo de comprador/vendedor</p>
-        </div>
 
         <div className="cotizacion-form">
           <div className="form-group">

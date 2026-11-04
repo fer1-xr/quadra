@@ -1,0 +1,699 @@
+/* ─────────────────────────────────────────────
+   QUADRA · Capa "libro mayor"
+   Papel milimetrado, filetes finos, ecuación rectora por hoja,
+   cifras en numerales tabulares y doble raya en totales.
+   Se carga después de QuadraModules.css.
+   ───────────────────────────────────────────── */
+
+.q-app {
+  --q-paper: #f3f5f8;
+  --q-rule: rgba(11, 27, 51, 0.16);
+  --q-r-card: 14px;
+  --q-r-ctl: 10px;
+  background: var(--q-paper);
+}
+
+:root[data-theme="dark"] .q-app {
+  --q-paper: #071425;
+  --q-rule: rgba(255, 255, 255, 0.16);
+}
+
+/* papel: cuadrícula menor 8px + mayor 40px, desvanecida hacia abajo */
+.q-main { background: transparent; }
+
+.q-main::before {
+  background-image:
+    linear-gradient(var(--q-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--q-grid) 1px, transparent 1px),
+    linear-gradient(rgba(10, 26, 47, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(10, 26, 47, 0.022) 1px, transparent 1px);
+  background-size: 40px 40px, 40px 40px, 8px 8px, 8px 8px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.2) 100%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.55) 45%, rgba(0, 0, 0, 0.2) 100%);
+}
+
+:root[data-theme="dark"] .q-main::before {
+  background-image:
+    linear-gradient(var(--q-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--q-grid) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.014) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px);
+}
+
+.q-topbar { background: color-mix(in srgb, var(--q-paper) 86%, transparent); }
+
+/* superficies del navegador */
+.q-app { scrollbar-color: rgba(11, 27, 51, 0.22) transparent; caret-color: var(--q-brand); }
+:root[data-theme="dark"] .q-app { scrollbar-color: rgba(255, 255, 255, 0.18) transparent; }
+.q-main::-webkit-scrollbar { width: 10px; }
+.q-main::-webkit-scrollbar-thumb { background: rgba(11, 27, 51, 0.18); border: 3px solid transparent; border-radius: 10px; background-clip: padding-box; }
+.q-main::-webkit-scrollbar-thumb:hover { background-color: rgba(11, 27, 51, 0.32); }
+:root[data-theme="dark"] .q-main::-webkit-scrollbar-thumb { background-color: rgba(255, 255, 255, 0.16); }
+
+/* ── hoja ───────────────────────────────────── */
+
+.q-app .q-content .q-sheet,
+.q-app .q-content :is(
+  .todo-del-dia, .metas-anuales, .importar-documentos, .liquidacion-container,
+  .venta-activo-fijo-container, .cotizacion-container, .gestion-clientes
+) {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 1120px;
+  animation: q-rise 360ms var(--q-ease) both;
+}
+
+.q-app .q-content .q-sheet--wide { max-width: 1320px; }
+.q-app .q-content .q-sheet > *,
+.q-app .q-content :is(.todo-del-dia, .metas-anuales, .gestion-clientes, .importar-documentos, .cotizacion-container, .liquidacion-container, .venta-activo-fijo-container) > * { margin-top: 0; margin-bottom: 0; }
+
+/* ── encabezado de hoja ─────────────────────── */
+
+.q-head {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 18px 40px;
+  padding: 6px 0 26px;
+  margin-bottom: 6px;
+}
+
+/* regla graduada: filete + marcas cada 8px, marcas mayores cada 40px */
+.q-head::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 9px;
+  border-bottom: 1px solid var(--q-rule);
+  background:
+    linear-gradient(90deg, var(--q-rule) 1px, transparent 1px) 0 100% / 40px 9px repeat-x,
+    linear-gradient(90deg, var(--q-line) 1px, transparent 1px) 0 100% / 8px 4px repeat-x;
+  pointer-events: none;
+}
+
+.q-head__copy { min-width: 0; }
+
+.q-app .q-content .q-head__title {
+  font-family: var(--q-sans);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.032em;
+  color: var(--q-ink);
+  text-wrap: balance;
+}
+
+.q-head__lede {
+  max-width: 62ch;
+  margin-top: 10px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--q-ink-2);
+  text-wrap: pretty;
+}
+
+.q-head__aside { grid-column: 1 / -1; }
+
+/* ecuación rectora: notación matemática, variables en itálica */
+.q-eq {
+  margin: 0;
+  display: grid;
+  justify-items: end;
+  gap: 6px;
+  text-align: right;
+}
+
+.q-eq__line {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  font-family: var(--q-serif);
+  font-size: 30px;
+  line-height: 1;
+  color: var(--q-ink);
+  white-space: nowrap;
+}
+
+.q-eq__v { font-style: italic; letter-spacing: -0.005em; }
+.q-eq__v sub { font-size: 0.5em; font-style: italic; margin-left: 1px; vertical-align: -0.35em; color: var(--q-ink-2); }
+.q-eq__op { margin: 0 0.24em; font-style: normal; color: var(--q-ink-3); }
+.q-eq__op:first-child { margin-left: 0; }
+.q-eq__n { font-style: normal; color: var(--q-brand); font-variant-numeric: lining-nums tabular-nums; }
+
+.q-eq__cap {
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--q-ink-3);
+}
+
+/* ── franja de cifras ───────────────────────── */
+
+.q-figs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  margin: 0;
+  border: 1px solid var(--q-line);
+  border-radius: var(--q-r-card);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow);
+  overflow: hidden;
+}
+
+.q-figs__item {
+  display: grid;
+  gap: 8px;
+  padding: 16px 22px 18px;
+  box-shadow: -1px 0 0 var(--q-line-2);
+}
+
+.q-figs dt { font-size: 12.5px; font-weight: 500; color: var(--q-ink-3); }
+
+.q-figs dd {
+  font-family: var(--q-mono);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  color: var(--q-ink);
+}
+
+.q-figs__item.is-ok dd { color: var(--q-ok); }
+.q-figs__item.is-err dd { color: var(--q-err); }
+
+/* ── superficies unificadas ─────────────────── */
+
+:root[data-theme] .q-app .q-content :is(
+  .q-card, .q-panel, .leccion-blog, .dia-card, .todo-form, .meta-form, .graficos-section,
+  .meta-card, .metas-vacio, .importar-documentos .card, .liquidacion-container > .card,
+  .venta-activo-fijo-container > .card, .cotizacion-card, .clientes-form,
+  .clientes-table-wrapper, .clientes-resumen, .clientes-vacio
+) {
+  border-radius: var(--q-r-card);
+  border: 1px solid var(--q-line);
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow);
+}
+
+.q-app .q-content .q-panel { max-width: none; padding: 28px 30px; animation: none; }
+.q-app .q-content .q-card { width: 100%; max-width: none; }
+
+/* contenedores que ahora solo agrupan: sin tarjeta propia */
+:root[data-theme] .q-app .q-content :is(.todo-header, .clientes-header, .metas-header, .clientes-header.clientes-header) {
+  padding: 0 !important;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.q-app .q-content .todo-header { display: flex; justify-content: flex-start; margin: 0; }
+
+.q-app .q-content .clientes-header {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin: 0;
+}
+
+.q-app .q-content .clientes-exportar { display: flex; gap: 10px; justify-content: flex-end; order: 2; }
+.q-app .q-content .clientes-header .q-figs { order: 1; }
+
+/* títulos internos de tarjeta */
+.q-app .q-content :is(.form-section h3, .files-list h3, .clientes-form h4, .grafico-container h4, .resultado-section h3) {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.012em;
+  color: var(--q-ink);
+}
+
+/* secciones de formulario: filetes, no tarjetas anidadas */
+.q-app .q-content .form-section {
+  padding: 22px 0 24px;
+  margin: 0;
+  border: 0;
+  border-top: 1px solid var(--q-line-2);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.q-app .q-content .form-section:first-of-type { border-top: 0; padding-top: 0; }
+.q-app .q-content .form-section h3 { margin-bottom: 16px; }
+
+/* ── controles ──────────────────────────────── */
+
+.q-app .q-content :is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea, .q-input) {
+  border-radius: var(--q-r-ctl);
+  border: 1px solid var(--q-line);
+  background-color: var(--q-field);
+  min-height: 42px;
+  font-size: 14px;
+  color: var(--q-ink);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.q-app .q-content :is(input, select, textarea, .q-input):hover:not(:focus):not(:disabled) { border-color: color-mix(in srgb, var(--q-ink-3) 55%, var(--q-line)); }
+
+.q-app .q-content :is(input, select, textarea, .q-input):focus {
+  outline: none;
+  border-color: var(--q-brand);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--q-brand) 16%, transparent);
+}
+
+.q-app .q-content :is(input[type="number"], input[type="date"], input[type="time"], .q-input--num) {
+  font-family: var(--q-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.q-app .q-content :is(.form-group label, .form-grid label, .q-label) {
+  font-size: 12.5px;
+  font-weight: 550;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--q-ink-2);
+}
+
+/* botones: un solo vocabulario, alto 42px, radio de control */
+.q-app .q-content :is(.q-btn, .btn, .btn-add-task, .btn-add-meta, .btn-add-cliente, .btn-exportar, .btn-export) {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--q-r-ctl);
+  font-size: 14px;
+  font-weight: 550;
+  letter-spacing: -0.01em;
+}
+
+.q-app .q-content .q-btn--block { min-height: 48px; }
+
+.q-app .q-content :is(.btn-add-task, .btn-add-meta, .btn-add-cliente) {
+  align-self: flex-start;
+  width: auto;
+}
+
+/* pestañas segmentadas */
+.q-app .q-content :is(.todo-pestanas, .periodo-selector) {
+  padding: 3px;
+  border-radius: 12px;
+  border: 1px solid var(--q-line);
+  background: var(--q-surface);
+}
+
+.q-app .q-content :is(.pestaña, .periodo-btn) { border-radius: 9px; min-height: 36px; font-size: 13.5px; font-weight: 550; }
+
+/* ── tablas de libro ────────────────────────── */
+
+.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table, #payment-preview table) th {
+  height: 40px;
+  font-family: var(--q-sans);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--q-ink-3);
+  background: transparent;
+  border-bottom: 1px solid var(--q-rule);
+  white-space: nowrap;
+}
+
+.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table, #payment-preview table) td {
+  height: 44px;
+  font-size: 13.5px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content :is(.q-table, .clientes-table, #payment-preview table) tbody tr:last-child td { border-bottom: 3px double var(--q-rule); }
+
+.q-app .q-content #payment-preview td:nth-child(3),
+.q-app .q-content #payment-preview td:nth-child(n+6) {
+  font-family: var(--q-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--q-ink);
+}
+
+.q-app .q-content #payment-preview td:nth-child(2),
+.q-app .q-content #payment-preview td:nth-child(5) { font-family: var(--q-mono); font-size: 12.5px; color: var(--q-ink-2); }
+
+.q-app .q-row.is-err td { background: color-mix(in srgb, var(--q-err-bg) 70%, transparent); }
+
+/* ── alertas y etiquetas ────────────────────── */
+
+.q-alert--ok { color: var(--q-ok); background: var(--q-ok-bg); border-color: var(--q-ok-line); }
+
+.q-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--q-line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--q-warn);
+  background: color-mix(in srgb, var(--q-warn) 8%, var(--q-surface));
+}
+
+.q-tag::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+/* ── zonas de carga ─────────────────────────── */
+
+.q-app .q-content :is(.drop-zone, .q-drop) {
+  border: 1px dashed color-mix(in srgb, var(--q-ink-3) 45%, var(--q-line));
+  border-radius: var(--q-r-card);
+  background:
+    linear-gradient(var(--q-grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--q-grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--q-surface-2);
+}
+
+.q-app .q-content :is(.drop-zone:hover, .drop-zone.active, .q-drop:hover) { border-color: var(--q-brand); border-style: solid; }
+.q-app .q-content .q-drop.is-filled { border-style: solid; border-color: var(--q-ok-line); background: var(--q-ok-bg); }
+
+.q-app .q-content .drop-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--q-line);
+  background: var(--q-surface);
+  color: var(--q-brand);
+  box-shadow: 0 1px 2px rgba(10, 26, 47, 0.06);
+}
+
+/* ── Conciliación bancaria (estructura) ─────── */
+
+.q-recon { padding: 28px 30px 26px; }
+.q-recon__head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+
+.q-recon__table { width: 100%; border-collapse: collapse; }
+
+.q-recon__table th {
+  padding: 14px 0;
+  font-size: 14.5px;
+  font-weight: 450;
+  text-align: left;
+  color: var(--q-ink-2);
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-recon__table td {
+  width: 34%;
+  border-bottom: 1px solid var(--q-line-2);
+  background: linear-gradient(90deg, transparent calc(100% - 1px), var(--q-line-2) 0) 0 0 / 100% 100%;
+}
+
+.q-recon__op {
+  display: inline-block;
+  width: 26px;
+  font-family: var(--q-serif);
+  font-size: 19px;
+  color: var(--q-ink-3);
+}
+
+.q-recon__table tr.is-total th { font-weight: 600; color: var(--q-ink); border-bottom: 3px double var(--q-rule); border-top: 1px solid var(--q-rule); }
+.q-recon__table tr.is-total td { border-bottom: 3px double var(--q-rule); border-top: 1px solid var(--q-rule); }
+.q-recon__table tr.is-total .q-recon__op { color: var(--q-brand); }
+
+.q-recon__note { margin-top: 18px; max-width: 64ch; font-size: 13.5px; line-height: 1.55; color: var(--q-ink-3); }
+
+/* ── Lección del Día: nota de estudio ───────── */
+
+.q-app .q-content .leccion-del-dia-container { max-width: 1040px; }
+
+.q-app .q-content .leccion-header {
+  position: relative;
+  height: 320px;
+  background-size: cover;
+  background-position: center 35%;
+  filter: none;
+}
+
+.q-app .q-content .leccion-header-overlay {
+  background:
+    linear-gradient(180deg, rgba(6, 17, 31, 0.35) 0%, rgba(6, 17, 31, 0.55) 45%, rgba(6, 17, 31, 0.92) 100%),
+    linear-gradient(90deg, rgba(6, 17, 31, 0.55), rgba(6, 17, 31, 0) 70%);
+}
+
+.q-app .q-content .leccion-header-content { padding: 0 48px 38px; max-width: 900px; }
+
+.q-app .q-content .leccion-header .leccion-dia {
+  height: 26px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.q-app .q-content .leccion-titulo {
+  margin-top: 14px;
+  font-family: var(--q-serif);
+  font-size: 52px;
+  font-weight: 400;
+  line-height: 1.02;
+  letter-spacing: -0.015em;
+  color: #fff;
+  text-wrap: balance;
+  text-shadow: none;
+}
+
+.q-app .q-content .leccion-body { padding: 0 48px 44px; }
+
+.q-app .q-content .leccion-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin: 0 -48px 34px;
+  padding: 0 48px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content .leccion-meta .meta-item {
+  padding: 14px 18px 14px 0;
+  margin-right: 18px;
+  font-family: var(--q-sans);
+  font-size: 13px;
+  color: var(--q-ink-3);
+  box-shadow: 1px 0 0 var(--q-line-2);
+}
+
+.q-app .q-content .leccion-meta .meta-item:last-child { box-shadow: none; }
+.q-app .q-content .leccion-meta .meta-item::before { display: none; }
+
+.q-app .q-content .leccion-content { max-width: 68ch; font-size: 16.5px; line-height: 1.72; color: var(--q-ink-2); }
+
+.q-app .q-content .leccion-content h2 {
+  margin: 0 0 14px;
+  font-family: var(--q-serif);
+  font-size: 32px;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: -0.01em;
+  color: var(--q-ink);
+}
+
+.q-app .q-content .leccion-content h3 { margin: 30px 0 10px; font-size: 16px; font-weight: 600; letter-spacing: -0.01em; color: var(--q-ink); }
+
+.q-app .q-content .leccion-content ul { padding-left: 0; list-style: none; border-top: 1px solid var(--q-line-2); }
+
+.q-app .q-content .leccion-content li {
+  position: relative;
+  margin: 0;
+  padding: 11px 0 11px 28px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content .leccion-content li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 21px;
+  width: 9px;
+  height: 1.5px;
+  background: var(--q-emerald);
+}
+
+.q-app .q-content .leccion-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+  margin-top: 40px;
+  padding-top: 26px;
+  border-top: 1px solid var(--q-rule);
+}
+
+.q-app .q-content .leccion-footer .footer-section {
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.q-app .q-content .leccion-footer .footer-section h3 { margin-bottom: 6px; font-size: 14px; font-weight: 600; color: var(--q-ink); }
+.q-app .q-content .leccion-footer .footer-section p { max-width: 62ch; font-size: 14px; line-height: 1.6; color: var(--q-ink-3); }
+
+.q-app .q-content .leccion-footer .footer-actions { display: flex; flex-direction: row; gap: 10px; margin: 0; }
+.q-app .q-content .leccion-footer .footer-actions .btn { width: auto; flex: none; }
+
+/* ── TO DO: columnas de la semana ───────────── */
+
+.q-app .q-content .dias-grid { gap: 12px; }
+.q-app .q-content .dia-card { padding: 0; overflow: hidden; }
+
+.q-app .q-content .dia-header {
+  margin: 0;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--q-line-2);
+}
+
+.q-app .q-content .dia-header .contador {
+  min-width: 26px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 6px;
+  font-family: var(--q-mono);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.q-app .q-content .dia-card > :not(.dia-header) { padding: 12px 14px; }
+.q-app .q-content .tareas-vacio { padding: 26px 14px !important; text-align: center; }
+.q-app .q-content .tareas-vacio p { font-size: 13px; color: var(--q-ink-3); }
+
+.q-app .q-content .tarea-item { border-radius: 10px; border: 1px solid var(--q-line-2); background: var(--q-surface); }
+
+.q-app .q-content .categoria-badge { border-left-width: 1px !important; }
+
+/* ── Metas ──────────────────────────────────── */
+
+.q-app .q-content .periodo-acciones { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; margin: 0; }
+
+/* ── responsive ─────────────────────────────── */
+
+@media (max-width: 960px) {
+  .q-head { grid-template-columns: 1fr; gap: 18px; }
+  .q-eq { justify-items: start; text-align: left; }
+  .q-eq__line { justify-content: flex-start; }
+  .q-app .q-content .leccion-header-content { padding: 0 28px 30px; }
+  .q-app .q-content .leccion-body { padding: 0 28px 32px; }
+  .q-app .q-content .leccion-meta { margin: 0 -28px 28px; padding: 0 28px; }
+  .q-app .q-content .leccion-titulo { font-size: 40px; }
+  .q-app .q-content .leccion-footer { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 600px) {
+  .q-app .q-content .q-head__title { font-size: 28px; }
+  .q-eq__line { font-size: 24px; white-space: normal; }
+  .q-figs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .q-figs dd { font-size: 22px; }
+  .q-recon, .q-app .q-content .q-panel { padding: 22px 20px; }
+  .q-app .q-content .leccion-header { height: 260px; }
+  .q-app .q-content .leccion-header-content { padding: 0 20px 24px; }
+  .q-app .q-content .leccion-body { padding: 0 20px 28px; }
+  .q-app .q-content .leccion-meta { margin: 0 -20px 24px; padding: 0 20px; }
+  .q-app .q-content .leccion-titulo { font-size: 32px; }
+  .q-app .q-content .leccion-footer .footer-actions { flex-direction: column; }
+  .q-app .q-content .clientes-exportar { justify-content: stretch; }
+  .q-app .q-content .clientes-exportar > * { flex: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-app .q-content .q-sheet,
+  .q-app .q-content :is(.todo-del-dia, .metas-anuales, .importar-documentos, .liquidacion-container, .venta-activo-fijo-container, .cotizacion-container, .gestion-clientes) { animation: none; }
+}
+
+/* barra superior: ruta (grupo / hoja) en vez de repetir el título */
+.q-topbar__title { display: flex; align-items: baseline; gap: 8px; font-size: 15px; font-weight: 550; }
+.q-topbar__crumb { font-weight: 450; color: var(--q-ink-3); }
+.q-topbar__crumb::after { content: '/'; margin-left: 8px; color: var(--q-line); }
+
+.q-recon__table thead th {
+  padding: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--q-ink-3);
+  border-bottom: 1px solid var(--q-rule);
+}
+.q-recon__table thead th:last-child { text-align: right; }
+
+/* contenedores aplanados (ganan también al tema oscuro de QuadraModules) */
+:root[data-theme] .q-app .q-content :is(.form-section, .leccion-footer, .tareas-principales, .tareas-restantes) {
+  background: transparent;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+:root[data-theme] .q-app .q-content :is(.tareas-principales, .tareas-restantes) { border-top: 0; padding: 0; }
+:root[data-theme] .q-app .q-content .leccion-footer { border-top: 1px solid var(--q-rule); padding: 26px 0 0; }
+:root[data-theme] .q-app .q-content .form-section { border-top: 1px solid var(--q-line-2); padding: 22px 0 24px; }
+:root[data-theme] .q-app .q-content .form-section:first-of-type { border-top: 0; padding-top: 4px; }
+
+/* tarjetas de trabajo a todo el ancho de la hoja */
+:root[data-theme] .q-app .q-content :is(.importar-documentos .card, .cotizacion-card, .venta-activo-fijo-container > .card, .liquidacion-container > .card) {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+.q-app .q-content .todo-pestanas { width: auto; display: inline-flex; }
+.q-app .q-content .todo-pestanas .pestaña { flex: none; padding: 0 16px; }
+
+.q-eq__op--tight { margin: 0 0.06em; }
+.q-eq__op--tight:first-child { margin-left: 0; }
+
+.q-app .q-content .liquidacion-form .form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px 20px;
+}
+.q-app .q-content .liquidacion-form .form-grid > div { display: grid; gap: 7px; }
+
+.q-app .q-content :is(.btn, .btn-add-task, .btn-add-meta, .btn-add-cliente) { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+.q-app .q-content .status-badge { display: inline-grid; place-items: center; }
+
+/* entrada de hoja: asentamiento leve desde un estado ya visible */
+@keyframes q-settle { from { transform: translateY(6px); } to { transform: none; } }
+.q-app .q-content .q-sheet,
+.q-app .q-content :is(.leccion-del-dia-container, .todo-del-dia, .metas-anuales, .importar-documentos, .liquidacion-container, .venta-activo-fijo-container, .cotizacion-container, .gestion-clientes) {
+  animation: q-settle 320ms var(--q-ease) both;
+}
+
+/* clientes: filas neutras, el estado lo dicen las insignias */
+:root[data-theme] .q-app .q-content .clientes-table tbody tr:is(.atrasado, .al-dia) td { background: transparent; }
+.q-app .q-content .clientes-table tbody tr:hover td { background: var(--q-surface-2); }
+.q-app .q-content .clientes-table-wrapper { min-height: 0; }
+.q-app .q-content .clientes-table .razon-social { font-weight: 550; color: var(--q-ink); }
+.q-app .q-content .clientes-table .acciones { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+.q-app .q-content .clientes-table td.acciones { display: table-cell; }
+.q-app .q-content .clientes-table td.acciones > * { vertical-align: middle; margin-right: 4px; }
+
+
+:root[data-theme] .q-app .q-content :is(.btn-export-excel, .btn-export-pdf) {
+  color: var(--q-ink);
+  background: var(--q-surface);
+  border: 1px solid var(--q-line);
+}
+:root[data-theme] .q-app .q-content :is(.btn-export-excel, .btn-export-pdf):hover { border-color: var(--q-ink-3); background: var(--q-surface-2); }
+.q-figs dd small { margin-left: 2px; font-size: 0.55em; letter-spacing: 0; color: var(--q-ink-3); }
+
+.q-app .q-content .leccion-content, .q-app .q-content .leccion-content p { text-align: left; hyphens: auto; }
+
+@media (max-width: 600px) {
+  .q-topbar__crumb { display: none; }
+  .q-app .q-content .leccion-meta { flex-direction: row; flex-wrap: wrap; }
+  .q-app .q-content .leccion-meta .meta-item { padding: 12px 12px 12px 0; margin-right: 12px; }
+  .q-app .q-content .leccion-content { font-size: 16px; }
+  .q-app .q-content .leccion-content h2 { font-size: 27px; }
+}

@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "src/styles/QuadraLedger.css"
+        ],
+        "createdAt": "2026-11-04T13:52:07.529Z",
+        "reason": "Claude: L84 is .q-head::after, a full-width 1px bottom rule with tick marks (graduated ruler), not a one-sided card accent"
+      }
+    ]
+  }
+}

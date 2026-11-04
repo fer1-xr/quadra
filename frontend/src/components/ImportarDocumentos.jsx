@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Spinner, Progress, Chip } from '@heroui/react'
 import { Upload, File, X, FileUp, CheckCircle2, Paperclip } from 'lucide-react'
@@ -186,11 +187,13 @@ function ImportarDocumentos() {
 
   return (
     <div className="importar-documentos">
+      <PageHead
+        title="Importar Documentos"
+        lede="Sube imágenes de facturas de tus proveedores y se extraerán automáticamente a Excel."
+        equation={[{ v: 'Factura' }, { op: '→' }, { v: 'Datos' }, { op: '→' }, { v: 'Excel' }]}
+        caption="extracción automática"
+      />
       <div className="card">
-        <div className="header">
-          <h1>Importar Documentos</h1>
-          <p>Sube imágenes o PDFs de facturas - Se extraerán automáticamente a Excel</p>
-        </div>
 
         {error && <div className="alert alert-error">{error}</div>}
         {success && <div className="alert alert-success">{success}</div>}

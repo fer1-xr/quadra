@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PageHead, { Figures } from './PageHead'
 import { Card, CardBody, CardHeader, Button, Input, Checkbox, Chip, Divider } from '@heroui/react'
 import { Plus, Trash2, CheckCircle2, X } from 'lucide-react'
 import '../styles/TodoDelDia.css'
@@ -134,11 +135,13 @@ function TodoDelDia() {
 
   return (
     <div className="todo-del-dia">
+      <PageHead
+        title="TO DO de la Semana"
+        lede="Organiza tus tareas por día, de lunes a viernes."
+        equation={[{ v: 'Pendientes' }, { op: '+' }, { v: 'Completadas' }, { op: '=' }, { n: String(tareasPendientes + tareasCompletadas) }]}
+        caption="tareas de la semana"
+      />
       <div className="todo-header">
-        <div className="todo-titulo">
-          <h3>TO DO de la Semana</h3>
-          <p className="todo-subtitulo">Organiza tus tareas por día (Lunes a Viernes)</p>
-        </div>
         <div className="todo-pestanas">
           <button
             className={`pestaña ${!mostrarCompletadas ? 'activa' : ''}`}
@@ -226,7 +229,7 @@ function TodoDelDia() {
       {/* Botón para mostrar formulario */}
       {!mostrarFormulario && (
         <button className="btn btn-add-task" onClick={() => setMostrarFormulario(true)}>
-          + Agregar Tarea
+          <Plus size={16} strokeWidth={1.8} /> Agregar Tarea
         </button>
       )}
 

@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
+import PageHead, { Figures } from './PageHead'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
-import { Plus, Edit2, Trash2, Download, Users, X, Pencil } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, Users, X, Pencil, Check } from 'lucide-react'
 import '../styles/GestionClientes.css'
 
 const TIPOS_IMPUESTO = [
@@ -214,11 +215,13 @@ function GestionClientes() {
 
   return (
     <div className="gestion-clientes">
+      <PageHead
+        title="Gestión de Clientes"
+        lede="Administra tu listado de clientes y servicios."
+        equation={[{ op: 'Σ' }, { v: 'Honorarios' }, { op: '=' }, { n: honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 }) }]}
+        caption="cartera de clientes"
+      />
       <div className="clientes-header">
-        <div className="clientes-titulo">
-          <h3>Gestión de Clientes</h3>
-          <p className="clientes-subtitulo">Administra tu listado de clientes y servicios</p>
-        </div>
         {clientes.length > 0 && (
           <div className="clientes-exportar">
             <button
@@ -237,24 +240,12 @@ function GestionClientes() {
             </button>
           </div>
         )}
-        <div className="clientes-stats">
-          <div className="stat-box">
-            <span className="stat-number">{clientes.length}</span>
-            <span className="stat-label">Total Clientes</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-number">{clientesAlDia}</span>
-            <span className="stat-label">Cuentas al Día</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-number">{clientesPagosAlDia}</span>
-            <span className="stat-label">Pagos al Día</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-number">{honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 })}</span>
-            <span className="stat-label">Honorarios Total</span>
-          </div>
-        </div>
+        <Figures items={[
+          { label: 'Total clientes', value: clientes.length },
+          { label: 'Cuentas al día', value: <>{clientesAlDia}<small> / {clientes.length}</small></>, tone: clientesAlDia ? 'ok' : undefined },
+          { label: 'Pagos al día', value: <>{clientesPagosAlDia}<small> / {clientes.length}</small></>, tone: clientesPagosAlDia ? 'ok' : undefined },
+          { label: 'Honorarios total', value: <>{honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 })}<small> Gs.</small></> }
+        ]} />
       </div>
 
       {/* Formulario para agregar/editar cliente */}
@@ -350,7 +341,7 @@ function GestionClientes() {
 
           <div className="form-buttons">
             <button className="btn btn-primary" onClick={agregarOActualizarCliente}>
-              {editandoId ? '✓ Actualizar Cliente' : '+ Agregar Cliente'}
+              {editandoId ? 'Actualizar Cliente' : 'Agregar Cliente'}
             </button>
             <button className="btn btn-secondary" onClick={cancelarEdicion}>Cancelar</button>
           </div>
@@ -360,7 +351,7 @@ function GestionClientes() {
       {/* Botón para mostrar formulario */}
       {!mostrarFormulario && (
         <button className="btn btn-add-cliente" onClick={() => setMostrarFormulario(true)}>
-          + Agregar Cliente
+          <Plus size={16} strokeWidth={1.8} /> Agregar Cliente
         </button>
       )}
 
@@ -414,7 +405,7 @@ function GestionClientes() {
                       onClick={() => toggleAlDia(cliente.id)}
                       title="Click para cambiar estado"
                     >
-                      {cliente.alDia ? '✓' : '✕'}
+                      {cliente.alDia ? <Check size={14} strokeWidth={2} aria-label="Sí" /> : <X size={14} strokeWidth={2} aria-label="No" />}
                     </button>
                   </td>
                   <td className="honorarios">
@@ -426,7 +417,7 @@ function GestionClientes() {
                       onClick={() => togglePagoAlDia(cliente.id)}
                       title="Click para cambiar estado"
                     >
-                      {cliente.pagoAlDia ? '✓' : '✕'}
+                      {cliente.pagoAlDia ? <Check size={14} strokeWidth={2} aria-label="Sí" /> : <X size={14} strokeWidth={2} aria-label="No" />}
                     </button>
                   </td>
                   <td className="checkbox-cell">
@@ -435,7 +426,7 @@ function GestionClientes() {
                       onClick={() => toggleFacturado(cliente.id)}
                       title="Click para cambiar estado"
                     >
-                      {cliente.facturado ? '✓' : '✕'}
+                      {cliente.facturado ? <Check size={14} strokeWidth={2} aria-label="Sí" /> : <X size={14} strokeWidth={2} aria-label="No" />}
                     </button>
                   </td>
                   <td className="acciones">
@@ -461,23 +452,6 @@ function GestionClientes() {
         </div>
       )}
 
-      {/* Resumen */}
-      {clientes.length > 0 && (
-        <div className="clientes-resumen">
-          <div className="resumen-item">
-            <span className="resumen-label">Clientes al día:</span>
-            <span className="resumen-valor">{clientesAlDia}/{clientes.length}</span>
-          </div>
-          <div className="resumen-item">
-            <span className="resumen-label">Pagos al día:</span>
-            <span className="resumen-valor">{clientesPagosAlDia}/{clientes.length}</span>
-          </div>
-          <div className="resumen-item">
-            <span className="resumen-label">Honorarios totales:</span>
-            <span className="resumen-valor">{honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 })} GS</span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

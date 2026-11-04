@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { utils, writeFile } from 'xlsx'
 import jsPDF from 'jspdf'
@@ -374,22 +375,17 @@ function ControlPagos() {
   )
 
   return (
-    <Card className="q-card max-w-4xl" shadow="none">
-      <CardHeader className="flex flex-col items-start gap-1 px-[30px] pt-[28px] pb-2">
-        <h1 className="q-card__title">Control de Pagos</h1>
-        <p className="q-card__sub">Carga facturas electrónicas de pólizas o liquidaciones de préstamos y obtén una planilla de control</p>
-      </CardHeader>
-      <CardBody className="gap-6 px-[30px] pb-[30px]">
-        {error && (
-          <div className="bg-red-100 dark:bg-red-950 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-200 px-4 py-3 rounded-lg">
-            {error}
-          </div>
-        )}
-        {success && (
-          <div className="bg-green-100 dark:bg-green-950 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-200 px-4 py-3 rounded-lg">
-            {success}
-          </div>
-        )}
+    <div className="q-sheet control-pagos-sheet">
+    <PageHead
+      title="Control de Pagos"
+      lede="Carga facturas electrónicas de pólizas o liquidaciones de préstamos y obtén una planilla de control."
+      equation={[{ v: 'Saldo', sub: 'n' }, { op: '=' }, { v: 'Saldo', sub: 'n−1' }, { op: '−' }, { v: 'Pago', sub: 'n' }]}
+      caption="cuota por cuota"
+    />
+    <Card className="q-card" shadow="none">
+      <CardBody className="q-card__body">
+        {error && <div className="q-alert" role="alert">{error}</div>}
+        {success && <div className="q-alert q-alert--ok" role="status">{success}</div>}
 
         {step === 'upload' && renderUploadStep()}
         {step === 'processing' && (
@@ -403,6 +399,7 @@ function ControlPagos() {
         {step === 'complete' && renderCompleteStep()}
       </CardBody>
     </Card>
+    </div>
   )
 }
 

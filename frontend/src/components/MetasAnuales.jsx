@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import PageHead, { Figures } from './PageHead'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
@@ -238,22 +239,17 @@ function MetasAnuales() {
         />
       )}
 
-      <div className="metas-header">
-        <div className="metas-titulo">
-          <h3>Metas {periodo === 'anual' ? 'Anuales' : 'Mensuales'}</h3>
-          <p className="metas-subtitulo">Establece y alcanza tus objetivos</p>
-        </div>
-        <div className="metas-stats">
-          <div className="stat-box">
-            <span className="stat-number">{metasFiltradas.length}</span>
-            <span className="stat-label">Metas</span>
-          </div>
-          <div className="stat-box">
-            <span className="stat-number">{metasCompletadas}</span>
-            <span className="stat-label">Completadas</span>
-          </div>
-        </div>
-      </div>
+      <PageHead
+        title={`Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}`}
+        lede="Establece y alcanza tus objetivos."
+        equation={[{ v: 'Avance' }, { op: '=' }, { v: 'Completadas' }, { op: '÷' }, { v: 'Metas' }]}
+        caption={metasFiltradas.length ? `${Math.round((metasCompletadas / metasFiltradas.length) * 100)} % del período` : 'sin metas en el período'}
+      />
+      <Figures items={[
+        { label: 'Metas', value: metasFiltradas.length },
+        { label: 'Completadas', value: metasCompletadas, tone: metasCompletadas ? 'ok' : undefined },
+        { label: 'En curso', value: metasFiltradas.length - metasCompletadas }
+      ]} />
 
       {/* Selector de período y botones de acción */}
       <div className="periodo-acciones">
@@ -435,7 +431,7 @@ function MetasAnuales() {
       {/* Botón para mostrar formulario */}
       {!mostrarFormulario && (
         <button className="btn btn-add-meta" onClick={() => setMostrarFormulario(true)}>
-          + Crear Nueva Meta
+          <Plus size={16} strokeWidth={1.8} /> Crear Nueva Meta
         </button>
       )}
 
