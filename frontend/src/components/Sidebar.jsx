@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react'
-import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History } from 'lucide-react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X } from 'lucide-react'
 import '../styles/Sidebar.css'
 
-function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onClose, contribuyente = null, onCambiarContribuyente }) {
+const MODOS = [
+  { id: 'fijo', label: 'Fijo', icon: Pin, hint: 'Menú siempre visible' },
+  { id: 'auto', label: 'Desplegable', icon: PanelLeft, hint: 'Se despliega al pasar el cursor' },
+  { id: 'oculto', label: 'Oculto', icon: PanelLeftClose, hint: 'Se abre desde el botón de menú' }
+]
+
+function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onClose, contribuyente = null, onCambiarContribuyente, mode = 'fijo', onModeChange }) {
   const [isDarkMode, setIsDarkMode] = useState(false)
 
   useEffect(() => {
@@ -106,7 +112,13 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
         gestion
       ]
     : [
-        { label: 'Trabajo', items: [{ id: 'seleccionar', label: 'Clientes', icon: Briefcase }] },
+        {
+          label: 'General',
+          items: [
+            { id: 'inicio', label: 'Inicio', icon: Home },
+            { id: 'seleccionar', label: 'Clientes', icon: Briefcase }
+          ]
+        },
         agenda,
         gestion
       ]
@@ -123,7 +135,7 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
   return (
     <>
       <div className={`q-sidebar-scrim ${isOpen ? 'is-open' : ''}`} onClick={onClose} aria-hidden="true" />
-      <aside className={`q-sidebar ${isOpen ? 'is-open' : ''}`} aria-label="Navegación principal">
+      <aside className={`q-sidebar q-sidebar--${mode} ${isOpen ? 'is-open' : ''}`} aria-label="Navegación principal">
         <div className="q-sidebar__brand">
           <svg className="q-sidebar__mark" viewBox="0 0 28 28" fill="none" aria-hidden="true">
             <rect className="q-sidebar__mark-a" x="1" y="1" width="11.5" height="11.5" rx="2.5" />
@@ -135,6 +147,15 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
             <p className="q-sidebar__name">Quadra</p>
             <p className="q-sidebar__tag">Σ debe = Σ haber</p>
           </div>
+          <button
+            type="button"
+            className="q-sidebar__close"
+            onClick={() => (mode === 'oculto' || isOpen ? onClose?.() : onModeChange?.('oculto'))}
+            aria-label="Ocultar menú"
+            title="Ocultar menú"
+          >
+            {isOpen ? <X size={16} strokeWidth={1.8} /> : <PanelLeftClose size={16} strokeWidth={1.8} />}
+          </button>
         </div>
 
         {contribuyente && (
@@ -180,6 +201,26 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
         </nav>
 
         <div className="q-sidebar__footer">
+          <div className="q-sidebar__mode" role="radiogroup" aria-label="Comportamiento del menú">
+            {MODOS.map((m) => {
+              const Icon = m.icon
+              const activo = mode === m.id
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={activo}
+                  className={`q-sidebar__mode-btn ${activo ? 'is-active' : ''}`}
+                  title={m.hint}
+                  onClick={() => { onModeChange?.(m.id); if (onClose) onClose() }}
+                >
+                  <Icon size={14} strokeWidth={1.8} />
+                  <span>{m.label}</span>
+                </button>
+              )
+            })}
+          </div>
           <button
             type="button"
             className={`q-nav-item ${currentView === 'cuenta' ? 'is-active' : ''}`}

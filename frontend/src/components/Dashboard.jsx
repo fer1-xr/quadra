@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3 } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3, Briefcase } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
 import History from './History'
 import ChangePassword from './ChangePassword'
@@ -30,6 +30,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
 
 const CONTRIBUYENTE_KEY = 'quadra_contribuyente'
 const ULTIMO_CONTRIBUYENTE_KEY = 'quadra_ultimo_contribuyente'
+const SIDEBAR_MODE_KEY = 'quadra-sidebar-mode'
 
 const leerJSON = (key) => {
   try { return JSON.parse(localStorage.getItem(key)) || null } catch { return null }
@@ -37,7 +38,7 @@ const leerJSON = (key) => {
 
 // Vistas que solo existen dentro del espacio de trabajo de un contribuyente
 const VISTAS_CONTRIBUYENTE = new Set([
-  'inicio', 'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
+  'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
   'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial'
 ])
 
@@ -52,12 +53,21 @@ function Dashboard({ user, onLogout }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sessionId, setSessionId] = useState(null)
-  const [view, setView] = useState(() => (leerJSON(CONTRIBUYENTE_KEY) ? 'inicio' : 'seleccionar'))
+  const [view, setView] = useState('inicio')
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [marangatuInputCount, setMarangatuInputCount] = useState(1)
   const [monthlyInputCount, setMonthlyInputCount] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarMode, setSidebarMode] = useState(() => {
+    const m = localStorage.getItem(SIDEBAR_MODE_KEY)
+    return ['fijo', 'auto', 'oculto'].includes(m) ? m : 'fijo'
+  })
+  const cambiarModoSidebar = (m) => {
+    localStorage.setItem(SIDEBAR_MODE_KEY, m)
+    setSidebarMode(m)
+    setSidebarOpen(false)
+  }
   const [flujo, setFlujo] = useState(FLUJO_VACIO)
   const [flujoCalculado, setFlujoCalculado] = useState(null)
   // resultado reabierto desde el Historial: { id, modulo, datos }
@@ -168,7 +178,7 @@ function Dashboard({ user, onLogout }) {
       return
     }
     setRestaurado(null)
-    setView(viewId || (contribuyente ? 'inicio' : 'seleccionar'))
+    setView(viewId || 'inicio')
   }
 
   const calcularFlujo = () => {
@@ -269,6 +279,18 @@ function Dashboard({ user, onLogout }) {
 
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
+  const accesos = [
+    { id: 'seleccionar', title: 'Clientes', desc: 'Elegí un contribuyente y entrá a su espacio de trabajo', icon: Briefcase, eq: [{ v: 'RUC' }, { op: '→' }, { v: 'Espacio' }], destacado: true },
+    { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
+    { id: 'todo', title: 'TO DO del Día', desc: 'Tus tareas de hoy y del resto de la semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'hoy' }] },
+    { id: 'metas', title: 'Metas Anuales', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'M' }] },
+    { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, eq: [{ op: 'Σ' }, { v: 'Honorarios' }] }
+  ]
+
+  const hora = new Date().getHours()
+  const saludo = hora < 12 ? 'Buenos días' : hora < 19 ? 'Buenas tardes' : 'Buenas noches'
+  const nombreCorto = (user?.name || user?.email || '').split(/[\s@]/)[0]
+
   const moduleIndex = [
     {
       group: 'Conciliación',
@@ -306,7 +328,7 @@ function Dashboard({ user, onLogout }) {
 
   return (
     <ContribuyenteContext.Provider value={contribuyente}>
-    <div className="dashboard q-app">
+    <div className={`dashboard q-app q-app--sb-${sidebarMode}`}>
       <Sidebar
         currentView={view}
         onNavigate={handleNavigate}
@@ -316,12 +338,14 @@ function Dashboard({ user, onLogout }) {
         onClose={() => setSidebarOpen(false)}
         contribuyente={contribuyente}
         onCambiarContribuyente={cambiarContribuyente}
+        mode={sidebarMode}
+        onModeChange={cambiarModoSidebar}
       />
 
       <div className="q-main">
         <header className={`q-topbar ${contribuyente ? 'q-topbar--client' : ''}`}>
           <div className="q-topbar__lead">
-            <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
+            <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú" title="Abrir menú">
               <Menu size={20} strokeWidth={1.6} />
             </button>
             <div>
@@ -376,6 +400,46 @@ function Dashboard({ user, onLogout }) {
                 onIngresar={ingresarContribuyente}
                 onGestionarClientes={() => setView('clientes')}
               />
+            )}
+
+            {view === 'inicio' && !contribuyente && (
+              <div className="dashboard-view q-home">
+                <section className="q-hero q-hero--welcome">
+                  <div className="q-hero__copy">
+                    <p className="q-hero__eyebrow">{saludo}{nombreCorto ? `, ${nombreCorto}` : ''}</p>
+                    <h1 className="q-hero__title">Bienvenido a <em>Quadra.</em></h1>
+                    <p className="q-hero__lede">Elegí por dónde empezar: un cliente para trabajar, tu lección y tareas del día, o el seguimiento de tus metas y tu cartera.</p>
+                  </div>
+                  <p className="q-hero__formula" aria-hidden="true">
+                    <span>Σ</span><i>Debe</i> − <span>Σ</span><i>Haber</i> = 0
+                  </p>
+                </section>
+
+                <section aria-labelledby="q-accesos-title">
+                  <header className="q-section-head">
+                    <h3 id="q-accesos-title">Accesos</h3>
+                    <p><span className="q-mono">{accesos.length}</span> atajos para tu jornada</p>
+                  </header>
+                  <ul className="q-access">
+                    {accesos.map((a) => {
+                      const Icon = a.icon
+                      return (
+                        <li key={a.id} className={a.destacado ? 'is-featured' : ''}>
+                          <button type="button" className="q-access__card" onClick={() => handleNavigate(a.id)}>
+                            <span className="q-access__top">
+                              <span className="q-access__icon"><Icon size={20} strokeWidth={1.6} /></span>
+                              <ArrowUpRight className="q-access__arrow" size={18} strokeWidth={1.7} />
+                            </span>
+                            <span className="q-access__title">{a.title}</span>
+                            <span className="q-access__desc">{a.desc}</span>
+                            <Eq terms={a.eq} className="q-access__eq" />
+                          </button>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </section>
+              </div>
             )}
 
             {view === 'inicio' && contribuyente && (

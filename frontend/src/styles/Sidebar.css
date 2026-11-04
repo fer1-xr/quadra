@@ -369,3 +369,150 @@
 
 :root:not([data-theme="dark"]) .q-sidebar__client { background: rgba(23, 71, 209, 0.05); }
 :root:not([data-theme="dark"]) .q-sidebar__client-switch { color: #1747d1; }
+
+/* ─────────────────────────────────────────────
+   Controles: ocultar + modo (fijo / desplegable / oculto)
+   ───────────────────────────────────────────── */
+
+.q-sidebar__brand > div { min-width: 0; flex: 1; }
+
+.q-sidebar__close {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border: 1px solid var(--sb-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sb-muted);
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, opacity 160ms ease;
+}
+
+.q-sidebar__close:hover { color: var(--sb-ink); border-color: rgba(255, 255, 255, 0.24); }
+.q-sidebar__close:focus-visible { outline: 2px solid var(--sb-mint); outline-offset: 1px; }
+
+.q-sidebar__mode {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  margin-bottom: 10px;
+  padding: 3px;
+  border: 1px solid var(--sb-line);
+  border-radius: 10px;
+}
+
+.q-sidebar__mode-btn {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  padding: 6px 2px 5px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--sb-faint);
+  font-family: 'Geist', 'Inter', system-ui, sans-serif;
+  font-size: 10.5px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 160ms ease, background-color 160ms ease;
+}
+
+.q-sidebar__mode-btn span { overflow: hidden; text-overflow: ellipsis; }
+.q-sidebar__mode-btn svg { flex-shrink: 0; }
+.q-sidebar__mode-btn:hover { color: var(--sb-ink); }
+.q-sidebar__mode-btn:focus-visible { outline: 2px solid var(--sb-mint); outline-offset: 1px; }
+.q-sidebar__mode-btn.is-active { color: var(--sb-ink); background: rgba(255, 255, 255, 0.09); }
+
+:root:not([data-theme="dark"]) .q-sidebar__close { background: #fff; }
+:root:not([data-theme="dark"]) .q-sidebar__close:hover { border-color: #6b7a90; }
+:root:not([data-theme="dark"]) .q-sidebar__mode { background: rgba(10, 26, 47, 0.03); }
+:root:not([data-theme="dark"]) .q-sidebar__mode-btn.is-active { color: #fff; background: #0a1a2f; }
+
+/* En móvil siempre es cajón: el modo no aplica */
+@media (max-width: 960px) {
+  .q-sidebar__mode { display: none; }
+}
+
+@media (min-width: 961px) {
+  /* ── Oculto: cajón que se abre desde el botón de menú ── */
+  .q-sidebar--oculto {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    height: 100dvh;
+    transform: translateX(-100%);
+    transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 24px 0 60px -20px rgba(4, 8, 20, 0.6);
+  }
+
+  .q-sidebar--oculto.is-open { transform: translateX(0); }
+
+  .q-app--sb-oculto .q-sidebar-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 39;
+    background: rgba(6, 17, 31, 0.5);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 240ms ease;
+  }
+
+  .q-app--sb-oculto .q-sidebar-scrim.is-open { opacity: 1; pointer-events: auto; }
+
+  /* ── Desplegable: riel de íconos que se expande al pasar el cursor ── */
+  .q-sidebar--auto {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 72px;
+    transition: width 260ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 260ms ease;
+  }
+
+  .q-sidebar--auto:hover,
+  .q-sidebar--auto:has(:focus-visible) {
+    width: 264px;
+    box-shadow: 24px 0 60px -24px rgba(4, 8, 20, 0.55);
+  }
+
+  .q-sidebar--auto .q-sidebar__brand { padding-left: 22px; padding-right: 14px; }
+  .q-sidebar--auto .q-nav-item { white-space: nowrap; overflow: hidden; }
+  .q-sidebar--auto .q-nav-item span,
+  .q-sidebar--auto .q-sidebar__brand > div,
+  .q-sidebar--auto .q-sidebar__close,
+  .q-sidebar--auto .q-nav-group__label,
+  .q-sidebar--auto .q-sidebar__mode,
+  .q-sidebar--auto .q-icon-btn span {
+    transition: opacity 180ms ease;
+  }
+
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) :is(
+    .q-nav-item > span:not(.q-avatar),
+    .q-sidebar__brand > div,
+    .q-sidebar__close,
+    .q-nav-group__label,
+    .q-sidebar__mode,
+    .q-icon-btn span
+  ) { opacity: 0; pointer-events: none; }
+
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-sidebar__client { display: none; }
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-nav-item.is-active::after { display: none; }
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-sidebar__actions { grid-template-columns: 1fr; }
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-icon-btn { gap: 0; padding: 8px; }
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-icon-btn span { width: 0; overflow: hidden; }
+  .q-sidebar--auto:not(:hover):not(:has(:focus-visible)) .q-sidebar__nav { overflow: hidden; }
+
+  :root:not([data-theme="dark"]) .q-sidebar--auto:hover,
+  :root:not([data-theme="dark"]) .q-sidebar--auto:has(:focus-visible) { box-shadow: 24px 0 60px -24px rgba(10, 26, 47, 0.3); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-sidebar--auto, .q-sidebar--oculto { transition: none; }
+}
