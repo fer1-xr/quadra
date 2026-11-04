@@ -3,6 +3,7 @@ import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Divider } from '@heroui/react'
 import { DollarSign, TrendingUp, Copy, Download } from 'lucide-react'
+import GuardarEnNube from './GuardarEnNube'
 import '../styles/Cotizacion.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -20,10 +21,10 @@ const MONEDAS = [
   { code: 'GBP', name: 'Libra Esterlina' },
 ]
 
-function Cotizacion() {
-  const [fecha, setFecha] = useState(new Date().toISOString().split('T')[0])
-  const [moneda, setMoneda] = useState('USD')
-  const [cotizacion, setCotizacion] = useState(null)
+function Cotizacion({ restaurar = null }) {
+  const [fecha, setFecha] = useState(restaurar?.consulta?.fecha || new Date().toISOString().split('T')[0])
+  const [moneda, setMoneda] = useState(restaurar?.consulta?.moneda || 'USD')
+  const [cotizacion, setCotizacion] = useState(restaurar?.cotizacion || null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [historico, setHistorico] = useState([])
@@ -160,6 +161,13 @@ function Cotizacion() {
               <p><strong>1 {moneda}</strong> = <strong>₲ {parseFloat(cotizacion.comprador).toFixed(2)}</strong> (Comprador)</p>
               <p><strong>1 {moneda}</strong> = <strong>₲ {parseFloat(cotizacion.vendedor).toFixed(2)}</strong> (Vendedor)</p>
             </div>
+
+            <GuardarEnNube
+              modulo="cotizacion"
+              titulo={`Cotización ${moneda} · ${new Date(cotizacion.fecha).toLocaleDateString('es-PY')}`}
+              resumen={{ Comprador: parseFloat(cotizacion.comprador), Vendedor: parseFloat(cotizacion.vendedor) }}
+              datos={{ consulta: { fecha, moneda }, cotizacion }}
+            />
           </div>
         )}
 

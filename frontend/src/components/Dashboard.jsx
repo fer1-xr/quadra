@@ -14,6 +14,10 @@ import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
 import LeccionDelDia from './LeccionDelDia'
 import GestionClientes from './GestionClientes'
+import SeleccionarContribuyente from './SeleccionarContribuyente'
+import Historial from './Historial'
+import GuardarEnNube from './GuardarEnNube'
+import { ContribuyenteContext } from '../services/historialService'
 import PageHead, { Figures, Eq } from './PageHead'
 import '../styles/Dashboard.css'
 import '../styles/QuadraModules.css'
@@ -24,19 +28,40 @@ const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
   : 'https://quadra-45d6.onrender.com'
 
+const CONTRIBUYENTE_KEY = 'quadra_contribuyente'
+const ULTIMO_CONTRIBUYENTE_KEY = 'quadra_ultimo_contribuyente'
+
+const leerJSON = (key) => {
+  try { return JSON.parse(localStorage.getItem(key)) || null } catch { return null }
+}
+
+// Vistas que solo existen dentro del espacio de trabajo de un contribuyente
+const VISTAS_CONTRIBUYENTE = new Set([
+  'inicio', 'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
+  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial'
+])
+
+const FLUJO_VACIO = { periodo: '', ingresos: '', egresos: '', saldo: '', inversiones: '', financiamientos: '' }
+const num = (v) => Number(v) || 0
+
 function Dashboard({ user, onLogout }) {
+  const [contribuyente, setContribuyente] = useState(() => leerJSON(CONTRIBUYENTE_KEY))
   const [libroFiles, setLibroFiles] = useState([])
   const [rg90Files, setRg90Files] = useState([])
   const [discrepancies, setDiscrepancies] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [sessionId, setSessionId] = useState(null)
-  const [view, setView] = useState('inicio')
+  const [view, setView] = useState(() => (leerJSON(CONTRIBUYENTE_KEY) ? 'inicio' : 'seleccionar'))
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [marangatuInputCount, setMarangatuInputCount] = useState(1)
   const [monthlyInputCount, setMonthlyInputCount] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [flujo, setFlujo] = useState(FLUJO_VACIO)
+  const [flujoCalculado, setFlujoCalculado] = useState(null)
+  // resultado reabierto desde el Historial: { id, modulo, datos }
+  const [restaurado, setRestaurado] = useState(null)
 
   const handleMarangatuFile = (index, file) => {
     const newFiles = [...libroFiles]
@@ -138,49 +163,75 @@ function Dashboard({ user, onLogout }) {
   }
 
   const handleNavigate = (viewId) => {
-    switch (viewId) {
-      case 'leccion':
-        setView('leccion')
-        break
-      case 'rg90':
-        setView('rg90')
-        break
-      case 'bancaria':
-        setView('bancaria')
-        break
-      case 'liquidacion':
-        setView('liquidacion')
-        break
-      case 'activofijo':
-        setView('activofijo')
-        break
-      case 'flujo':
-        setView('flujo')
-        break
-      case 'importar-documentos':
-        setView('importar-documentos')
-        break
-      case 'control-pagos':
-        setView('control-pagos')
-        break
-      case 'cotizacion':
-        setView('cotizacion')
-        break
-      case 'cuenta':
-        setView('cuenta')
-        break
-      case 'todo':
-        setView('todo')
-        break
-      case 'metas':
-        setView('metas')
-        break
-      case 'clientes':
-        setView('clientes')
-        break
-      default:
-        setView('inicio')
+    if (VISTAS_CONTRIBUYENTE.has(viewId) && !contribuyente) {
+      setView('seleccionar')
+      return
     }
+    setRestaurado(null)
+    setView(viewId || (contribuyente ? 'inicio' : 'seleccionar'))
+  }
+
+  const calcularFlujo = () => {
+    const r = {
+      periodo: flujo.periodo,
+      saldoInicial: num(flujo.saldo),
+      ingresos: num(flujo.ingresos),
+      egresos: num(flujo.egresos),
+      inversiones: num(flujo.inversiones),
+      financiamientos: num(flujo.financiamientos)
+    }
+    r.flujoNeto = r.ingresos - r.egresos - r.inversiones + r.financiamientos
+    r.saldoFinal = r.saldoInicial + r.flujoNeto
+    setFlujoCalculado(r)
+  }
+
+  // Qué módulos se pueden reabrir desde el Historial
+  const abrirDesdeHistorial = {
+    canOpen: (item) => ['rg90', 'flujo', 'liquidacion', 'activofijo', 'cotizacion', 'control-pagos'].includes(item.modulo),
+    open: (item) => {
+      const d = item.datos || {}
+      if (item.modulo === 'rg90') {
+        setDiscrepancies(d.discrepancies || [])
+        setTotalCoincidencias(d.totalCoincidencias ?? (d.discrepancies || []).filter((x) => x.status === 'success').length)
+        setSessionId(d.sessionId || null)
+        setView('rg90-results')
+        return
+      }
+      if (item.modulo === 'flujo') {
+        setFlujo({
+          periodo: d.periodo || '', ingresos: d.ingresos ?? '', egresos: d.egresos ?? '', saldo: d.saldoInicial ?? '',
+          inversiones: d.inversiones ?? '', financiamientos: d.financiamientos ?? ''
+        })
+        setFlujoCalculado(d)
+        setView('flujo')
+        return
+      }
+      setRestaurado({ id: item.id, modulo: item.modulo, datos: d })
+      setView(item.modulo)
+    }
+  }
+
+  const restauradoDe = (modulo) => (restaurado?.modulo === modulo ? restaurado : null)
+
+  const ingresarContribuyente = (datos) => {
+    localStorage.setItem(CONTRIBUYENTE_KEY, JSON.stringify(datos))
+    localStorage.setItem(ULTIMO_CONTRIBUYENTE_KEY, JSON.stringify(datos))
+    setContribuyente(datos)
+    setView('inicio')
+  }
+
+  const salir = () => {
+    localStorage.removeItem(CONTRIBUYENTE_KEY)
+    localStorage.removeItem(ULTIMO_CONTRIBUYENTE_KEY)
+    onLogout()
+  }
+
+  const cambiarContribuyente = () => {
+    localStorage.removeItem(CONTRIBUYENTE_KEY)
+    setContribuyente(null)
+    setDiscrepancies([])
+    setSessionId(null)
+    setView('seleccionar')
   }
 
   const fmt = (n) => parseFloat(n).toLocaleString('es-PY', { minimumFractionDigits: 2 })
@@ -189,6 +240,8 @@ function Dashboard({ user, onLogout }) {
 
   const viewTitles = {
     inicio: 'Inicio',
+    seleccionar: 'Clientes',
+    historial: 'Historial',
     leccion: 'Lección del Día',
     todo: 'TO DO del Día',
     metas: 'Metas Anuales',
@@ -210,7 +263,8 @@ function Dashboard({ user, onLogout }) {
     rg90: 'Conciliación', 'rg90-results': 'Conciliación', bancaria: 'Conciliación',
     'importar-documentos': 'Conciliación', 'control-pagos': 'Conciliación',
     liquidacion: 'Cálculo', activofijo: 'Cálculo', flujo: 'Cálculo', cotizacion: 'Cálculo',
-    clientes: 'Gestión'
+    clientes: 'Gestión',
+    historial: 'Nube'
   }
 
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
@@ -251,18 +305,21 @@ function Dashboard({ user, onLogout }) {
   ]
 
   return (
+    <ContribuyenteContext.Provider value={contribuyente}>
     <div className="dashboard q-app">
       <Sidebar
         currentView={view}
         onNavigate={handleNavigate}
         user={user}
-        onLogout={onLogout}
+        onLogout={salir}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        contribuyente={contribuyente}
+        onCambiarContribuyente={cambiarContribuyente}
       />
 
       <div className="q-main">
-        <header className="q-topbar">
+        <header className={`q-topbar ${contribuyente ? 'q-topbar--client' : ''}`}>
           <div className="q-topbar__lead">
             <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú">
               <Menu size={20} strokeWidth={1.6} />
@@ -275,12 +332,30 @@ function Dashboard({ user, onLogout }) {
               </h2>
             </div>
           </div>
+          {contribuyente && (
+            <button
+              type="button"
+              className="q-taxpayer"
+              onClick={cambiarContribuyente}
+              title="Cambiar contribuyente"
+              aria-label={`Contribuyente activo: ${contribuyente.razonSocial}, RUC ${contribuyente.ruc}. Cambiar contribuyente`}
+            >
+              <span className="q-taxpayer__label">Contribuyente</span>
+              <span className="q-taxpayer__name">{contribuyente.razonSocial}</span>
+              <span className="q-taxpayer__meta">
+                <span>RUC {contribuyente.ruc}</span>
+                <span aria-hidden="true">·</span>
+                <span>Ej. {contribuyente.ejercicio}</span>
+                {contribuyente.sucursalLabel && <><span aria-hidden="true">·</span><span>{contribuyente.sucursalLabel}</span></>}
+              </span>
+            </button>
+          )}
           <div className="q-topbar__meta">
             <span className="q-topbar__hello">Hola, <strong>{user?.name || user?.email}</strong></span>
             <span className="q-quota">
               <span className="q-quota__value">8/10</span> Conciliaciones
             </span>
-            <button type="button" className="q-ghost-icon" onClick={onLogout} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <button type="button" className="q-ghost-icon" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
               <LogOut size={18} strokeWidth={1.6} />
             </button>
           </div>
@@ -295,7 +370,15 @@ function Dashboard({ user, onLogout }) {
               />
             )}
 
-            {view === 'inicio' && (
+            {view === 'seleccionar' && (
+              <SeleccionarContribuyente
+                previo={leerJSON(ULTIMO_CONTRIBUYENTE_KEY)}
+                onIngresar={ingresarContribuyente}
+                onGestionarClientes={() => setView('clientes')}
+              />
+            )}
+
+            {view === 'inicio' && contribuyente && (
               <div className="dashboard-view q-home">
                 <section className="q-hero">
                   <div className="q-hero__copy">
@@ -511,9 +594,22 @@ function Dashboard({ user, onLogout }) {
                   </Table>
 
                   <div className="q-actions">
-                    <button type="button" className="q-btn q-btn--primary" onClick={handleExport}>
-                      <Download size={16} strokeWidth={1.8} /> Descargar Excel
-                    </button>
+                    <GuardarEnNube
+                      modulo="rg90"
+                      titulo={`Conciliación RG90 · ${discrepancies.length} comprobantes`}
+                      resumen={{
+                        Comprobantes: discrepancies.length,
+                        Coinciden: totalCoincidencias,
+                        Discrepancias: totalErrors,
+                        'Exactitud %': Number(((totalCoincidencias / discrepancies.length) * 100).toFixed(1))
+                      }}
+                      datos={{ discrepancies, totalCoincidencias, sessionId }}
+                    />
+                    {sessionId && (
+                      <button type="button" className="q-btn q-btn--primary" onClick={handleExport}>
+                        <Download size={16} strokeWidth={1.8} /> Descargar Excel
+                      </button>
+                    )}
                     <button
                       type="button"
                       className="q-btn q-btn--line"
@@ -600,15 +696,15 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'control-pagos' && (
-              <ControlPagos />
+              <ControlPagos key={restauradoDe('control-pagos')?.id} restaurar={restauradoDe('control-pagos')?.datos} />
             )}
 
             {view === 'liquidacion' && (
-              <LiquidacionSalarial />
+              <LiquidacionSalarial key={restauradoDe('liquidacion')?.id} restaurar={restauradoDe('liquidacion')?.datos} />
             )}
 
             {view === 'activofijo' && (
-              <VentaActivoFijo />
+              <VentaActivoFijo key={restauradoDe('activofijo')?.id} restaurar={restauradoDe('activofijo')?.datos} />
             )}
 
             {view === 'flujo' && (
@@ -623,30 +719,44 @@ function Dashboard({ user, onLogout }) {
                 <div className="q-form-grid">
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-periodo">Mes/Período</label>
-                    <input id="flujo-periodo" className="q-input" type="text" placeholder="Ej: Enero 2026" />
+                    <input id="flujo-periodo" className="q-input" type="text" placeholder="Ej: Enero 2026" value={flujo.periodo} onChange={(e) => { setFlujo({ ...flujo, periodo: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-ingresos">Ingresos Totales</label>
-                    <input id="flujo-ingresos" className="q-input q-input--num" type="number" placeholder="Monto" />
+                    <input id="flujo-ingresos" className="q-input q-input--num" type="number" placeholder="Monto" value={flujo.ingresos} onChange={(e) => { setFlujo({ ...flujo, ingresos: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-egresos">Egresos Totales</label>
-                    <input id="flujo-egresos" className="q-input q-input--num" type="number" placeholder="Monto" />
+                    <input id="flujo-egresos" className="q-input q-input--num" type="number" placeholder="Monto" value={flujo.egresos} onChange={(e) => { setFlujo({ ...flujo, egresos: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-saldo">Saldo Anterior</label>
-                    <input id="flujo-saldo" className="q-input q-input--num" type="number" placeholder="Saldo" />
+                    <input id="flujo-saldo" className="q-input q-input--num" type="number" placeholder="Saldo" value={flujo.saldo} onChange={(e) => { setFlujo({ ...flujo, saldo: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-inversiones">Inversiones</label>
-                    <input id="flujo-inversiones" className="q-input q-input--num" type="number" placeholder="Monto" />
+                    <input id="flujo-inversiones" className="q-input q-input--num" type="number" placeholder="Monto" value={flujo.inversiones} onChange={(e) => { setFlujo({ ...flujo, inversiones: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="flujo-financiamientos">Financiamientos</label>
-                    <input id="flujo-financiamientos" className="q-input q-input--num" type="number" placeholder="Monto" />
+                    <input id="flujo-financiamientos" className="q-input q-input--num" type="number" placeholder="Monto" value={flujo.financiamientos} onChange={(e) => { setFlujo({ ...flujo, financiamientos: e.target.value }); setFlujoCalculado(null) }} />
                   </div>
                 </div>
-                <button type="button" className="q-btn q-btn--primary">Calcular Flujo de Caja</button>
+                <button type="button" className="q-btn q-btn--primary" onClick={calcularFlujo}>Calcular Flujo de Caja</button>
+                {flujoCalculado && (
+                  <div className="q-flujo-result">
+                    <dl className="q-dl">
+                      <div><dt>Flujo neto del período</dt><dd className="q-mono">₲ {flujoCalculado.flujoNeto.toLocaleString('es-PY')}</dd></div>
+                      <div><dt>Saldo final</dt><dd className="q-mono">₲ {flujoCalculado.saldoFinal.toLocaleString('es-PY')}</dd></div>
+                    </dl>
+                    <GuardarEnNube
+                      modulo="flujo"
+                      titulo={`Flujo de Caja${flujoCalculado.periodo ? ` · ${flujoCalculado.periodo}` : ''}`}
+                      resumen={{ 'Flujo neto': flujoCalculado.flujoNeto, 'Saldo final': flujoCalculado.saldoFinal }}
+                      datos={flujoCalculado}
+                    />
+                  </div>
+                )}
               </section>
               </div>
             )}
@@ -682,11 +792,15 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'cotizacion' && (
-              <Cotizacion />
+              <Cotizacion key={restauradoDe('cotizacion')?.id} restaurar={restauradoDe('cotizacion')?.datos} />
             )}
 
             {view === 'leccion' && (
               <LeccionDelDia />
+            )}
+
+            {view === 'historial' && contribuyente && (
+              <Historial onAbrir={abrirDesdeHistorial} />
             )}
 
             {view === 'clientes' && (
@@ -696,6 +810,7 @@ function Dashboard({ user, onLogout }) {
         </main>
       </div>
     </div>
+    </ContribuyenteContext.Provider>
   )
 }
 

@@ -4,6 +4,7 @@ import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Checkbox, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell } from '@heroui/react'
 import { Download } from 'lucide-react'
 import { Var, MoneyInput, IntInput, SetChoice, TermToggle, Step, F, fmtGs } from './MathInputs'
+import GuardarEnNube from './GuardarEnNube'
 import '../styles/LiquidacionSalarial.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
@@ -103,7 +104,7 @@ function liquidar(formData) {
   }
 }
 
-function LiquidacionSalarial() {
+function LiquidacionSalarial({ restaurar = null }) {
   const [formData, setFormData] = useState({
     // Datos del empleado
     nombreEmpleado: '',
@@ -130,7 +131,7 @@ function LiquidacionSalarial() {
     porcentajeIPS: 9.625,
   })
 
-  const [resultado, setResultado] = useState(null)
+  const [resultado, setResultado] = useState(restaurar)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -417,6 +418,12 @@ function LiquidacionSalarial() {
             </div>
 
             <div className="button-group">
+              <GuardarEnNube
+                modulo="liquidacion"
+                titulo={`Liquidación · ${resultado.nombreEmpleado || 'Empleado'}`}
+                resumen={{ 'Total devengado': resultado.totalDevengado, Descuentos: resultado.totalDescuentos, Neto: resultado.neto }}
+                datos={resultado}
+              />
               <button
                 className="btn btn-success"
                 onClick={descargarExcel}

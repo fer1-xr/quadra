@@ -35,6 +35,15 @@
         "value": "instrument serif",
         "createdAt": "2026-11-03T02:24:22.393Z",
         "reason": "brand typeface: quadra-landing-two.vercel.app ships Geist + Instrument Serif, user asked the app to match that landing"
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "frontend/src/styles/QuadraLedger.css"
+        ],
+        "createdAt": "2026-11-04T17:20:29.160Z",
+        "reason": "Claude triage: L84 is .q-head::after, a full-width graduated ruler (1px border-bottom across left:0/right:0), not a one-sided card accent"
       }
     ]
   }

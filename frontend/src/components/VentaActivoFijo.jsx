@@ -3,9 +3,10 @@ import PageHead, { Figures } from './PageHead'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner } from '@heroui/react'
 import { Download } from 'lucide-react'
 import { Var, MoneyInput, SetChoice, Step, F, fmtGs } from './MathInputs'
+import GuardarEnNube from './GuardarEnNube'
 import '../styles/VentaActivoFijo.css'
 
-const VentaActivoFijo = () => {
+const VentaActivoFijo = ({ restaurar = null }) => {
   const [formData, setFormData] = useState({
     tipoBien: 'inmueble',
     tipoContribuyente: 'no-contribuyente',
@@ -14,7 +15,7 @@ const VentaActivoFijo = () => {
     monto: 0,
   })
 
-  const [resultado, setResultado] = useState(null)
+  const [resultado, setResultado] = useState(restaurar)
   const [error, setError] = useState('')
 
   // Base de conocimiento: Regulaciones tributarias para venta de activos fijos en Paraguay
@@ -917,6 +918,12 @@ const VentaActivoFijo = () => {
 
             {/* Botones de Acción */}
             <div className="button-group">
+              <GuardarEnNube
+                modulo="activofijo"
+                titulo={`Venta de ${resultado.tipoBien === 'inmueble' ? 'inmueble' : 'vehículo'} · ₲ ${resultado.montoFormateado}`}
+                resumen={{ Monto: resultado.monto, Factura: resultado.debe_facturar ? 'Sí' : 'No', IVA: resultado.tasa_iva || '—' }}
+                datos={resultado}
+              />
               <button
                 className="btn btn-secondary"
                 onClick={resetForm}
