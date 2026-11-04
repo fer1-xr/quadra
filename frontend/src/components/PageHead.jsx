@@ -1,16 +1,20 @@
 import React from 'react'
+import { SYNC_LABELS } from '../services/useCloudCollection'
 
 /**
  * Encabezado común de cada hoja de trabajo.
  * `equation` es la ecuación rectora del módulo: una lista de términos
  * { v: 'Variable' } (itálica, como en notación matemática) u { op: '=' }.
  */
-function PageHead({ title, lede, equation, caption, children }) {
+function PageHead({ title, lede, equation, caption, status, children }) {
   return (
     <header className="q-head">
       <div className="q-head__copy">
         <h1 className="q-head__title">{title}</h1>
         {lede && <p className="q-head__lede">{lede}</p>}
+        {status && (
+          <p className={`q-sync is-${status}`} role="status" aria-live="polite">{SYNC_LABELS[status]}</p>
+        )}
       </div>
 
       {equation && (

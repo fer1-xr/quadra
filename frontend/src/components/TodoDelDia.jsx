@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PageHead, { Figures } from './PageHead'
+import { useCloudCollection } from '../services/useCloudCollection'
 import { Card, CardBody, CardHeader, Button, Input, Checkbox, Chip, Divider } from '@heroui/react'
 import { Plus, Trash2, CheckCircle2, X } from 'lucide-react'
 import '../styles/TodoDelDia.css'
@@ -21,7 +22,7 @@ const DIAS_SEMANA = [
 ]
 
 function TodoDelDia() {
-  const [tareas, setTareas] = useState([])
+  const [tareas, setTareas, syncStatus] = useCloudCollection('tarea', 'quadra_tareas_diarias')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false)
   const [nuevaTarea, setNuevaTarea] = useState({
@@ -36,16 +37,6 @@ function TodoDelDia() {
   const [editandoTarea, setEditandoTarea] = useState(null)
   const [nuevoPaso, setNuevoPaso] = useState('')
 
-  useEffect(() => {
-    const tareasGuardadas = localStorage.getItem('quadra_tareas_diarias')
-    if (tareasGuardadas) {
-      setTareas(JSON.parse(tareasGuardadas))
-    }
-  }, [])
-
-  useEffect(() => {
-    localStorage.setItem('quadra_tareas_diarias', JSON.stringify(tareas))
-  }, [tareas])
 
   const agregarTarea = () => {
     if (!nuevaTarea.titulo.trim()) {
@@ -140,6 +131,7 @@ function TodoDelDia() {
         lede="Organiza tus tareas por día, de lunes a viernes."
         equation={[{ v: 'Pendientes' }, { op: '+' }, { v: 'Completadas' }, { op: '=' }, { n: String(tareasPendientes + tareasCompletadas) }]}
         caption="tareas de la semana"
+        status={syncStatus}
       />
       <div className="todo-header">
         <div className="todo-pestanas">

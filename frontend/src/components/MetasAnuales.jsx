@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PageHead, { Figures } from './PageHead'
+import { useCloudCollection } from '../services/useCloudCollection'
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
@@ -19,7 +20,7 @@ const PERIODOS = [
 ]
 
 function MetasAnuales() {
-  const [metas, setMetas] = useState([])
+  const [metas, setMetas, syncStatus] = useCloudCollection('meta', 'quadra_metas_anuales')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [periodo, setPeriodo] = useState('anual')
   const [nuevaMeta, setNuevaMeta] = useState({
@@ -37,18 +38,6 @@ function MetasAnuales() {
   const [editandoId, setEditandoId] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
 
-  // Cargar metas del localStorage
-  useEffect(() => {
-    const metasGuardadas = localStorage.getItem('quadra_metas_anuales')
-    if (metasGuardadas) {
-      setMetas(JSON.parse(metasGuardadas))
-    }
-  }, [])
-
-  // Guardar metas en localStorage
-  useEffect(() => {
-    localStorage.setItem('quadra_metas_anuales', JSON.stringify(metas))
-  }, [metas])
 
   const mostrarNotificacion = (mensaje, tipo = 'success') => {
     setNotificacion({ mensaje, tipo })
@@ -243,6 +232,7 @@ function MetasAnuales() {
         title={`Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}`}
         lede="Establece y alcanza tus objetivos."
         equation={[{ v: 'Avance' }, { op: '=' }, { v: 'Completadas' }, { op: '÷' }, { v: 'Metas' }]}
+        status={syncStatus}
         caption={metasFiltradas.length ? `${Math.round((metasCompletadas / metasFiltradas.length) * 100)} % del período` : 'sin metas en el período'}
       />
       <Figures items={[

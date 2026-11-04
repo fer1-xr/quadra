@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PageHead, { Figures } from './PageHead'
+import { useCloudCollection } from '../services/useCloudCollection'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
@@ -15,7 +16,7 @@ const TIPOS_IMPUESTO = [
 ]
 
 function GestionClientes() {
-  const [clientes, setClientes] = useState([])
+  const [clientes, setClientes, syncStatus] = useCloudCollection('cliente', 'quadra_clientes')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
   const [busqueda, setBusqueda] = useState('')
@@ -30,18 +31,6 @@ function GestionClientes() {
     facturado: false
   })
 
-  // Cargar clientes del localStorage
-  useEffect(() => {
-    const clientesGuardados = localStorage.getItem('quadra_clientes')
-    if (clientesGuardados) {
-      setClientes(JSON.parse(clientesGuardados))
-    }
-  }, [])
-
-  // Guardar clientes en localStorage
-  useEffect(() => {
-    localStorage.setItem('quadra_clientes', JSON.stringify(clientes))
-  }, [clientes])
 
   const agregarOActualizarCliente = () => {
     if (!nuevoCliente.razonSocial.trim() || !nuevoCliente.ruc.trim()) {
@@ -220,6 +209,7 @@ function GestionClientes() {
         lede="Administra tu listado de clientes y servicios."
         equation={[{ op: 'Σ' }, { v: 'Honorarios' }, { op: '=' }, { n: honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 }) }]}
         caption="cartera de clientes"
+        status={syncStatus}
       />
       <div className="clientes-header">
         {clientes.length > 0 && (

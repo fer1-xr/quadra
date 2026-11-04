@@ -697,3 +697,22 @@
   .q-app .q-content .leccion-content { font-size: 16px; }
   .q-app .q-content .leccion-content h2 { font-size: 27px; }
 }
+
+/* estado de guardado */
+.q-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 12px;
+  font-size: 12.5px;
+  color: var(--q-ink-3);
+}
+.q-sync::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: 0.8; }
+.q-sync.is-saved { color: var(--q-ok); }
+.q-sync.is-saving, .q-sync.is-loading { color: var(--q-ink-3); }
+.q-sync.is-local { color: var(--q-warn); }
+.q-sync.is-error { color: var(--q-err); }
+@media (prefers-reduced-motion: no-preference) {
+  .q-sync.is-saving::before { animation: q-pulse 900ms ease-in-out infinite alternate; }
+}
+@keyframes q-pulse { from { opacity: 0.25; } to { opacity: 1; } }
