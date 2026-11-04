@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import PageHead, { Figures } from './PageHead'
 import { useCloudCollection } from '../services/useCloudCollection'
-import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
 import { Plus, Trash2, Download, Target, X, GraduationCap, Briefcase, Wallet } from 'lucide-react'
@@ -18,6 +17,104 @@ const PERIODOS = [
   { id: 'anual', label: 'Anual' },
   { id: 'mensual', label: 'Mensual' }
 ]
+
+const pct = (n) => `${Math.round(n)} %`
+
+function estadisticas(valores) {
+  const n = valores.length
+  if (!n) return { media: 0, mediana: 0, sigma: 0 }
+  const media = valores.reduce((a, b) => a + b, 0) / n
+  const orden = [...valores].sort((a, b) => a - b)
+  const mediana = n % 2 ? orden[(n - 1) / 2] : (orden[n / 2 - 1] + orden[n / 2]) / 2
+  const sigma = Math.sqrt(valores.reduce((a, v) => a + (v - media) ** 2, 0) / n)
+  return { media, mediana, sigma }
+}
+
+/** Avance por meta sobre escala graduada + composición por tipo. */
+function MetasCharts({ metas }) {
+  const progresos = metas.map((m) => Number(m.progreso) || 0)
+  const { media, mediana, sigma } = estadisticas(progresos)
+  const filas = [...metas].sort((a, b) => (Number(b.progreso) || 0) - (Number(a.progreso) || 0))
+  const total = metas.length
+  const completadas = metas.filter((m) => m.completada).length
+
+  const porTipo = TIPOS_META.map((t) => {
+    const delTipo = metas.filter((m) => m.tipo === t.id)
+    const st = estadisticas(delTipo.map((m) => Number(m.progreso) || 0))
+    return { ...t, n: delTipo.length, share: total ? (delTipo.length / total) * 100 : 0, media: st.media, hechas: delTipo.filter((m) => m.completada).length }
+  })
+
+  return (
+    <div className="mc">
+      <figure className="mc-panel mc-panel--wide">
+        <figcaption className="mc-head">
+          <h4>Avance por meta</h4>
+          <p className="mc-stats">
+            <span><i>x̄</i> = <b>{pct(media)}</b></span>
+            <span><i>Me</i> = <b>{pct(mediana)}</b></span>
+            <span><i>σ</i> = <b>{Math.round(sigma)}</b></span>
+          </p>
+        </figcaption>
+
+        <div className="mc-plot" style={{ '--mean': `${media}%` }}>
+          {filas.map((m) => {
+            const v = Math.max(0, Math.min(100, Number(m.progreso) || 0))
+            return (
+              <div key={m.id} className={`mc-row tipo-${m.tipo} ${m.completada ? 'is-done' : ''}`}>
+                <span className="mc-row__label" title={m.titulo}>{m.titulo}</span>
+                <span className="mc-row__track" role="img" aria-label={`${m.titulo}: ${v} %`}>
+                  <span className="mc-row__bar" style={{ width: `${v}%` }} />
+                  <span className="mc-mean" aria-hidden="true" />
+                </span>
+                <span className="mc-row__val">{v}<small>%</small></span>
+              </div>
+            )
+          })}
+          <div className="mc-axis" aria-hidden="true">
+            <span />
+            <span className="mc-axis__scale">
+              {[0, 25, 50, 75, 100].map((t) => <span key={t} style={{ left: `${t}%` }}>{t}</span>)}
+              <span className="mc-axis__mean" style={{ left: `${media}%` }}><i>x̄</i></span>
+            </span>
+            <span />
+          </div>
+        </div>
+      </figure>
+
+      <figure className="mc-panel">
+        <figcaption className="mc-head">
+          <h4>Composición por tipo</h4>
+          <p className="mc-stats"><span><b>{completadas}</b> / {total} completadas</span></p>
+        </figcaption>
+
+        <div className="mc-stack" role="img" aria-label={porTipo.map((t) => `${t.label} ${t.n}`).join(', ')}>
+          {porTipo.filter((t) => t.n).map((t) => (
+            <span key={t.id} className={`mc-stack__seg tipo-${t.id}`} style={{ flexGrow: t.n }} />
+          ))}
+        </div>
+
+        <table className="mc-table">
+          <thead>
+            <tr><th>Tipo</th><th>n</th><th>%</th><th><i>x̄</i> avance</th></tr>
+          </thead>
+          <tbody>
+            {porTipo.map((t) => (
+              <tr key={t.id} className={`tipo-${t.id} ${t.n ? '' : 'is-zero'}`}>
+                <td><span className="mc-dot" />{t.label}</td>
+                <td>{t.n}</td>
+                <td>{pct(t.share)}</td>
+                <td>{t.n ? pct(t.media) : '—'}</td>
+              </tr>
+            ))}
+          </tbody>
+          <tfoot>
+            <tr><td>Total</td><td>{total}</td><td>100 %</td><td>{pct(media)}</td></tr>
+          </tfoot>
+        </table>
+      </figure>
+    </div>
+  )
+}
 
 function MetasAnuales() {
   const [metas, setMetas, syncStatus] = useCloudCollection('meta', 'quadra_metas_anuales')
@@ -202,22 +299,6 @@ function MetasAnuales() {
 
   const metasCompletadas = metasFiltradas.filter(m => m.completada).length
 
-  // Datos para gráficos
-  const datosProgresoGeneral = [
-    { name: 'Completadas', value: metasCompletadas, color: '#4ECDC4' },
-    { name: 'Pendientes', value: metasFiltradas.length - metasCompletadas, color: '#FFD93D' }
-  ]
-
-  const datosPorTipo = TIPOS_META.map(tipo => ({
-    name: tipo.label,
-    count: metasFiltradas.filter(m => m.tipo === tipo.id).length,
-    fill: tipo.color
-  }))
-
-  const promedioProgreso = metasFiltradas.length > 0
-    ? Math.round(metasFiltradas.reduce((sum, m) => sum + m.progreso, 0) / metasFiltradas.length)
-    : 0
-
   return (
     <div className="metas-anuales">
       {notificacion && (
@@ -260,55 +341,7 @@ function MetasAnuales() {
       </div>
 
       {/* Gráficos de Progreso */}
-      {metasFiltradas.length > 0 && (
-        <div className="graficos-section">
-          <div className="grafico-container">
-            <h4>Progreso General</h4>
-            <div className="progreso-general">
-              <ResponsiveContainer width="100%" height={200}>
-                <PieChart>
-                  <Pie
-                    data={datosProgresoGeneral}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${value}`}
-                    outerRadius={60}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {datosProgresoGeneral.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            <div className="estadistica-box">
-              <span className="estadistica-label">Promedio de Progreso</span>
-              <span className="estadistica-valor">{promedioProgreso}%</span>
-            </div>
-          </div>
-
-          <div className="grafico-container">
-            <h4>Metas por Tipo</h4>
-            <ResponsiveContainer width="100%" height={200}>
-              <BarChart data={datosPorTipo}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                <YAxis tick={{ fontSize: 12 }} />
-                <Tooltip />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {datosPorTipo.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      )}
+      {metasFiltradas.length > 0 && <MetasCharts metas={metasFiltradas} />}
 
       {/* Formulario para agregar meta */}
       {mostrarFormulario && (

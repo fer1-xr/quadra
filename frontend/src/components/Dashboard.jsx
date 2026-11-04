@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3 } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3 } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
 import History from './History'
 import ChangePassword from './ChangePassword'
@@ -14,10 +14,11 @@ import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
 import LeccionDelDia from './LeccionDelDia'
 import GestionClientes from './GestionClientes'
-import PageHead, { Figures } from './PageHead'
+import PageHead, { Figures, Eq } from './PageHead'
 import '../styles/Dashboard.css'
 import '../styles/QuadraModules.css'
 import '../styles/QuadraLedger.css'
+import '../styles/QuadraMath.css'
 
 const API_BASE_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:3000'
@@ -214,12 +215,39 @@ function Dashboard({ user, onLogout }) {
 
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
-  const secondaryModules = [
-    { id: 'liquidacion', title: 'Liquidación Salarial', desc: 'Calcula y gestiona liquidaciones de sueldo de tus empleados', icon: DollarSign },
-    { id: 'control-pagos', title: 'Control de Pagos', desc: 'Administra pólizas de seguros y préstamos', icon: CreditCard },
-    { id: 'activofijo', title: 'Venta Activo Fijo', desc: 'Registra y calcula la venta de bienes de uso', icon: TrendingUp },
-    { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Carga y procesa archivos de tus proveedores', icon: Truck },
-    { id: 'clientes', title: 'Gestión de Clientes', desc: 'Administra la información de tus clientes', icon: Users }
+  const moduleIndex = [
+    {
+      group: 'Conciliación',
+      items: [
+        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Maragnatu frente a compras, ventas y notas de crédito', icon: BarChart3, eq: [{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }] },
+        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Extracto contra libro, con partidas en tránsito', icon: Wallet, eq: [{ v: 'S', sub: 'banco' }, { op: '±' }, { v: 'P' }, { op: '=' }, { v: 'S', sub: 'libro' }] },
+        { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, eq: [{ v: 'Factura' }, { op: '→' }, { v: 'Excel' }] },
+        { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, eq: [{ v: 'Saldo', sub: 'n' }, { op: '=' }, { v: 'Saldo', sub: 'n−1' }, { op: '−' }, { v: 'Pago', sub: 'n' }] }
+      ]
+    },
+    {
+      group: 'Cálculo',
+      items: [
+        { id: 'liquidacion', title: 'Liquidación Salarial', desc: 'Haberes, indemnización y aportes por empleado', icon: Calculator, eq: [{ v: 'Neto' }, { op: '=' }, { v: 'H' }, { op: '−' }, { v: 'D' }] },
+        { id: 'activofijo', title: 'Venta de Activo Fijo', desc: 'Modalidad de facturación según bien y régimen', icon: Building2, eq: [{ v: 'f' }, { op: '(' }, { v: 'bien' }, { op: ',' }, { v: 'régimen' }, { op: ')' }] },
+        { id: 'flujo', title: 'Flujo de Caja', desc: 'Saldo inicial, ingresos y egresos del período', icon: TrendingUp, eq: [{ v: 'S', sub: 'f' }, { op: '=' }, { v: 'S', sub: '0' }, { op: '+' }, { v: 'I' }, { op: '−' }, { v: 'E' }] },
+        { id: 'cotizacion', title: 'Cotización', desc: 'Conversión al tipo de cambio de la DNIT', icon: LineChart, eq: [{ v: 'PYG' }, { op: '=' }, { v: 'M' }, { op: '×' }, { v: 'TC' }] }
+      ]
+    },
+    {
+      group: 'Agenda',
+      items: [
+        { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
+        { id: 'todo', title: 'TO DO de la Semana', desc: 'Tareas por día, de lunes a viernes', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
+        { id: 'metas', title: 'Metas Anuales', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'M' }] }
+      ]
+    },
+    {
+      group: 'Gestión',
+      items: [
+        { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, eq: [{ op: 'Σ' }, { v: 'Honorarios' }] }
+      ]
+    }
   ]
 
   return (
@@ -313,44 +341,39 @@ function Dashboard({ user, onLogout }) {
                   </figure>
                 </section>
 
-                <section className="q-modules">
+                <section className="q-modules" aria-labelledby="q-modules-title">
                   <header className="q-section-head">
-                    <h3>Módulos</h3>
-                    <p>Accesos directos a tus herramientas de trabajo</p>
+                    <h3 id="q-modules-title">Módulos</h3>
+                    <p><span className="q-mono">{moduleIndex.reduce((n, g) => n + g.items.length, 0)}</span> hojas de trabajo, cada una con su ecuación</p>
                   </header>
 
-                  <div className="q-modules__grid">
-                    <button type="button" className="q-feature" onClick={() => handleNavigate('rg90')}>
-                      <span className="q-feature__icon"><FileText size={22} strokeWidth={1.6} /></span>
-                      <span className="q-feature__body">
-                        <span className="q-feature__title">Conciliación RG90</span>
-                        <span className="q-feature__desc">Concilia tus archivos Maragnatu con reportes de compras y ventas</span>
-                      </span>
-                      <span className="q-feature__eq" aria-hidden="true">
-                        <span>Libro</span>
-                        <span className="q-feature__op">≡</span>
-                        <span>RG90</span>
-                      </span>
-                      <span className="q-feature__cta">Abrir módulo <ArrowRight size={15} strokeWidth={1.8} /></span>
-                    </button>
-
-                    <ul className="q-ledger">
-                      {secondaryModules.map((m) => {
-                        const Icon = m.icon
-                        return (
-                          <li key={m.id}>
-                            <button type="button" className="q-ledger__row" onClick={() => handleNavigate(m.id)}>
-                              <span className="q-ledger__icon"><Icon size={18} strokeWidth={1.6} /></span>
-                              <span className="q-ledger__text">
-                                <span className="q-ledger__title">{m.title}</span>
-                                <span className="q-ledger__desc">{m.desc}</span>
-                              </span>
-                              <ArrowUpRight className="q-ledger__arrow" size={17} strokeWidth={1.6} />
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
+                  <div className="q-index">
+                    {moduleIndex.map((g) => (
+                      <div key={g.group} className="q-index__group">
+                        <div className="q-index__head">
+                          <h4>{g.group}</h4>
+                          <span className="q-index__count">{g.items.length}</span>
+                        </div>
+                        <ul>
+                          {g.items.map((m) => {
+                            const Icon = m.icon
+                            return (
+                              <li key={m.id}>
+                                <button type="button" className="q-index__row" onClick={() => handleNavigate(m.id)}>
+                                  <Icon className="q-index__icon" size={18} strokeWidth={1.6} />
+                                  <span className="q-index__text">
+                                    <span className="q-index__title">{m.title}</span>
+                                    <span className="q-index__desc">{m.desc}</span>
+                                  </span>
+                                  <Eq terms={m.eq} className="q-index__eq" />
+                                  <ArrowUpRight className="q-index__arrow" size={16} strokeWidth={1.7} />
+                                </button>
+                              </li>
+                            )
+                          })}
+                        </ul>
+                      </div>
+                    ))}
                   </div>
                 </section>
               </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import PageHead, { Figures } from './PageHead'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner } from '@heroui/react'
 import { Download } from 'lucide-react'
+import { Var, MoneyInput, SetChoice, Step, F, fmtGs } from './MathInputs'
 import '../styles/VentaActivoFijo.css'
 
 const VentaActivoFijo = () => {
@@ -663,6 +664,30 @@ const VentaActivoFijo = () => {
     }))
   }
 
+  const resolver = (fd) => {
+    if (fd.tipoBien === 'inmueble') {
+      return regulaciones.inmueble[fd.tipoContribuyente]?.[fd.esActivoEmpresa] || null
+    }
+    if (fd.tipoContribuyente === 'playa-vehiculos') {
+      return regulaciones.vehiculo['playa-vehiculos']?.[fd.estadoVehiculo]?.['si'] || null
+    }
+    return regulaciones.vehiculo[fd.tipoContribuyente]?.[fd.estadoVehiculo]?.[fd.esActivoEmpresa] || null
+  }
+
+  const setAf = (name) => (value) => setFormData((prev) => ({ ...prev, [name]: value }))
+  const previa = resolver(formData)
+  const baseG = previa ? (formData.monto * previa.porcentaje_gravado) / 100 : 0
+  const baseE = previa ? (formData.monto * previa.porcentaje_exento) / 100 : 0
+  const tasaIva = previa && previa.porcentaje_gravado > 0 ? (parseInt(previa.tasa_iva, 10) || 0) : 0
+  const iva = baseG * (tasaIva / 100)
+  const regimenCorto = {
+    'prestador-servicios': 'servicios',
+    'ire-simple': 'IRE Simple',
+    'ire-general': 'IRE General',
+    'playa-vehiculos': 'playa',
+    'no-contribuyente': 'no contrib.'
+  }[formData.tipoContribuyente]
+
   const calcular = () => {
     setError('')
 
@@ -671,17 +696,7 @@ const VentaActivoFijo = () => {
       return
     }
 
-    let config = null
-
-    if (formData.tipoBien === 'inmueble') {
-      config = regulaciones.inmueble[formData.tipoContribuyente]?.[formData.esActivoEmpresa]
-    } else if (formData.tipoBien === 'vehiculo') {
-      if (formData.tipoContribuyente === 'playa-vehiculos') {
-        config = regulaciones.vehiculo['playa-vehiculos']?.[formData.estadoVehiculo]?.['si']
-      } else {
-        config = regulaciones.vehiculo[formData.tipoContribuyente]?.[formData.estadoVehiculo]?.[formData.esActivoEmpresa]
-      }
-    }
+    const config = resolver(formData)
 
     if (!config) {
       setError('Configuración no encontrada para esta combinación')
@@ -732,109 +747,75 @@ const VentaActivoFijo = () => {
         {error && <div className="error-message">{error}</div>}
 
         {!resultado ? (
-          <form className="venta-form">
-            {/* Tipo de Bien */}
-            <section className="form-section">
-              <h3>Tipo de Bien</h3>
-              <div className="form-group">
-                <label>Seleccionar tipo de bien *</label>
-                <select
-                  name="tipoBien"
-                  value={formData.tipoBien}
-                  onChange={handleChange}
-                  className="select-input"
-                >
-                  <option value="inmueble">Inmueble (Terreno, Casa, Edificio, etc.)</option>
-                  <option value="vehiculo">Vehículo (Automóvil, Camión, etc.)</option>
-                </select>
-              </div>
-            </section>
-
-            {/* Tipo de Contribuyente */}
-            <section className="form-section">
-              <h3>Tipo de Contribuyente / Vendedor</h3>
-              <div className="form-group">
-                <label>Seleccionar régimen tributario *</label>
-                <select
-                  name="tipoContribuyente"
-                  value={formData.tipoContribuyente}
-                  onChange={handleChange}
-                  className="select-input"
-                >
-                  <option value="prestador-servicios">Prestador de Servicios</option>
-                  <option value="ire-simple">IRE SIMPLE</option>
-                  <option value="ire-general">IRE GENERAL</option>
-                  <option value="playa-vehiculos">PLAYA DE VEHÍCULOS</option>
-                  <option value="no-contribuyente">NO CONTRIBUYENTE</option>
-                </select>
-              </div>
-            </section>
-
-            {/* ¿Es Activo de la Empresa? */}
-            {formData.tipoContribuyente !== 'playa-vehiculos' && (
-              <section className="form-section">
-                <h3>¿Es Activo de la Empresa?</h3>
-                <div className="form-group">
-                  <label>Condición del bien *</label>
-                  <select
-                    name="esActivoEmpresa"
-                    value={formData.esActivoEmpresa}
-                    onChange={handleChange}
-                    className="select-input"
-                  >
-                    <option value="no-aplica">No Aplica (Persona Física o No Empresa)</option>
-                    <option value="si">Sí, es activo de la empresa</option>
-                    <option value="no">No, es bien de uso personal</option>
-                  </select>
-                </div>
+          <form className="qm" onSubmit={(e) => { e.preventDefault(); calcular() }}>
+            <div className="qm-vars">
+              <section className="qm-block">
+                <h3 className="qm-legend">Argumentos</h3>
+                <Var sym="bien" label="Tipo de bien" op="∈" wide>
+                  <SetChoice name="af-bien" label="Tipo de bien" value={formData.tipoBien} onChange={setAf('tipoBien')} options={[
+                    { value: 'inmueble', label: 'Inmueble' },
+                    { value: 'vehiculo', label: 'Vehículo' }
+                  ]} />
+                </Var>
+                <Var sym="r" label="Régimen del vendedor" op="∈" wide>
+                  <SetChoice name="af-reg" label="Régimen tributario" value={formData.tipoContribuyente} onChange={setAf('tipoContribuyente')} options={[
+                    { value: 'prestador-servicios', label: 'Prestador de servicios' },
+                    { value: 'ire-simple', label: 'IRE Simple' },
+                    { value: 'ire-general', label: 'IRE General' },
+                    { value: 'playa-vehiculos', label: 'Playa de vehículos' },
+                    { value: 'no-contribuyente', label: 'No contribuyente' }
+                  ]} />
+                </Var>
+                {formData.tipoContribuyente !== 'playa-vehiculos' && (
+                  <Var sym="a" label="¿Activo de la empresa?" op="∈" wide>
+                    <SetChoice name="af-act" label="Condición del bien" value={formData.esActivoEmpresa} onChange={setAf('esActivoEmpresa')} options={[
+                      { value: 'no-aplica', label: 'No aplica' },
+                      { value: 'si', label: 'Sí, activo de la empresa' },
+                      { value: 'no', label: 'No, uso personal' }
+                    ]} />
+                  </Var>
+                )}
+                {formData.tipoBien === 'vehiculo' && (
+                  <Var sym="e" label="Estado del vehículo" op="∈" wide>
+                    <SetChoice name="af-est" label="Estado del vehículo" value={formData.estadoVehiculo} onChange={setAf('estadoVehiculo')} options={[
+                      { value: 'nuevo', label: 'Nuevo' },
+                      { value: 'usado', label: 'Usado' }
+                    ]} />
+                  </Var>
+                )}
               </section>
-            )}
 
-            {/* Estado del Vehículo */}
-            {formData.tipoBien === 'vehiculo' && (
-              <section className="form-section">
-                <h3>Estado del Vehículo</h3>
-                <div className="form-group">
-                  <label>Condición del vehículo *</label>
-                  <select
-                    name="estadoVehiculo"
-                    value={formData.estadoVehiculo}
-                    onChange={handleChange}
-                    className="select-input"
-                  >
-                    <option value="nuevo">Nuevo</option>
-                    <option value="usado">Usado</option>
-                  </select>
-                </div>
+              <section className="qm-block">
+                <h3 className="qm-legend">Monto</h3>
+                <Var sym="M" label="Precio de venta" htmlFor="af-M" unit="₲">
+                  <MoneyInput id="af-M" value={formData.monto} onChange={setAf('monto')} />
+                </Var>
               </section>
-            )}
+            </div>
 
-            {/* Monto */}
-            <section className="form-section">
-              <h3>Monto de la Venta</h3>
-              <div className="form-group">
-                <label>Monto en Guaraníes (₲) *</label>
-                <input
-                  type="number"
-                  name="monto"
-                  value={formData.monto}
-                  onChange={handleMonto}
-                  placeholder="0.00"
-                  className="input-number"
-                  min="0"
-                  step="1000"
-                  required
-                />
+            <aside className="qm-deriv" aria-label="Vista previa">
+              <h3 className="qm-legend">Resultado</h3>
+              <div className="qm-fx">
+                <F t={[{ v: 'f' }, { op: '(' }, { w: formData.tipoBien === 'inmueble' ? 'inmueble' : 'vehículo' }, { op: ',' }, { w: regimenCorto }, { op: ')' }]} />
+                <span className="qm-fx__arrow">→</span>
+                <strong className={previa ? (previa.debe_facturar ? 'tone-ok' : '') : 'tone-err'}>
+                  {previa ? (previa.debe_facturar ? 'Debe facturar' : 'Sin factura obligatoria') : 'Sin regla para esta combinación'}
+                </strong>
               </div>
-            </section>
-
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={calcular}
-            >
-              Calcular
-            </button>
+              {previa && <p className="qm-fx__mode">{previa.modo_calculo}</p>}
+              {previa && (
+                <>
+                  <Step value={fmtGs(baseG)}><F t={[{ v: 'G' }, { op: '=' }, { v: 'M' }, { op: '×' }, { n: `${previa.porcentaje_gravado} %` }]} /></Step>
+                  <Step value={fmtGs(baseE)}><F t={[{ v: 'E' }, { op: '=' }, { v: 'M' }, { op: '×' }, { n: `${previa.porcentaje_exento} %` }]} /></Step>
+                  <Step kind="sum" value={fmtGs(formData.monto)}><F t={[{ v: 'G' }, { op: '+' }, { v: 'E' }, { op: '=' }, { v: 'M' }]} /></Step>
+                  <Step kind="total" value={<>{fmtGs(iva)} <small>₲</small></>}>
+                    <F t={tasaIva ? [{ w: 'IVA' }, { op: '=' }, { v: 'G' }, { op: '×' }, { n: `${tasaIva} %` }] : [{ w: 'IVA' }, { op: '=' }, { n: '0' }, { w: '(exento)' }]} />
+                  </Step>
+                </>
+              )}
+              <p className="qm-deriv__note">{formData.monto ? 'Vista previa en vivo. Calcula para ver normas, requisitos y marco legal.' : 'Ingresa el precio de venta para ver las bases.'}</p>
+              <button type="submit" className="btn btn-primary qm-deriv__go">Calcular</button>
+            </aside>
           </form>
         ) : (
           <div className="resultado-section">

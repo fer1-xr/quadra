@@ -35,6 +35,19 @@ function PageHead({ title, lede, equation, caption, status, children }) {
   )
 }
 
+/** Ecuación en línea (misma notación que el encabezado, a escala de texto). */
+export function Eq({ terms, className = '' }) {
+  return (
+    <span className={`q-eqi ${className}`} aria-hidden="true">
+      {terms.map((t, i) => {
+        if (t.op) return <span key={i} className={`q-eqi__op${'(),'.includes(t.op) ? ' is-tight' : ''}`}>{t.op}</span>
+        if (t.n) return <span key={i} className="q-eqi__n">{t.n}</span>
+        return <span key={i} className="q-eqi__v">{t.v}{t.sub && <sub>{t.sub}</sub>}</span>
+      })}
+    </span>
+  )
+}
+
 /** Franja de cifras: etiqueta arriba, valor en numerales tabulares. */
 export function Figures({ items }) {
   return (

@@ -1,322 +1,302 @@
-import React, { useState, useEffect } from 'react'
-import PageHead, { Figures } from './PageHead'
+import React, { useMemo, useState } from 'react'
+import PageHead from './PageHead'
 import { useCloudCollection } from '../services/useCloudCollection'
-import { Card, CardBody, CardHeader, Button, Input, Checkbox, Chip, Divider } from '@heroui/react'
-import { Plus, Trash2, CheckCircle2, X } from 'lucide-react'
+import { Plus, X, Check } from 'lucide-react'
 import '../styles/TodoDelDia.css'
 
 const CATEGORIAS = [
-  { id: 'tributacion', label: 'Tributación', color: '#FF6B6B' },
-  { id: 'laboral', label: 'Laboral', color: '#4ECDC4' },
-  { id: 'societarios', label: 'Societarios', color: '#45B7D1' },
-  { id: 'contable', label: 'Contable', color: '#FFA07A' },
-  { id: 'financiero', label: 'Financiero', color: '#98D8C8' }
+  { id: 'tributacion', label: 'Tributación' },
+  { id: 'laboral', label: 'Laboral' },
+  { id: 'societarios', label: 'Societarios' },
+  { id: 'contable', label: 'Contable' },
+  { id: 'financiero', label: 'Financiero' }
 ]
 
 const DIAS_SEMANA = [
-  { id: 'lunes', label: 'Lunes' },
-  { id: 'martes', label: 'Martes' },
-  { id: 'miercoles', label: 'Miércoles' },
-  { id: 'jueves', label: 'Jueves' },
-  { id: 'viernes', label: 'Viernes' }
+  { id: 'lunes', label: 'Lunes', corto: 'L' },
+  { id: 'martes', label: 'Martes', corto: 'M' },
+  { id: 'miercoles', label: 'Miércoles', corto: 'X' },
+  { id: 'jueves', label: 'Jueves', corto: 'J' },
+  { id: 'viernes', label: 'Viernes', corto: 'V' }
 ]
+
+const PRIORIDADES = [
+  { id: 'baja', label: 'Baja', nivel: 1 },
+  { id: 'media', label: 'Media', nivel: 2 },
+  { id: 'alta', label: 'Alta', nivel: 3 }
+]
+
+const NIVEL = { baja: 1, media: 2, alta: 3 }
+
+const TAREA_VACIA = {
+  titulo: '',
+  categoria: 'tributacion',
+  hora: '17:00',
+  dia: 'lunes',
+  prioridad: 'media',
+  pasos: [],
+  completada: false
+}
+
+/** Lunes de la semana en curso (sábado y domingo ya miran la semana siguiente). */
+function lunesDeLaSemana(hoy = new Date()) {
+  const d = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())
+  const dow = d.getDay() // 0 dom … 6 sáb
+  const delta = dow === 0 ? 1 : dow === 6 ? 2 : 1 - dow
+  d.setDate(d.getDate() + delta)
+  return d
+}
+
+/** Número de semana ISO-8601. */
+function semanaISO(fecha) {
+  const d = new Date(Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate()))
+  const dia = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dia)
+  const inicio = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  return Math.ceil(((d - inicio) / 86400000 + 1) / 7)
+}
+
+const dd = (n) => String(n).padStart(2, '0')
+
+function Prioridad({ nivel }) {
+  const label = PRIORIDADES[nivel - 1]?.label
+  return (
+    <span className={`wk-prio is-${nivel}`} role="img" aria-label={`Prioridad ${label?.toLowerCase()}`} title={`Prioridad ${label?.toLowerCase()}`}>
+      <i /><i /><i />
+    </span>
+  )
+}
 
 function TodoDelDia() {
   const [tareas, setTareas, syncStatus] = useCloudCollection('tarea', 'quadra_tareas_diarias')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false)
-  const [nuevaTarea, setNuevaTarea] = useState({
-    titulo: '',
-    categoria: 'tributacion',
-    hora: '17:00',
-    dia: 'lunes',
-    prioridad: 'media',
-    pasos: [],
-    completada: false
-  })
-  const [editandoTarea, setEditandoTarea] = useState(null)
-  const [nuevoPaso, setNuevoPaso] = useState('')
+  const [nuevaTarea, setNuevaTarea] = useState(TAREA_VACIA)
+  const [errorTitulo, setErrorTitulo] = useState(false)
 
+  const semana = useMemo(() => {
+    const lunes = lunesDeLaSemana()
+    const hoy = new Date()
+    const hoyKey = `${hoy.getFullYear()}-${hoy.getMonth()}-${hoy.getDate()}`
+    const dias = DIAS_SEMANA.map((dia, i) => {
+      const f = new Date(lunes)
+      f.setDate(lunes.getDate() + i)
+      return { ...dia, fecha: f, esHoy: `${f.getFullYear()}-${f.getMonth()}-${f.getDate()}` === hoyKey }
+    })
+    const viernes = dias[4].fecha
+    const mes = (f) => f.toLocaleDateString('es-PY', { month: 'short' }).replace('.', '')
+    const rango = lunes.getMonth() === viernes.getMonth()
+      ? `${lunes.getDate()}–${viernes.getDate()} ${mes(viernes)}`
+      : `${lunes.getDate()} ${mes(lunes)} – ${viernes.getDate()} ${mes(viernes)}`
+    return { dias, numero: semanaISO(lunes), rango }
+  }, [])
 
-  const agregarTarea = () => {
+  const abrirFormulario = (diaId) => {
+    const hoy = semana.dias.find((d) => d.esHoy)
+    setNuevaTarea({ ...TAREA_VACIA, dia: diaId || hoy?.id || 'lunes' })
+    setErrorTitulo(false)
+    setMostrarFormulario(true)
+  }
+
+  const agregarTarea = (e) => {
+    e?.preventDefault()
     if (!nuevaTarea.titulo.trim()) {
-      alert('Ingresa un título para la tarea')
+      setErrorTitulo(true)
       return
     }
-
-    const tarea = {
-      id: Date.now(),
-      ...nuevaTarea,
-      pasos: []
-    }
-
-    setTareas([...tareas, tarea])
-    setNuevaTarea({
-      titulo: '',
-      categoria: 'tributacion',
-      hora: '17:00',
-      dia: 'lunes',
-      prioridad: 'media',
-      pasos: [],
-      completada: false
-    })
+    setTareas([...tareas, { id: Date.now(), ...nuevaTarea, titulo: nuevaTarea.titulo.trim(), pasos: [] }])
+    setNuevaTarea({ ...TAREA_VACIA, dia: nuevaTarea.dia })
     setMostrarFormulario(false)
   }
 
-  const agregarPaso = (tareaId) => {
-    if (!nuevoPaso.trim()) return
-
-    setTareas(tareas.map(tarea => {
-      if (tarea.id === tareaId) {
-        return {
-          ...tarea,
-          pasos: [...tarea.pasos, { id: Date.now(), texto: nuevoPaso, completado: false }]
-        }
-      }
-      return tarea
-    }))
-    setNuevoPaso('')
-  }
-
-  const completarPaso = (tareaId, pasoId) => {
-    setTareas(tareas.map(tarea => {
-      if (tarea.id === tareaId) {
-        return {
-          ...tarea,
-          pasos: tarea.pasos.map(paso =>
-            paso.id === pasoId ? { ...paso, completado: !paso.completado } : paso
-          )
-        }
-      }
-      return tarea
-    }))
-  }
-
   const completarTarea = (tareaId) => {
-    setTareas(tareas.map(tarea =>
-      tarea.id === tareaId ? { ...tarea, completada: !tarea.completada } : tarea
-    ))
+    setTareas(tareas.map((t) => (t.id === tareaId ? { ...t, completada: !t.completada } : t)))
   }
 
   const eliminarTarea = (tareaId) => {
-    setTareas(tareas.filter(tarea => tarea.id !== tareaId))
+    setTareas(tareas.filter((t) => t.id !== tareaId))
   }
 
-  const getTareasPorDia = (diaId) => {
-    return mostrarCompletadas
-      ? tareas.filter(t => t.dia === diaId && t.completada)
-      : tareas.filter(t => t.dia === diaId && !t.completada)
-  }
+  const ordenar = (a, b) => (a.hora || '').localeCompare(b.hora || '') || (NIVEL[b.prioridad] || 0) - (NIVEL[a.prioridad] || 0)
 
-  const getTareas3Principales = (diaId) => {
-    return getTareasPorDia(diaId).filter(t => t.prioridad === 'alta').slice(0, 3)
-  }
-
-  const getTareasRestantes = (diaId) => {
-    const principales = getTareasPorDia(diaId).filter(t => t.prioridad === 'alta').slice(0, 3)
-    return getTareasPorDia(diaId).filter(t => !principales.includes(t))
-  }
-
-  const getCategoriaInfo = (categoriaId) => {
-    return CATEGORIAS.find(c => c.id === categoriaId)
-  }
-
-  const tareasCompletadas = tareas.filter(t => t.completada).length
-  const tareasPendientes = tareas.filter(t => !t.completada).length
+  const tareasCompletadas = tareas.filter((t) => t.completada).length
+  const tareasPendientes = tareas.length - tareasCompletadas
+  const avance = tareas.length ? Math.round((tareasCompletadas / tareas.length) * 100) : 0
 
   return (
     <div className="todo-del-dia">
       <PageHead
         title="TO DO de la Semana"
         lede="Organiza tus tareas por día, de lunes a viernes."
-        equation={[{ v: 'Pendientes' }, { op: '+' }, { v: 'Completadas' }, { op: '=' }, { n: String(tareasPendientes + tareasCompletadas) }]}
-        caption="tareas de la semana"
+        equation={[{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'N' }, { op: '=' }, { n: `${tareasCompletadas}/${tareas.length}` }]}
+        caption={tareas.length ? `${avance} % de la semana ${semana.numero} · ${semana.rango}` : `semana ${semana.numero} · ${semana.rango}`}
         status={syncStatus}
       />
-      <div className="todo-header">
-        <div className="todo-pestanas">
+
+      <div className="wk-toolbar">
+        <div className="todo-pestanas" role="tablist" aria-label="Filtrar tareas">
           <button
+            role="tab"
+            aria-selected={!mostrarCompletadas}
             className={`pestaña ${!mostrarCompletadas ? 'activa' : ''}`}
             onClick={() => setMostrarCompletadas(false)}
           >
-            Pendientes ({tareasPendientes})
+            Pendientes <span className="wk-tabcount">{tareasPendientes}</span>
           </button>
           <button
+            role="tab"
+            aria-selected={mostrarCompletadas}
             className={`pestaña ${mostrarCompletadas ? 'activa' : ''}`}
             onClick={() => setMostrarCompletadas(true)}
           >
-            Completadas ({tareasCompletadas})
+            Completadas <span className="wk-tabcount">{tareasCompletadas}</span>
           </button>
         </div>
+
+        {!mostrarFormulario && (
+          <button className="btn btn-add-task" onClick={() => abrirFormulario()}>
+            <Plus size={16} strokeWidth={1.8} /> Agregar tarea
+          </button>
+        )}
       </div>
 
-      {/* Formulario para agregar tarea */}
       {mostrarFormulario && (
-        <div className="todo-form">
-          <div className="form-group">
-            <label>Título de la tarea</label>
+        <form className="wk-composer" onSubmit={agregarTarea}>
+          <div className="wk-composer__main">
+            <label className="wk-sr" htmlFor="wk-titulo">Título de la tarea</label>
             <input
+              id="wk-titulo"
+              className={`wk-composer__title ${errorTitulo ? 'is-invalid' : ''}`}
               type="text"
               value={nuevaTarea.titulo}
-              onChange={(e) => setNuevaTarea({ ...nuevaTarea, titulo: e.target.value })}
-              placeholder="Ej: Revisar comprobantes"
+              onChange={(e) => { setNuevaTarea({ ...nuevaTarea, titulo: e.target.value }); setErrorTitulo(false) }}
+              placeholder="Qué hay que hacer — p. ej. Liquidar IVA de octubre"
+              aria-invalid={errorTitulo}
+              aria-describedby={errorTitulo ? 'wk-titulo-err' : undefined}
               autoFocus
             />
+            {errorTitulo && <p id="wk-titulo-err" className="wk-composer__err">Escribe un título para poder agregar la tarea.</p>}
           </div>
 
-          <div className="form-row">
-            <div className="form-group">
-              <label>Categoría</label>
-              <select
-                value={nuevaTarea.categoria}
-                onChange={(e) => setNuevaTarea({ ...nuevaTarea, categoria: e.target.value })}
-              >
-                {CATEGORIAS.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.label}</option>
+          <div className="wk-composer__params">
+            <fieldset className="wk-param">
+              <legend>Día</legend>
+              <div className="wk-seg">
+                {semana.dias.map((d) => (
+                  <label key={d.id} className={`wk-seg__opt ${nuevaTarea.dia === d.id ? 'is-on' : ''}`} title={d.label}>
+                    <input type="radio" name="wk-dia" value={d.id} checked={nuevaTarea.dia === d.id} onChange={() => setNuevaTarea({ ...nuevaTarea, dia: d.id })} />
+                    <span className="wk-seg__k">{d.corto}</span>
+                    <span className="wk-seg__d">{dd(d.fecha.getDate())}</span>
+                  </label>
                 ))}
-              </select>
-            </div>
+              </div>
+            </fieldset>
 
-            <div className="form-group">
-              <label>Día</label>
-              <select
-                value={nuevaTarea.dia}
-                onChange={(e) => setNuevaTarea({ ...nuevaTarea, dia: e.target.value })}
-              >
-                {DIAS_SEMANA.map(dia => (
-                  <option key={dia.id} value={dia.id}>{dia.label}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Prioridad</label>
-              <select
-                value={nuevaTarea.prioridad}
-                onChange={(e) => setNuevaTarea({ ...nuevaTarea, prioridad: e.target.value })}
-              >
-                <option value="baja">Baja</option>
-                <option value="media">Media</option>
-                <option value="alta">Alta</option>
-              </select>
-            </div>
-
-            <div className="form-group">
-              <label>Hora</label>
+            <fieldset className="wk-param">
+              <legend>Hora</legend>
               <input
+                className="wk-time"
                 type="time"
                 value={nuevaTarea.hora}
                 onChange={(e) => setNuevaTarea({ ...nuevaTarea, hora: e.target.value })}
+                aria-label="Hora"
               />
-            </div>
+            </fieldset>
+
+            <fieldset className="wk-param">
+              <legend>Prioridad</legend>
+              <div className="wk-seg">
+                {PRIORIDADES.map((p) => (
+                  <label key={p.id} className={`wk-seg__opt ${nuevaTarea.prioridad === p.id ? 'is-on' : ''}`}>
+                    <input type="radio" name="wk-prio" value={p.id} checked={nuevaTarea.prioridad === p.id} onChange={() => setNuevaTarea({ ...nuevaTarea, prioridad: p.id })} />
+                    <Prioridad nivel={p.nivel} />
+                    <span className="wk-seg__t">{p.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="wk-param wk-param--grow">
+              <legend>Categoría</legend>
+              <div className="wk-cats">
+                {CATEGORIAS.map((c) => (
+                  <label key={c.id} className={`wk-cat cat-${c.id} ${nuevaTarea.categoria === c.id ? 'is-on' : ''}`}>
+                    <input type="radio" name="wk-cat" value={c.id} checked={nuevaTarea.categoria === c.id} onChange={() => setNuevaTarea({ ...nuevaTarea, categoria: c.id })} />
+                    {c.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
           </div>
 
-          <div className="form-buttons">
-            <button className="btn btn-primary" onClick={agregarTarea}>Agregar Tarea</button>
-            <button className="btn btn-secondary" onClick={() => setMostrarFormulario(false)}>Cancelar</button>
+          <div className="wk-composer__actions">
+            <button type="submit" className="btn btn-primary">Agregar tarea</button>
+            <button type="button" className="btn btn-secondary" onClick={() => setMostrarFormulario(false)}>Cancelar</button>
           </div>
-        </div>
+        </form>
       )}
 
-      {/* Botón para mostrar formulario */}
-      {!mostrarFormulario && (
-        <button className="btn btn-add-task" onClick={() => setMostrarFormulario(true)}>
-          <Plus size={16} strokeWidth={1.8} /> Agregar Tarea
-        </button>
-      )}
-
-      {/* Grid de días */}
-      <div className="dias-grid">
-        {DIAS_SEMANA.map(dia => {
-          const tareasDelDia = getTareasPorDia(dia.id)
-          const principales = getTareas3Principales(dia.id)
-          const restantes = getTareasRestantes(dia.id)
+      <div className="wk-board" role="list" aria-label={`Semana ${semana.numero}`}>
+        {semana.dias.map((dia) => {
+          const delDia = tareas.filter((t) => t.dia === dia.id)
+          const hechas = delDia.filter((t) => t.completada).length
+          const visibles = delDia.filter((t) => t.completada === mostrarCompletadas).sort(ordenar)
+          const segmentos = [...delDia].sort((a, b) => Number(b.completada) - Number(a.completada))
 
           return (
-            <div key={dia.id} className="dia-card">
-              <div className="dia-header">
-                <h4>{dia.label}</h4>
-                <span className="contador">{tareasDelDia.length}</span>
+            <section key={dia.id} className={`wk-day ${dia.esHoy ? 'is-today' : ''}`} role="listitem" aria-label={`${dia.label} ${dia.fecha.getDate()}`}>
+              <header className="wk-day__head">
+                <div className="wk-day__name">
+                  <h4>{dia.label}</h4>
+                  <span className="wk-day__date">{dd(dia.fecha.getDate())}.{dd(dia.fecha.getMonth() + 1)}</span>
+                  {dia.esHoy && <span className="wk-day__today">Hoy</span>}
+                </div>
+                <button type="button" className="wk-day__add" onClick={() => abrirFormulario(dia.id)} aria-label={`Agregar tarea el ${dia.label.toLowerCase()}`} title="Agregar tarea">
+                  <Plus size={15} strokeWidth={1.8} />
+                </button>
+              </header>
+
+              <div className="wk-day__meter" aria-label={`${hechas} de ${delDia.length} completadas`}>
+                <span className="wk-day__frac">
+                  <b>{hechas}</b><span>/</span>{delDia.length}
+                </span>
+                <span className="wk-day__segs" aria-hidden="true">
+                  {segmentos.length === 0
+                    ? <i className="is-empty" />
+                    : segmentos.map((t) => <i key={t.id} className={t.completada ? 'is-done' : ''} />)}
+                </span>
               </div>
 
-              {tareasDelDia.length === 0 ? (
-                <div className="tareas-vacio">
-                  <p>Sin tareas</p>
-                </div>
-              ) : (
-                <>
-                  {/* Tareas principales (3 primeras) */}
-                  {principales.length > 0 && (
-                    <div className="tareas-principales">
-                      <span className="label-principales">Prioritarias</span>
-                      {principales.map(tarea => {
-                        const categoriaInfo = getCategoriaInfo(tarea.categoria)
-                        return (
-                          <div key={tarea.id} className={`tarea-item ${tarea.completada ? 'completada' : ''}`}>
-                            <input
-                              type="checkbox"
-                              checked={tarea.completada}
-                              onChange={() => completarTarea(tarea.id)}
-                            />
-                            <div className="tarea-info">
-                              <span className="tarea-titulo">{tarea.titulo}</span>
-                              <div className="tarea-meta">
-                                <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
-                                  {categoriaInfo?.label}
-                                </span>
-                                <span className="tarea-hora">{tarea.hora}</span>
-                              </div>
-                            </div>
-                            <button
-                              className="btn-eliminar"
-                              onClick={() => eliminarTarea(tarea.id)}
-                            >
-                              <X size={14} strokeWidth={1.8} />
-                            </button>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  )}
-
-                  {/* Tareas restantes */}
-                  {restantes.length > 0 && (
-                    <div className="tareas-restantes">
-                      <details>
-                        <summary className="label-restantes">Más ({restantes.length})</summary>
-                        {restantes.map(tarea => {
-                          const categoriaInfo = getCategoriaInfo(tarea.categoria)
-                          return (
-                            <div key={tarea.id} className={`tarea-item ${tarea.completada ? 'completada' : ''}`}>
-                              <input
-                                type="checkbox"
-                                checked={tarea.completada}
-                                onChange={() => completarTarea(tarea.id)}
-                              />
-                              <div className="tarea-info">
-                                <span className="tarea-titulo">{tarea.titulo}</span>
-                                <div className="tarea-meta">
-                                  <span className="categoria-badge" style={{ borderLeftColor: categoriaInfo?.color }}>
-                                    {categoriaInfo?.label}
-                                  </span>
-                                  <span className="tarea-hora">{tarea.hora}</span>
-                                </div>
-                              </div>
-                              <button
-                                className="btn-eliminar"
-                                onClick={() => eliminarTarea(tarea.id)}
-                              >
-                                <X size={14} strokeWidth={1.8} />
-                              </button>
-                            </div>
-                          )
-                        })}
-                      </details>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
+              <ol className="wk-day__list">
+                {visibles.length === 0 && (
+                  <li className="wk-empty">
+                    {mostrarCompletadas ? 'Nada completado' : delDia.length ? 'Todo al día' : 'Sin tareas'}
+                  </li>
+                )}
+                {visibles.map((tarea) => {
+                  const cat = CATEGORIAS.find((c) => c.id === tarea.categoria)
+                  return (
+                    <li key={tarea.id} className={`wk-task cat-${tarea.categoria} ${tarea.completada ? 'is-done' : ''}`}>
+                      <span className="wk-task__time">{tarea.hora || '—'}</span>
+                      <label className="wk-check">
+                        <input type="checkbox" checked={tarea.completada} onChange={() => completarTarea(tarea.id)} aria-label={`Marcar «${tarea.titulo}» como ${tarea.completada ? 'pendiente' : 'completada'}`} />
+                        <span aria-hidden="true"><Check size={11} strokeWidth={2.6} /></span>
+                      </label>
+                      <div className="wk-task__body">
+                        <span className="wk-task__title">{tarea.titulo}</span>
+                        <span className="wk-task__meta">
+                          <span className="wk-task__cat">{cat?.label}</span>
+                          <Prioridad nivel={NIVEL[tarea.prioridad] || 2} />
+                        </span>
+                      </div>
+                      <button type="button" className="wk-task__del" onClick={() => eliminarTarea(tarea.id)} aria-label={`Eliminar «${tarea.titulo}»`} title="Eliminar">
+                        <X size={13} strokeWidth={1.8} />
+                      </button>
+                    </li>
+                  )
+                })}
+              </ol>
+            </section>
           )
         })}
       </div>
