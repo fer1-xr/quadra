@@ -1,11 +1,34 @@
 import React, { useState, useEffect } from 'react'
-import { Card, CardBody, CardHeader, Button, Spinner, Divider, Chip } from '@heroui/react'
-import { BookOpen, Share2, Bookmark } from 'lucide-react'
+import { BookOpen, Share2, Bookmark, BookmarkCheck, Trash2, ArrowLeft } from 'lucide-react'
 import '../styles/LeccionDelDia.css'
+
+// Clave de favoritos por usuario para que cada cuenta tenga su propia lista
+const obtenerClaveFavoritos = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem('quaedra_user') || 'null')
+    const id = user?.id || user?.email
+    return id ? `quadra_lecciones_favoritas_${id}` : 'quadra_lecciones_favoritas'
+  } catch (e) {
+    return 'quadra_lecciones_favoritas'
+  }
+}
+
+const cargarFavoritos = () => {
+  try {
+    const guardados = JSON.parse(localStorage.getItem(obtenerClaveFavoritos()) || '[]')
+    return Array.isArray(guardados) ? guardados : []
+  } catch (e) {
+    return []
+  }
+}
 
 function LeccionDelDia() {
   const [leccion, setLeccion] = useState(null)
+  const [leccionHoy, setLeccionHoy] = useState(null)
   const [diaActual, setDiaActual] = useState('')
+  const [vista, setVista] = useState('hoy') // 'hoy' | 'favoritos'
+  const [favoritos, setFavoritos] = useState(cargarFavoritos)
+  const [aviso, setAviso] = useState('')
 
   // Lecciones disponibles (Lunes a Viernes)
   const lecciones = [
@@ -138,6 +161,7 @@ function LeccionDelDia() {
 
       const leccionDelDia = lecciones.find(l => l.diaNumero === diaParaLeccion)
       setLeccion(leccionDelDia || lecciones[0])
+      setLeccionHoy(leccionDelDia || lecciones[0])
 
       // Obtener nombre del día
       const diasNombre = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
@@ -147,9 +171,136 @@ function LeccionDelDia() {
     obtenerLeccionDelDia()
   }, [])
 
+  useEffect(() => {
+    localStorage.setItem(obtenerClaveFavoritos(), JSON.stringify(favoritos))
+  }, [favoritos])
+
+  useEffect(() => {
+    if (!aviso) return
+    const t = setTimeout(() => setAviso(''), 2500)
+    return () => clearTimeout(t)
+  }, [aviso])
+
+  const esFavorito = (l) => !!l && favoritos.some(f => f.diaNumero === l.diaNumero)
+
+  const alternarFavorito = (l) => {
+    if (esFavorito(l)) {
+      setFavoritos(prev => prev.filter(f => f.diaNumero !== l.diaNumero))
+      setAviso('Lección quitada de favoritos')
+    } else {
+      setFavoritos(prev => [{ diaNumero: l.diaNumero, guardadoEn: new Date().toISOString() }, ...prev])
+      setAviso('Lección guardada en favoritos')
+    }
+  }
+
+  const compartir = async (l) => {
+    const texto = `${l.titulo} — Lección del día en Quadra Academy`
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: l.titulo, text: texto })
+      } else {
+        await navigator.clipboard.writeText(texto)
+        setAviso('Título copiado al portapapeles')
+      }
+    } catch (e) {
+      // El usuario canceló o el navegador bloqueó la acción
+    }
+  }
+
+  const abrirLeccion = (l) => {
+    setLeccion(l)
+    setVista('hoy')
+  }
+
+  const volverAHoy = () => {
+    setLeccion(leccionHoy)
+    setVista('hoy')
+  }
+
+  const leccionesFavoritas = favoritos
+    .map(f => {
+      const l = lecciones.find(x => x.diaNumero === f.diaNumero)
+      return l ? { ...l, guardadoEn: f.guardadoEn } : null
+    })
+    .filter(Boolean)
+
+  const formatearFecha = (iso) => {
+    try {
+      return new Date(iso).toLocaleDateString('es-PY', { day: 'numeric', month: 'short', year: 'numeric' })
+    } catch (e) {
+      return ''
+    }
+  }
+
+  const viendoOtraLeccion = leccion && leccionHoy && leccion.diaNumero !== leccionHoy.diaNumero
+
   return (
     <div className="leccion-del-dia-container">
-      {leccion && (
+      <div className="leccion-tabs" role="tablist">
+        <button
+          role="tab"
+          aria-selected={vista === 'hoy'}
+          className={`leccion-tab ${vista === 'hoy' ? 'active' : ''}`}
+          onClick={volverAHoy}
+        >
+          <BookOpen size={16} /> Lección de hoy
+        </button>
+        <button
+          role="tab"
+          aria-selected={vista === 'favoritos'}
+          className={`leccion-tab ${vista === 'favoritos' ? 'active' : ''}`}
+          onClick={() => setVista('favoritos')}
+        >
+          <Bookmark size={16} /> Mis favoritos
+          <span className="leccion-tab-count">{leccionesFavoritas.length}</span>
+        </button>
+      </div>
+
+      {aviso && <div className="leccion-aviso" role="status">{aviso}</div>}
+
+      {vista === 'favoritos' && (
+        <section className="leccion-favoritos">
+          {leccionesFavoritas.length === 0 ? (
+            <div className="favoritos-vacio">
+              <Bookmark size={32} />
+              <h3>Aún no tienes lecciones guardadas</h3>
+              <p>Cuando una lección te resulte útil, pulsa «Guardar como favorito» y la encontrarás aquí para releerla cuando quieras.</p>
+              <button className="btn btn-primary" onClick={volverAHoy}>Ir a la lección de hoy</button>
+            </div>
+          ) : (
+            <ul className="favoritos-lista">
+              {leccionesFavoritas.map(l => (
+                <li key={l.diaNumero} className="favorito-item">
+                  <button className="favorito-abrir" onClick={() => abrirLeccion(l)}>
+                    <div className="favorito-imagen" style={{ backgroundImage: `url(${l.imagen})` }} />
+                    <div className="favorito-info">
+                      <span className="favorito-dia">{l.dia}</span>
+                      <h3 className="favorito-titulo">{l.titulo}</h3>
+                      {l.guardadoEn && <span className="favorito-fecha">Guardado el {formatearFecha(l.guardadoEn)}</span>}
+                    </div>
+                  </button>
+                  <button
+                    className="favorito-quitar"
+                    onClick={() => alternarFavorito(l)}
+                    aria-label={`Quitar ${l.titulo} de favoritos`}
+                    title="Quitar de favoritos"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      )}
+
+      {vista === 'hoy' && viendoOtraLeccion && (
+        <button className="leccion-volver" onClick={volverAHoy}>
+          <ArrowLeft size={16} /> Volver a la lección de hoy
+        </button>
+      )}
+
+      {vista === 'hoy' && leccion && (
         <article className="leccion-blog">
           {/* Imagen de fondo */}
           <div className="leccion-header" style={{ backgroundImage: `url(${leccion.imagen})` }}>
@@ -178,8 +329,18 @@ function LeccionDelDia() {
               </div>
 
               <div className="footer-actions">
-                <button className="btn btn-primary">Guardar como favorito </button>
-                <button className="btn btn-secondary">Compartir </button>
+                <button
+                  className={`btn btn-primary ${esFavorito(leccion) ? 'is-saved' : ''}`}
+                  onClick={() => alternarFavorito(leccion)}
+                  aria-pressed={esFavorito(leccion)}
+                >
+                  {esFavorito(leccion)
+                    ? <><BookmarkCheck size={16} /> Guardado en favoritos</>
+                    : <><Bookmark size={16} /> Guardar como favorito</>}
+                </button>
+                <button className="btn btn-secondary" onClick={() => compartir(leccion)}>
+                  <Share2 size={16} /> Compartir
+                </button>
               </div>
             </div>
           </div>
