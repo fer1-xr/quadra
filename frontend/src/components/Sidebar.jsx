@@ -67,8 +67,8 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
     label: 'Agenda',
     items: [
       { id: 'leccion', label: 'Lección del Día', icon: BookOpen },
-      { id: 'todo', label: 'TO DO del Día', icon: CheckSquare },
-      { id: 'metas', label: 'Metas Anuales', icon: Target }
+      { id: 'todo', label: 'Tareas del Día', icon: CheckSquare },
+      { id: 'metas', label: 'Metas y Objetivos', icon: Target }
     ]
   }
 

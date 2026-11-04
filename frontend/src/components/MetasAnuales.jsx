@@ -310,9 +310,9 @@ function MetasAnuales() {
       )}
 
       <PageHead
-        title={`Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}`}
+        title="Metas y Objetivos"
         lede="Establece y alcanza tus objetivos."
-        equation={[{ v: 'Avance' }, { op: '=' }, { v: 'Completadas' }, { op: '÷' }, { v: 'Metas' }]}
+        equation={[{ n: `${metasCompletadas} de ${metasFiltradas.length} ` }, { v: 'metas cumplidas' }]}
         status={syncStatus}
         caption={metasFiltradas.length ? `${Math.round((metasCompletadas / metasFiltradas.length) * 100)} % del período` : 'sin metas en el período'}
       />

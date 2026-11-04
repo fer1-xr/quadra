@@ -253,8 +253,8 @@ function Dashboard({ user, onLogout }) {
     seleccionar: 'Clientes',
     historial: 'Historial',
     leccion: 'Lección del Día',
-    todo: 'TO DO del Día',
-    metas: 'Metas Anuales',
+    todo: 'Tareas del Día',
+    metas: 'Metas y Objetivos',
     rg90: 'Conciliación RG90',
     'rg90-results': 'Resultados de Conciliación',
     bancaria: 'Conciliación Bancaria',
@@ -282,8 +282,8 @@ function Dashboard({ user, onLogout }) {
   const accesos = [
     { id: 'seleccionar', title: 'Clientes', desc: 'Elegí un contribuyente y entrá a su espacio de trabajo', icon: Briefcase, eq: [{ v: 'RUC' }, { op: '→' }, { v: 'Espacio' }], destacado: true },
     { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
-    { id: 'todo', title: 'TO DO del Día', desc: 'Tus tareas de hoy y del resto de la semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'hoy' }] },
-    { id: 'metas', title: 'Metas Anuales', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'M' }] },
+    { id: 'todo', title: 'Tareas del Día', desc: 'Tus tareas de hoy y del resto de la semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'hoy' }] },
+    { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance en %' }] },
     { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, eq: [{ op: 'Σ' }, { v: 'Honorarios' }] }
   ]
 
@@ -314,8 +314,8 @@ function Dashboard({ user, onLogout }) {
       group: 'Agenda',
       items: [
         { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
-        { id: 'todo', title: 'TO DO de la Semana', desc: 'Tareas por día, de lunes a viernes', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
-        { id: 'metas', title: 'Metas Anuales', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'M' }] }
+        { id: 'todo', title: 'Tareas de la Semana', desc: 'Tareas por día, de lunes a viernes', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
+        { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance en %' }] }
       ]
     },
     {
@@ -454,7 +454,7 @@ function Dashboard({ user, onLogout }) {
                         <ArrowRight size={16} strokeWidth={1.8} />
                       </button>
                       <button type="button" className="q-btn q-btn--ghost" onClick={() => handleNavigate('todo')}>
-                        Ver TO DO del Día
+                        Ver Tareas del Día
                       </button>
                     </div>
                   </div>

@@ -126,9 +126,9 @@ function TodoDelDia() {
   return (
     <div className="todo-del-dia">
       <PageHead
-        title="TO DO de la Semana"
+        title="Tareas de la Semana"
         lede="Organiza tus tareas por día, de lunes a viernes."
-        equation={[{ v: 'Avance' }, { op: '=' }, { v: 'C' }, { op: '÷' }, { v: 'N' }, { op: '=' }, { n: `${tareasCompletadas}/${tareas.length}` }]}
+        equation={[{ n: `${tareasCompletadas} de ${tareas.length} ` }, { v: 'tareas hechas' }]}
         caption={tareas.length ? `${avance} % de la semana ${semana.numero} · ${semana.rango}` : `semana ${semana.numero} · ${semana.rango}`}
         status={syncStatus}
       />
