@@ -6,6 +6,7 @@ import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner,
 import { Plus, Trash2, Download, Target, X, GraduationCap, Briefcase, Wallet } from 'lucide-react'
 import '../styles/MetasAnuales.css'
 import Toast from './Toast'
+import MetasAvanceGeneral from './MetasAvanceGeneral'
 
 const TIPOS_META = [
   { id: 'educativo', label: 'Educativo', icon: GraduationCap, color: '#12B886' },
@@ -239,6 +240,7 @@ function MetasAnuales() {
     const meta = {
       id: editandoId || Date.now(),
       ...nuevaMeta,
+      creadaEn: nuevaMeta.creadaEn || new Date().toISOString(),
       montoFinanciero: nuevaMeta.tipo === 'financiero' ? parseFloat(nuevaMeta.montoFinanciero) : null
     }
 
@@ -339,6 +341,9 @@ function MetasAnuales() {
           Exportar PDF
         </button>
       </div>
+
+      {/* Avance general: todas las metas, ambos períodos */}
+      {metas.length > 0 && <MetasAvanceGeneral metas={metas} />}
 
       {/* Gráficos de Progreso */}
       {metasFiltradas.length > 0 && <MetasCharts metas={metasFiltradas} />}
