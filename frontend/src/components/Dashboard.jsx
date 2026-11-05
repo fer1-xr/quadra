@@ -16,6 +16,7 @@ import LeccionDelDia from './LeccionDelDia'
 import GestionClientes from './GestionClientes'
 import SeleccionarContribuyente from './SeleccionarContribuyente'
 import Historial from './Historial'
+import MiCuenta from './MiCuenta'
 import GuardarEnNube from './GuardarEnNube'
 import { ContribuyenteContext } from '../services/historialService'
 import PageHead, { Figures, Eq } from './PageHead'
@@ -45,7 +46,7 @@ const VISTAS_CONTRIBUYENTE = new Set([
 const FLUJO_VACIO = { periodo: '', ingresos: '', egresos: '', saldo: '', inversiones: '', financiamientos: '' }
 const num = (v) => Number(v) || 0
 
-function Dashboard({ user, onLogout }) {
+function Dashboard({ user, onLogout, onUserUpdate }) {
   const [contribuyente, setContribuyente] = useState(() => leerJSON(CONTRIBUYENTE_KEY))
   const [libroFiles, setLibroFiles] = useState([])
   const [rg90Files, setRg90Files] = useState([])
@@ -826,25 +827,11 @@ function Dashboard({ user, onLogout }) {
             )}
 
             {view === 'cuenta' && (
-              <section className="q-panel q-panel--narrow">
-                <span className="q-card__icon q-card__icon--serif">{(user?.name || user?.email || 'Q').charAt(0).toUpperCase()}</span>
-                <h2 className="q-card__title">Mi Cuenta</h2>
-                <dl className="q-dl">
-                  <div>
-                    <dt>Email</dt>
-                    <dd>{user?.email}</dd>
-                  </div>
-                  {user?.name && (
-                    <div>
-                      <dt>Nombre</dt>
-                      <dd>{user.name}</dd>
-                    </div>
-                  )}
-                </dl>
-                <button type="button" className="q-btn q-btn--primary" onClick={() => setShowChangePassword(true)}>
-                  <KeyRound size={16} strokeWidth={1.8} /> Cambiar contraseña
-                </button>
-              </section>
+              <MiCuenta
+                user={user}
+                onUserUpdate={onUserUpdate}
+                onChangePassword={() => setShowChangePassword(true)}
+              />
             )}
 
             {view === 'todo' && (

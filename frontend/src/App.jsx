@@ -5,6 +5,7 @@ import Register from './components/Register'
 import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import leccionScheduler from './services/leccionScheduler'
+import { authService } from './services/authService'
 import './App.css'
 
 function App() {
@@ -40,13 +41,13 @@ function App() {
   }, [])
 
   const handleLogin = (userData) => {
-    setUser(userData)
+    setUser(authService.getUser() || userData)
     setAuthPage('login')
     leccionScheduler.start()
   }
 
   const handleRegister = (userData) => {
-    setUser(userData)
+    setUser(authService.getUser() || userData)
     setAuthPage('login')
     leccionScheduler.start()
   }
@@ -71,7 +72,7 @@ function App() {
   }
 
   if (user) {
-    return <Dashboard user={user} onLogout={handleLogout} />
+    return <Dashboard user={user} onLogout={handleLogout} onUserUpdate={setUser} />
   }
 
   return (

@@ -1,0 +1,198 @@
+/* Mi Cuenta: perfil, foto, antigüedad y cambio de plan */
+
+.q-cuenta { display: grid; gap: 22px; max-width: 920px; }
+
+.q-cuenta__perfil {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  column-gap: 22px;
+  max-width: none;
+}
+.q-cuenta__perfil > .q-cuenta__aviso,
+.q-cuenta__perfil > .q-dl,
+.q-cuenta__perfil > .q-btn { grid-column: 1 / -1; }
+.q-cuenta__perfil > .q-btn { justify-self: start; }
+
+/* foto */
+.q-cuenta__foto { position: relative; width: 96px; height: 96px; }
+.q-cuenta__avatar {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 50%;
+  font-family: var(--q-serif);
+  font-style: italic;
+  font-size: 40px;
+  color: var(--q-accent);
+  background: var(--q-accent-bg);
+  border: 1px solid var(--q-line);
+}
+.q-cuenta__avatar img { width: 100%; height: 100%; object-fit: cover; }
+.q-cuenta__foto-btn {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--q-surface-2);
+  border-radius: 50%;
+  color: var(--q-action-fg);
+  background: var(--q-action);
+  cursor: pointer;
+  transition: background-color 160ms ease, transform 160ms var(--q-ease);
+}
+.q-cuenta__foto-btn:hover:not(:disabled) { background: var(--q-action-hover); }
+.q-cuenta__foto-btn:active:not(:disabled) { transform: scale(0.94); }
+.q-cuenta__foto-btn:disabled { opacity: 0.6; cursor: progress; }
+
+/* identidad */
+.q-cuenta__ident { display: grid; gap: 4px; min-width: 0; }
+.q-cuenta__nombre {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+.q-cuenta__edit {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--q-line);
+  border-radius: 8px;
+  color: var(--q-ink-3);
+  background: transparent;
+  cursor: pointer;
+}
+.q-cuenta__edit:hover { color: var(--q-accent); border-color: var(--q-accent); }
+.q-cuenta__email { font-size: 14px; color: var(--q-ink-3); }
+.q-cuenta__foto-acciones { display: flex; gap: 14px; margin-top: 4px; }
+.q-cuenta__link {
+  padding: 0;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--q-accent);
+  background: none;
+  cursor: pointer;
+}
+.q-cuenta__link:hover:not(:disabled) { text-decoration: underline; }
+.q-cuenta__link:disabled { cursor: progress; opacity: 0.7; }
+.q-cuenta__link--muted { color: var(--q-ink-3); }
+
+.q-cuenta__nombre-form { display: grid; gap: 8px; }
+.q-cuenta__nombre-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.q-cuenta__nombre-row .q-input { flex: 1 1 200px; }
+
+.q-cuenta__btn-sec { color: var(--q-ink); background: transparent; border-color: var(--q-line); }
+.q-cuenta__btn-sec:hover:not(:disabled) { border-color: var(--q-ink-3); }
+.q-cuenta__btn-sec:disabled { color: var(--q-ink-3); cursor: default; }
+
+/* avisos */
+.q-cuenta__aviso {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 10px 14px;
+  border: 1px solid;
+  border-radius: 10px;
+  font-size: 13.5px;
+}
+.q-cuenta__aviso button { display: grid; padding: 2px; border: 0; color: inherit; background: none; cursor: pointer; }
+.q-cuenta__aviso--ok { color: var(--q-ok); background: var(--q-ok-bg); border-color: var(--q-ok-line); }
+.q-cuenta__aviso--err { color: var(--q-err); background: var(--q-err-bg); border-color: var(--q-err-line); }
+
+/* datos */
+.q-cuenta__datos { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); column-gap: 24px; }
+.q-cuenta__datos dd { display: grid; gap: 4px; }
+.q-cuenta__desde { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--q-ink-3); }
+
+/* planes */
+.q-cuenta__planes { max-width: none; }
+.q-cuenta__sub { font-size: 14px; color: var(--q-ink-2); }
+.q-cuenta__plan-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 14px;
+  width: 100%;
+  margin-top: 18px;
+}
+.q-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid var(--q-line);
+  border-radius: 14px;
+  background: var(--q-surface);
+}
+.q-plan.is-current { border-color: var(--q-accent); box-shadow: 0 0 0 3px var(--q-accent-bg); }
+.q-plan__badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--q-accent);
+  background: var(--q-accent-bg);
+}
+.q-plan__nombre { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+.q-plan__desc { font-size: 13px; color: var(--q-ink-3); }
+.q-plan__precio { margin: 6px 0 4px; font-size: 13px; color: var(--q-ink-3); }
+.q-plan__precio .q-mono { font-family: var(--q-mono); font-size: 20px; font-weight: 600; color: var(--q-ink); }
+.q-plan__features { display: grid; gap: 6px; margin: 4px 0 16px; padding: 0; list-style: none; font-size: 13px; color: var(--q-ink-2); }
+.q-plan__features li { display: flex; align-items: flex-start; gap: 7px; }
+.q-plan__features svg { flex-shrink: 0; margin-top: 3px; color: var(--q-ok); }
+.q-plan .q-btn { margin-top: auto; width: 100%; }
+
+/* confirmación de cambio de plan */
+.q-cuenta__modal-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(6, 17, 31, 0.45);
+}
+.q-cuenta__modal {
+  display: grid;
+  gap: 12px;
+  width: min(460px, 100%);
+  padding: 26px;
+  border: 1px solid var(--q-line);
+  border-radius: 16px;
+  color: var(--q-ink);
+  background: var(--q-surface-2);
+  box-shadow: var(--q-shadow-lift);
+  animation: q-rise 280ms var(--q-ease) both;
+}
+.q-cuenta__modal h3 { font-size: 19px; font-weight: 600; letter-spacing: -0.015em; }
+.q-cuenta__modal p { font-size: 14px; line-height: 1.55; color: var(--q-ink-2); }
+.q-cuenta__modal-warn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--q-warn) !important;
+  background: color-mix(in srgb, var(--q-warn) 10%, transparent);
+}
+.q-cuenta__modal-acciones { display: flex; justify-content: flex-end; gap: 8px; margin-top: 6px; }
+
+@media (max-width: 560px) {
+  .q-cuenta__perfil { grid-template-columns: 1fr; row-gap: 16px; }
+}

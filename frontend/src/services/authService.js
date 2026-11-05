@@ -1,5 +1,15 @@
 import { supabase } from './supabaseClient'
 
+// Forma del usuario que se guarda en localStorage y recibe la app
+const toLocalUser = (u) => ({
+  id: u.id,
+  email: u.email,
+  name: u.user_metadata?.name || u.email.split('@')[0],
+  avatar_url: u.user_metadata?.avatar_url || null,
+  plan: u.user_metadata?.plan || 'basico',
+  created_at: u.created_at,
+})
+
 export const authService = {
   // Registro de nuevo usuario
   signup: async (email, password, name) => {
@@ -52,11 +62,7 @@ export const authService = {
       // Guardar sesión
       if (data.session) {
         localStorage.setItem('quaedra_token', data.session.access_token)
-        localStorage.setItem('quaedra_user', JSON.stringify({
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.user_metadata?.name || email.split('@')[0],
-        }))
+        localStorage.setItem('quaedra_user', JSON.stringify(toLocalUser(data.user)))
       }
 
       return data
@@ -124,6 +130,33 @@ export const authService = {
   // Verificar si está autenticado
   isAuthenticated: () => {
     return !!localStorage.getItem('quaedra_token')
+  },
+
+  // Perfil: datos de la cuenta en Supabase (fecha de alta, nombre, foto, plan)
+  getProfile: async () => {
+    const { data, error } = await supabase.auth.getUser()
+    if (error || !data?.user) throw new Error(error?.message || 'No se pudo leer la cuenta')
+    return toLocalUser(data.user)
+  },
+
+  // Actualiza nombre, foto o plan (user_metadata) y la copia local
+  updateProfile: async (changes) => {
+    const { data, error } = await supabase.auth.updateUser({ data: changes })
+    if (error) throw new Error(error.message || 'No se pudieron guardar los cambios')
+    const user = toLocalUser(data.user)
+    localStorage.setItem('quaedra_user', JSON.stringify(user))
+    return user
+  },
+
+  // Sube la foto de perfil al bucket "avatars" y devuelve su URL pública
+  uploadAvatar: async (userId, blob) => {
+    const path = `${userId}/avatar-${Date.now()}.jpg`
+    const { error } = await supabase.storage
+      .from('avatars')
+      .upload(path, blob, { contentType: 'image/jpeg', upsert: true })
+    if (error) throw new Error(error.message || 'No se pudo subir la foto')
+    const { data } = supabase.storage.from('avatars').getPublicUrl(path)
+    return data.publicUrl
   },
 
   // Obtener sesión actual

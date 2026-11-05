@@ -226,7 +226,9 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
             className={`q-nav-item ${currentView === 'cuenta' ? 'is-active' : ''}`}
             onClick={() => handleNavigate('cuenta')}
           >
-            <span className="q-avatar" aria-hidden="true">{initial}</span>
+            <span className="q-avatar" aria-hidden="true">
+              {user?.avatar_url ? <img src={user.avatar_url} alt="" /> : initial}
+            </span>
             <span className="q-sidebar__user">
               <span>Mi Cuenta</span>
               {displayName && <small>{displayName}</small>}
