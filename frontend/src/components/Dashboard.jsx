@@ -57,6 +57,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   const [error, setError] = useState('')
   const [sessionId, setSessionId] = useState(null)
   const [view, setView] = useState('inicio')
+  const [preseleccion, setPreseleccion] = useState(null)
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
   const [marangatuInputCount, setMarangatuInputCount] = useState(1)
@@ -230,7 +231,18 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     localStorage.setItem(CONTRIBUYENTE_KEY, JSON.stringify(datos))
     localStorage.setItem(ULTIMO_CONTRIBUYENTE_KEY, JSON.stringify(datos))
     setContribuyente(datos)
+    setPreseleccion(null)
     setView('inicio')
+  }
+
+  // Desde Gestión de Clientes: abrir el selector con ese cliente ya elegido
+  const trabajarEnCliente = (clienteId) => {
+    localStorage.removeItem(CONTRIBUYENTE_KEY)
+    setContribuyente(null)
+    setDiscrepancies([])
+    setSessionId(null)
+    setPreseleccion(clienteId)
+    setView('seleccionar')
   }
 
   const salir = () => {
@@ -244,6 +256,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     setContribuyente(null)
     setDiscrepancies([])
     setSessionId(null)
+    setPreseleccion(null)
     setView('seleccionar')
   }
 
@@ -405,7 +418,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
 
             {view === 'seleccionar' && (
               <SeleccionarContribuyente
-                previo={leerJSON(ULTIMO_CONTRIBUYENTE_KEY)}
+                key={preseleccion ?? 'ultimo'}
+                previo={preseleccion ? { ...(leerJSON(ULTIMO_CONTRIBUYENTE_KEY) || {}), clienteId: preseleccion, sucursal: undefined } : leerJSON(ULTIMO_CONTRIBUYENTE_KEY)}
                 onIngresar={ingresarContribuyente}
                 onGestionarClientes={() => setView('clientes')}
               />
@@ -871,7 +885,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             )}
 
             {view === 'clientes' && (
-              <GestionClientes />
+              <GestionClientes onTrabajar={trabajarEnCliente} />
             )}
           </div>
         </main>

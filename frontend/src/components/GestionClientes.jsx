@@ -4,67 +4,106 @@ import { useCloudCollection } from '../services/useCloudCollection'
 import * as XLSX from 'xlsx'
 import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
-import { Plus, Edit2, Trash2, Download, Users, X, Pencil, Check } from 'lucide-react'
+import { Plus, Edit2, Trash2, Download, Users, X, Pencil, Check, LogIn } from 'lucide-react'
 import '../styles/GestionClientes.css'
 
-const TIPOS_IMPUESTO = [
+// Impuestos vigentes en Paraguay
+export const TIPOS_IMPUESTO = [
   { id: 'iva', label: 'IVA' },
-  { id: 'mre', label: 'MRE' },
-  { id: 'ipc', label: 'IPC' },
-  { id: 'exento', label: 'Exento' },
-  { id: 'monotributo', label: 'Monotributo' }
+  { id: 'irp', label: 'IRP' },
+  { id: 'irp_rsp', label: 'IRP Servicios Profesionales' },
+  { id: 'irp_rgc', label: 'IRP Ganancia de Capital' },
+  { id: 'ire_simple', label: 'IRE Simple' },
+  { id: 'ire_resimple', label: 'IRE Resimple' },
+  { id: 'ire_general', label: 'IRE General' }
 ]
 
-function GestionClientes() {
+// Valores de la lista anterior: se siguen mostrando en clientes ya cargados
+// y se descartan al editar el cliente.
+const IMPUESTOS_ANTERIORES = {
+  mre: 'MRE',
+  ipc: 'IPC',
+  exento: 'Exento',
+  monotributo: 'Monotributo'
+}
+
+export const impuestoLabel = (id) => (
+  TIPOS_IMPUESTO.find((t) => t.id === id)?.label || IMPUESTOS_ANTERIORES[id] || id
+)
+
+export const SUCURSAL_INICIAL = { codigo: '001', nombre: 'Casa matriz' }
+
+const CLIENTE_VACIO = {
+  razonSocial: '',
+  ruc: '',
+  sena: '',
+  impuestos: ['iva'],
+  sucursales: [SUCURSAL_INICIAL],
+  alDia: false,
+  honorarios: '',
+  pagoAlDia: false,
+  facturado: false
+}
+
+// Los clientes cargados antes tenían un solo `tipoImpuesto` y ninguna sucursal.
+export const impuestosDe = (c) => (
+  Array.isArray(c?.impuestos) ? c.impuestos : (c?.tipoImpuesto ? [c.tipoImpuesto] : [])
+)
+export const sucursalesDe = (c) => (
+  Array.isArray(c?.sucursales) && c.sucursales.length ? c.sucursales : [SUCURSAL_INICIAL]
+)
+
+function GestionClientes({ onTrabajar }) {
   const [clientes, setClientes, syncStatus] = useCloudCollection('cliente', 'quadra_clientes')
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
   const [busqueda, setBusqueda] = useState('')
-  const [nuevoCliente, setNuevoCliente] = useState({
-    razonSocial: '',
-    ruc: '',
-    sena: '',
-    tipoImpuesto: 'iva',
-    alDia: false,
-    honorarios: '',
-    pagoAlDia: false,
-    facturado: false
-  })
-
+  const [nuevoCliente, setNuevoCliente] = useState(CLIENTE_VACIO)
 
   const agregarOActualizarCliente = () => {
     if (!nuevoCliente.razonSocial.trim() || !nuevoCliente.ruc.trim()) {
       alert('Completa razón social y RUC')
       return
     }
+    if (nuevoCliente.impuestos.length === 0) {
+      alert('Marcá al menos un impuesto')
+      return
+    }
+    const sucursales = nuevoCliente.sucursales
+      .map((s) => ({ codigo: s.codigo.trim(), nombre: s.nombre.trim() }))
+      .filter((s) => s.codigo || s.nombre)
+    if (sucursales.length === 0) {
+      alert('Cargá al menos una sucursal')
+      return
+    }
+    if (sucursales.some((s) => !s.codigo)) {
+      alert('Cada sucursal necesita un código (ej: 001)')
+      return
+    }
+    if (new Set(sucursales.map((s) => s.codigo)).size !== sucursales.length) {
+      alert('Hay códigos de sucursal repetidos')
+      return
+    }
+    const datos = { ...nuevoCliente, sucursales, tipoImpuesto: nuevoCliente.impuestos[0] }
 
     if (editandoId) {
       setClientes(clientes.map(c =>
-        c.id === editandoId ? { ...nuevoCliente, id: editandoId } : c
+        c.id === editandoId ? { ...datos, id: editandoId } : c
       ))
       setEditandoId(null)
     } else {
       setClientes([...clientes, {
         id: Date.now(),
-        ...nuevoCliente
+        ...datos
       }])
     }
 
-    setNuevoCliente({
-      razonSocial: '',
-      ruc: '',
-      sena: '',
-      tipoImpuesto: 'iva',
-      alDia: false,
-      honorarios: '',
-      pagoAlDia: false,
-      facturado: false
-    })
+    setNuevoCliente(CLIENTE_VACIO)
     setMostrarFormulario(false)
   }
 
   const editarCliente = (cliente) => {
-    setNuevoCliente(cliente)
+    setNuevoCliente({ ...CLIENTE_VACIO, ...cliente, impuestos: impuestosDe(cliente).filter((id) => TIPOS_IMPUESTO.some((t) => t.id === id)), sucursales: sucursalesDe(cliente) })
     setEditandoId(cliente.id)
     setMostrarFormulario(true)
   }
@@ -76,16 +115,7 @@ function GestionClientes() {
   }
 
   const cancelarEdicion = () => {
-    setNuevoCliente({
-      razonSocial: '',
-      ruc: '',
-      sena: '',
-      tipoImpuesto: 'iva',
-      alDia: false,
-      honorarios: '',
-      pagoAlDia: false,
-      facturado: false
-    })
+    setNuevoCliente(CLIENTE_VACIO)
     setEditandoId(null)
     setMostrarFormulario(false)
   }
@@ -109,7 +139,34 @@ function GestionClientes() {
   }
 
   const getTipoImpuestoLabel = (id) => {
-    return TIPOS_IMPUESTO.find(t => t.id === id)?.label || id
+    return impuestoLabel(id)
+  }
+  const impuestosLabel = (c) => impuestosDe(c).map(getTipoImpuestoLabel).join(', ')
+  const sucursalesLabel = (c) => sucursalesDe(c).map((s) => `${s.codigo}${s.nombre ? ` · ${s.nombre}` : ''}`).join(', ')
+
+  const toggleImpuesto = (id) => {
+    const actuales = nuevoCliente.impuestos
+    setNuevoCliente({
+      ...nuevoCliente,
+      impuestos: actuales.includes(id) ? actuales.filter((x) => x !== id) : [...actuales, id]
+    })
+  }
+
+  const cambiarSucursal = (i, campo, valor) => {
+    setNuevoCliente({
+      ...nuevoCliente,
+      sucursales: nuevoCliente.sucursales.map((s, j) => (j === i ? { ...s, [campo]: valor } : s))
+    })
+  }
+
+  const agregarSucursal = () => {
+    const usados = nuevoCliente.sucursales.map((s) => parseInt(s.codigo, 10)).filter((n) => !isNaN(n))
+    const siguiente = String((usados.length ? Math.max(...usados) : 0) + 1).padStart(3, '0')
+    setNuevoCliente({ ...nuevoCliente, sucursales: [...nuevoCliente.sucursales, { codigo: siguiente, nombre: '' }] })
+  }
+
+  const quitarSucursal = (i) => {
+    setNuevoCliente({ ...nuevoCliente, sucursales: nuevoCliente.sucursales.filter((_, j) => j !== i) })
   }
 
   const exportarAExcel = () => {
@@ -117,7 +174,8 @@ function GestionClientes() {
       'Razón Social': c.razonSocial,
       'RUC': c.ruc,
       'Seña': c.sena || '',
-      'Tipo Impuesto': getTipoImpuestoLabel(c.tipoImpuesto),
+      'Impuestos': impuestosLabel(c),
+      'Sucursales': sucursalesLabel(c),
       '¿Al día?': c.alDia ? 'Sí' : 'No',
       'Honorarios (GS)': c.honorarios || '',
       '¿Pago al día?': c.pagoAlDia ? 'Sí' : 'No',
@@ -129,7 +187,8 @@ function GestionClientes() {
       { wch: 25 },
       { wch: 15 },
       { wch: 15 },
-      { wch: 12 },
+      { wch: 20 },
+      { wch: 28 },
       { wch: 10 },
       { wch: 15 },
       { wch: 10 },
@@ -176,7 +235,10 @@ function GestionClientes() {
         y += lineHeight
       }
 
-      doc.text(`Tipo Impuesto: ${getTipoImpuestoLabel(cliente.tipoImpuesto)}`, 14, y)
+      doc.text(`Impuestos: ${impuestosLabel(cliente)}`, 14, y)
+      y += lineHeight
+
+      doc.text(`Sucursales: ${sucursalesLabel(cliente)}`, 14, y)
       y += lineHeight
 
       doc.text(`¿Al día?: ${cliente.alDia ? '✓ Sí' : '✕ No'} | ¿Pago al día?: ${cliente.pagoAlDia ? '✓ Sí' : '✕ No'} | ¿Facturado?: ${cliente.facturado ? '✓ Sí' : '✕ No'}`, 14, y)
@@ -275,18 +337,69 @@ function GestionClientes() {
                 placeholder="Ej: Sucursal Centro"
               />
             </div>
-            <div className="form-group">
-              <label>Tipo de Impuesto</label>
-              <select
-                value={nuevoCliente.tipoImpuesto}
-                onChange={(e) => setNuevoCliente({ ...nuevoCliente, tipoImpuesto: e.target.value })}
-              >
-                {TIPOS_IMPUESTO.map(tipo => (
-                  <option key={tipo.id} value={tipo.id}>{tipo.label}</option>
-                ))}
-              </select>
-            </div>
           </div>
+
+          <fieldset className="form-group form-fieldset">
+            <legend>Impuestos *</legend>
+            <p className="form-hint">Marcá todas las obligaciones que tiene el cliente.</p>
+            <div className="impuestos-chips">
+              {TIPOS_IMPUESTO.map((tipo) => {
+                const activo = nuevoCliente.impuestos.includes(tipo.id)
+                return (
+                  <button
+                    key={tipo.id}
+                    type="button"
+                    className={`impuesto-chip ${activo ? 'is-on' : ''}`}
+                    aria-pressed={activo}
+                    onClick={() => toggleImpuesto(tipo.id)}
+                  >
+                    {activo && <Check size={13} strokeWidth={2.2} aria-hidden="true" />}
+                    {tipo.label}
+                  </button>
+                )
+              })}
+            </div>
+          </fieldset>
+
+          <fieldset className="form-group form-fieldset">
+            <legend>Sucursales *</legend>
+            <p className="form-hint">Código de establecimiento y nombre. La primera se usa por defecto al ingresar al cliente.</p>
+            <div className="sucursales-list">
+              {nuevoCliente.sucursales.map((suc, i) => (
+                <div className="sucursal-row" key={i}>
+                  <input
+                    type="text"
+                    className="sucursal-codigo"
+                    value={suc.codigo}
+                    onChange={(e) => cambiarSucursal(i, 'codigo', e.target.value)}
+                    placeholder="001"
+                    aria-label={`Código de sucursal ${i + 1}`}
+                    maxLength={6}
+                  />
+                  <input
+                    type="text"
+                    value={suc.nombre}
+                    onChange={(e) => cambiarSucursal(i, 'nombre', e.target.value)}
+                    placeholder={i === 0 ? 'Casa matriz' : 'Ej: Sucursal San Lorenzo'}
+                    aria-label={`Nombre de sucursal ${i + 1}`}
+                  />
+                  <button
+                    type="button"
+                    className="btn-accion btn-eliminar"
+                    onClick={() => quitarSucursal(i)}
+                    disabled={nuevoCliente.sucursales.length === 1}
+                    title="Quitar sucursal"
+                    aria-label={`Quitar sucursal ${i + 1}`}
+                  >
+                    <X size={14} strokeWidth={1.8} />
+                  </button>
+                </div>
+              ))}
+            </div>
+            <button type="button" className="btn-link-add" onClick={agregarSucursal}>
+              <Plus size={14} strokeWidth={1.8} /> Agregar sucursal
+            </button>
+          </fieldset>
 
           <div className="form-row-2">
             <div className="form-group">
@@ -371,7 +484,8 @@ function GestionClientes() {
                 <th>Razón Social</th>
                 <th>RUC</th>
                 <th>Seña</th>
-                <th>Tipo Impuesto</th>
+                <th>Impuestos</th>
+                <th>Sucursales</th>
                 <th>¿Al día?</th>
                 <th>Honorarios</th>
                 <th>¿Pago al día?</th>
@@ -387,7 +501,14 @@ function GestionClientes() {
                   <td className="ruc">{cliente.ruc}</td>
                   <td className="sena">{cliente.sena || '-'}</td>
                   <td className="tipo-impuesto">
-                    <span className="badge">{getTipoImpuestoLabel(cliente.tipoImpuesto)}</span>
+                    <span className="badges">
+                      {impuestosDe(cliente).map((id) => <span key={id} className="badge">{getTipoImpuestoLabel(id)}</span>)}
+                    </span>
+                  </td>
+                  <td className="sucursales-cell">
+                    {sucursalesDe(cliente).map((suc) => (
+                      <span key={suc.codigo} className="sucursal-item"><b>{suc.codigo}</b>{suc.nombre ? ` ${suc.nombre}` : ''}</span>
+                    ))}
                   </td>
                   <td className="checkbox-cell">
                     <button
@@ -420,6 +541,16 @@ function GestionClientes() {
                     </button>
                   </td>
                   <td className="acciones">
+                    {onTrabajar && (
+                      <button
+                        className="btn-accion btn-trabajar"
+                        onClick={() => onTrabajar(cliente.id)}
+                        title="Trabajar en este cliente"
+                        aria-label={`Trabajar en ${cliente.razonSocial}`}
+                      >
+                        <LogIn size={14} strokeWidth={1.8} />
+                      </button>
+                    )}
                     <button
                       className="btn-accion btn-editar"
                       onClick={() => editarCliente(cliente)}

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { LogIn, ChevronDown, Users, Plus } from 'lucide-react'
 import { useCloudCollection } from '../services/useCloudCollection'
+import { impuestoLabel, impuestosDe, sucursalesDe } from './GestionClientes'
 import '../styles/SeleccionarContribuyente.css'
 
 export const ACTIVIDADES = [
@@ -11,11 +12,11 @@ export const ACTIVIDADES = [
   { id: 'agropecuaria', label: 'Agropecuaria' }
 ]
 
-export const SUCURSALES = [
-  { id: '001', label: '001 · Casa matriz' },
-  { id: '002', label: '002 · Sucursal' },
-  { id: '003', label: '003 · Sucursal' }
-]
+// Sucursales que el usuario cargó al registrar al cliente en Gestión de Clientes
+const opcionesSucursal = (cliente) => sucursalesDe(cliente).map((s) => ({
+  id: s.codigo,
+  label: s.nombre ? `${s.codigo} · ${s.nombre}` : s.codigo
+}))
 
 const thisYear = new Date().getFullYear()
 const EJERCICIOS = Array.from({ length: 7 }, (_, i) => thisYear + 1 - i)
@@ -52,6 +53,15 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
   const [cierre, setCierre] = useState(previo?.cierre || rangoEjercicio(thisYear).cierre)
   const [actividad, setActividad] = useState(previo?.actividad || 'principal')
   const [sucursal, setSucursal] = useState(previo?.sucursal || '001')
+
+  const clienteSel = useMemo(() => clientes.find((c) => String(c.id) === clienteId) || null, [clientes, clienteId])
+  const sucursales = useMemo(() => opcionesSucursal(clienteSel), [clienteSel])
+  const impuestos = impuestosDe(clienteSel).map(impuestoLabel)
+
+  // la sucursal elegida tiene que pertenecer al cliente seleccionado
+  useEffect(() => {
+    if (!sucursales.some((s) => s.id === sucursal)) setSucursal(sucursales[0]?.id || '')
+  }, [sucursales, sucursal])
 
   const opcionesClientes = useMemo(() => (
     [...clientes]
@@ -92,7 +102,9 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
       actividad,
       actividadLabel: ACTIVIDADES.find((a) => a.id === actividad)?.label,
       sucursal,
-      sucursalLabel: SUCURSALES.find((s) => s.id === sucursal)?.label
+      sucursalLabel: sucursales.find((s) => s.id === sucursal)?.label,
+      impuestos: impuestosDe(c),
+      impuestosLabel: impuestos.join(', ')
     })
   }
 
@@ -135,6 +147,9 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
                     disabled={status === 'loading'}
                   />
                 </Field>
+                {clienteSel && impuestos.length > 0 && (
+                  <p className="q-pick__meta">Impuestos: {impuestos.join(' · ')}</p>
+                )}
               </div>
 
               <div className="q-pick__row q-pick__row--3">
@@ -160,7 +175,7 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
                   <SelectBox ariaLabel="Actividad" value={actividad} onChange={setActividad} disabled={sinCliente} options={ACTIVIDADES} />
                 </Field>
                 <Field label="Sucursal" disabled={sinCliente} floating>
-                  <SelectBox ariaLabel="Sucursal" value={sucursal} onChange={setSucursal} disabled={sinCliente} options={SUCURSALES} />
+                  <SelectBox ariaLabel="Sucursal" value={sucursal} onChange={setSucursal} disabled={sinCliente} options={sucursales} />
                 </Field>
               </div>
             </div>

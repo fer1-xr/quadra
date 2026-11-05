@@ -441,7 +441,8 @@
 
 .acciones {
   text-align: center;
-  width: 100px;
+  width: 140px;
+  white-space: nowrap;
 }
 
 .btn-accion {
@@ -648,4 +649,131 @@
   .razon-social {
     max-width: 100px;
   }
+}
+
+/* Impuestos y sucursales del cliente */
+.form-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 4px 0 16px;
+  min-width: 0;
+}
+
+.form-fieldset legend {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--q-ink, #333);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0;
+  margin-bottom: 2px;
+}
+
+.form-hint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--q-ink-3, #666);
+}
+
+.impuestos-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.impuesto-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border: 1px solid var(--q-line, #ddd);
+  border-radius: 999px;
+  background: var(--q-surface, white);
+  color: var(--q-ink, #333);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.impuesto-chip:hover {
+  border-color: var(--q-brand, #1747d1);
+}
+
+.impuesto-chip.is-on {
+  border-color: var(--q-action, #0a1a2f);
+  background: var(--q-action, #0a1a2f);
+  color: var(--q-action-fg, #fff);
+}
+
+.impuesto-chip:focus-visible,
+.btn-link-add:focus-visible {
+  outline: 2px solid var(--q-brand, #1747d1);
+  outline-offset: 2px;
+}
+
+.sucursales-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sucursal-row {
+  display: grid;
+  grid-template-columns: 90px 1fr auto;
+  gap: 8px;
+  align-items: center;
+}
+
+.sucursal-row .sucursal-codigo {
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.sucursal-row .btn-accion:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.btn-link-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--q-brand, #1747d1);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-link-add:hover {
+  text-decoration: underline;
+}
+
+.badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.sucursales-cell {
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.sucursal-item {
+  display: block;
+  white-space: nowrap;
+}
+
+.sucursal-item b {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  margin-right: 2px;
 }
