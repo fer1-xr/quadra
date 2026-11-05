@@ -5,6 +5,7 @@ import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
 import { Plus, Trash2, Download, Target, X, GraduationCap, Briefcase, Wallet } from 'lucide-react'
 import '../styles/MetasAnuales.css'
+import '../styles/ClienteAgenda.css'
 import Toast from './Toast'
 import MetasAvanceGeneral from './MetasAvanceGeneral'
 
@@ -117,8 +118,21 @@ function MetasCharts({ metas }) {
   )
 }
 
-function MetasAnuales() {
-  const [metas, setMetas, syncStatus] = useCloudCollection('meta', 'quadra_metas_anuales')
+/**
+ * Sin `cliente`: metas personales del usuario.
+ * Con `cliente` (contribuyente activo): metas propias de ese cliente, totalmente
+ * independientes de las personales y de las de otros clientes.
+ * Ambas viven en la colección 'meta'; las de cliente llevan `clienteId`.
+ */
+function MetasAnuales({ cliente = null }) {
+  const [todas, setTodas, syncStatus] = useCloudCollection('meta', 'quadra_metas_anuales')
+  const clienteActivoId = cliente ? String(cliente.clienteId) : null
+  const esDelAmbito = (m) => (clienteActivoId ? String(m.clienteId ?? '') === clienteActivoId : !m.clienteId)
+  const metas = todas.filter(esDelAmbito)
+  const setMetas = (lista) => {
+    const conCliente = lista.map((m) => (clienteActivoId ? { ...m, clienteId: clienteActivoId } : m))
+    setTodas([...todas.filter((m) => !esDelAmbito(m)), ...conCliente])
+  }
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [periodo, setPeriodo] = useState('anual')
   const [nuevaMeta, setNuevaMeta] = useState({
@@ -174,7 +188,7 @@ function MetasAnuales() {
     const metasFiltradas = metas.filter(m => m.periodo === periodo)
 
     doc.setFontSize(20)
-    doc.text(`Resumen de Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}`, 20, 20)
+    doc.text(`Resumen de Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}${cliente ? ` · ${cliente.razonSocial}` : ''}`, 20, 20)
 
     doc.setFontSize(10)
     doc.text(`Generado: ${new Date().toLocaleDateString('es-PY')}`, 20, 30)
@@ -198,7 +212,7 @@ function MetasAnuales() {
 
       doc.setFontSize(9)
       doc.setTextColor(100)
-      doc.text(`Tipo: ${tipo.label} | Estado: ${meta.completada ? 'Completada' : 'Pendiente'}`, 25, yPosition)
+      doc.text(`Tipo: ${tipo?.label || meta.tipo} | Estado: ${meta.completada ? 'Completada' : 'Pendiente'}`, 25, yPosition)
       yPosition += 6
 
       doc.text(`Descripción: ${meta.descripcion.substring(0, 60)}...`, 25, yPosition)
@@ -312,8 +326,10 @@ function MetasAnuales() {
       )}
 
       <PageHead
-        title="Metas y Objetivos"
-        lede="Establece y alcanza tus objetivos."
+        title={cliente ? 'Metas y objetivos del cliente' : 'Metas y Objetivos'}
+        lede={cliente
+          ? `Objetivos propios de ${cliente.razonSocial}, independientes de tus metas personales y de los demás clientes.`
+          : 'Establece y alcanza tus objetivos.'}
         equation={[{ n: `${metasCompletadas} de ${metasFiltradas.length} ` }, { v: 'metas cumplidas' }]}
         status={syncStatus}
         caption={metasFiltradas.length ? `${Math.round((metasCompletadas / metasFiltradas.length) * 100)} % del período` : 'sin metas en el período'}
@@ -357,7 +373,7 @@ function MetasAnuales() {
               type="text"
               value={nuevaMeta.titulo}
               onChange={(e) => setNuevaMeta({ ...nuevaMeta, titulo: e.target.value })}
-              placeholder="Ej: Obtener certificación en Excel Avanzado"
+              placeholder={cliente ? 'Ej: Regularizar las declaraciones de IVA atrasadas' : 'Ej: Obtener certificación en Excel Avanzado'}
               autoFocus
             />
           </div>

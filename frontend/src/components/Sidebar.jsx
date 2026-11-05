@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X } from 'lucide-react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X, NotebookPen, ListChecks } from 'lucide-react'
 import '../styles/Sidebar.css'
 
 const MODOS = [
@@ -87,7 +87,17 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
           label: 'General',
           items: [
             { id: 'inicio', label: 'Inicio', icon: Home },
-            { id: 'historial', label: 'Historial', icon: History }
+            { id: 'historial', label: 'Historial', icon: History },
+            { id: 'leccion', label: 'Lección del Día', icon: BookOpen }
+          ]
+        },
+        {
+          label: 'Agenda del cliente',
+          items: [
+            { id: 'todo', label: 'Tareas de la semana', icon: CheckSquare },
+            { id: 'memoria', label: 'Ayuda memoria', icon: ListChecks },
+            { id: 'metas', label: 'Metas y Objetivos', icon: Target },
+            { id: 'notas', label: 'Notas y Reuniones', icon: NotebookPen }
           ]
         },
         {
@@ -108,7 +118,6 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
             { id: 'cotizacion', label: 'Cotización', icon: LineChart }
           ]
         },
-        agenda,
         gestion
       ]
     : [

@@ -143,7 +143,7 @@
 .q-eq__v sub { font-size: 0.5em; font-style: italic; margin-left: 1px; vertical-align: -0.35em; color: var(--q-ink-2); }
 .q-eq__op { margin: 0 0.24em; font-style: normal; color: var(--q-ink-3); }
 .q-eq__op:first-child { margin-left: 0; }
-.q-eq__n { font-style: normal; color: var(--q-brand); font-variant-numeric: lining-nums tabular-nums; }
+.q-eq__n { white-space: pre; font-style: normal; color: var(--q-brand); font-variant-numeric: lining-nums tabular-nums; }
 
 .q-eq__cap {
   font-size: 12px;

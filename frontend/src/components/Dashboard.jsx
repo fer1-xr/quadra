@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3, Briefcase } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
 import History from './History'
 import ChangePassword from './ChangePassword'
@@ -18,6 +18,8 @@ import SeleccionarContribuyente from './SeleccionarContribuyente'
 import Historial from './Historial'
 import MiCuenta from './MiCuenta'
 import GuardarEnNube from './GuardarEnNube'
+import AyudaMemoria from './AyudaMemoria'
+import NotasReuniones from './NotasReuniones'
 import { ContribuyenteContext } from '../services/historialService'
 import PageHead, { Figures, Eq } from './PageHead'
 import '../styles/Dashboard.css'
@@ -40,7 +42,7 @@ const leerJSON = (key) => {
 // Vistas que solo existen dentro del espacio de trabajo de un contribuyente
 const VISTAS_CONTRIBUYENTE = new Set([
   'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
-  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial'
+  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial', 'memoria', 'notas'
 ])
 
 const FLUJO_VACIO = { periodo: '', ingresos: '', egresos: '', saldo: '', inversiones: '', financiamientos: '' }
@@ -254,8 +256,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     seleccionar: 'Clientes',
     historial: 'Historial',
     leccion: 'Lección del Día',
-    todo: 'Tareas del Día',
+    todo: contribuyente ? 'Tareas de la semana' : 'Tareas del Día',
     metas: 'Metas y Objetivos',
+    memoria: 'Ayuda memoria',
+    notas: 'Notas y Reuniones',
     rg90: 'Conciliación RG90',
     'rg90-results': 'Resultados de Conciliación',
     bancaria: 'Conciliación Bancaria',
@@ -270,7 +274,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   }
 
   const viewGroups = {
-    leccion: 'Agenda', todo: 'Agenda', metas: 'Agenda',
+    leccion: 'Agenda',
+    todo: contribuyente ? 'Agenda del cliente' : 'Agenda',
+    metas: contribuyente ? 'Agenda del cliente' : 'Agenda',
+    memoria: 'Agenda del cliente', notas: 'Agenda del cliente',
     rg90: 'Conciliación', 'rg90-results': 'Conciliación', bancaria: 'Conciliación',
     'importar-documentos': 'Conciliación', 'control-pagos': 'Conciliación',
     liquidacion: 'Cálculo', activofijo: 'Cálculo', flujo: 'Cálculo', cotizacion: 'Cálculo',
@@ -312,11 +319,12 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       ]
     },
     {
-      group: 'Agenda',
+      group: 'Agenda del cliente',
       items: [
-        { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
-        { id: 'todo', title: 'Tareas de la Semana', desc: 'Tareas por día, de lunes a viernes', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
-        { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance en %' }] }
+        { id: 'todo', title: 'Tareas de la semana', desc: 'Lo que agendaste para este cliente en tu semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
+        { id: 'memoria', title: 'Ayuda memoria', desc: 'Todo lo que hay que hacer durante el ejercicio', icon: ListChecks, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'ejercicio' }] },
+        { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos propios de este cliente', icon: Target, eq: [{ v: 'Avance en %' }] },
+        { id: 'notas', title: 'Notas y Reuniones', desc: 'Conversaciones, minutas y acuerdos', icon: NotebookPen, eq: [{ v: 'Acuerdos' }] }
       ]
     },
     {
@@ -455,7 +463,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                         <ArrowRight size={16} strokeWidth={1.8} />
                       </button>
                       <button type="button" className="q-btn q-btn--ghost" onClick={() => handleNavigate('todo')}>
-                        Ver Tareas del Día
+                        Ver tareas de la semana
                       </button>
                     </div>
                   </div>
@@ -835,11 +843,19 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             )}
 
             {view === 'todo' && (
-              <TodoDelDia />
+              <TodoDelDia key={contribuyente?.clienteId ?? 'personal'} cliente={contribuyente} />
             )}
 
             {view === 'metas' && (
-              <MetasAnuales />
+              <MetasAnuales key={contribuyente?.clienteId ?? 'personal'} cliente={contribuyente} />
+            )}
+
+            {view === 'memoria' && contribuyente && (
+              <AyudaMemoria key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} cliente={contribuyente} />
+            )}
+
+            {view === 'notas' && contribuyente && (
+              <NotasReuniones key={contribuyente.clienteId} cliente={contribuyente} />
             )}
 
             {view === 'cotizacion' && (

@@ -1,8 +1,9 @@
 import React, { useMemo, useState } from 'react'
 import PageHead from './PageHead'
 import { useCloudCollection } from '../services/useCloudCollection'
-import { Plus, X, Check } from 'lucide-react'
+import { Plus, X, Check, Briefcase } from 'lucide-react'
 import '../styles/TodoDelDia.css'
+import '../styles/ClienteAgenda.css'
 
 const CATEGORIAS = [
   { id: 'tributacion', label: 'Tributación' },
@@ -35,7 +36,8 @@ const TAREA_VACIA = {
   dia: 'lunes',
   prioridad: 'media',
   pasos: [],
-  completada: false
+  completada: false,
+  clienteId: ''
 }
 
 /** Lunes de la semana en curso (sábado y domingo ya miran la semana siguiente). */
@@ -67,8 +69,28 @@ function Prioridad({ nivel }) {
   )
 }
 
-function TodoDelDia() {
-  const [tareas, setTareas, syncStatus] = useCloudCollection('tarea', 'quadra_tareas_diarias')
+/**
+ * Agenda semanal. Sin `cliente` es la agenda personal (todas las tareas,
+ * cada una puede asignarse a un cliente). Con `cliente` (contribuyente activo)
+ * muestra solo las tareas asignadas a ese cliente, y las nuevas quedan asignadas a él.
+ */
+function TodoDelDia({ cliente = null }) {
+  const [todas, setTodas, syncStatus] = useCloudCollection('tarea', 'quadra_tareas_diarias')
+  const [clientes] = useCloudCollection('cliente', 'quadra_clientes')
+  const clienteActivoId = cliente ? String(cliente.clienteId) : null
+  const tareas = useMemo(
+    () => (clienteActivoId ? todas.filter((t) => String(t.clienteId ?? '') === clienteActivoId) : todas),
+    [todas, clienteActivoId]
+  )
+  const clientesOrdenados = useMemo(
+    () => [...clientes].sort((a, b) => (a.razonSocial || '').localeCompare(b.razonSocial || '', 'es')),
+    [clientes]
+  )
+  const nombreCliente = (id) => {
+    if (!id) return ''
+    const c = clientes.find((x) => String(x.id) === String(id))
+    return c?.razonSocial || ''
+  }
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false)
   const [nuevaTarea, setNuevaTarea] = useState(TAREA_VACIA)
@@ -93,7 +115,7 @@ function TodoDelDia() {
 
   const abrirFormulario = (diaId) => {
     const hoy = semana.dias.find((d) => d.esHoy)
-    setNuevaTarea({ ...TAREA_VACIA, dia: diaId || hoy?.id || 'lunes' })
+    setNuevaTarea({ ...TAREA_VACIA, dia: diaId || hoy?.id || 'lunes', clienteId: clienteActivoId || '' })
     setErrorTitulo(false)
     setMostrarFormulario(true)
   }
@@ -104,17 +126,26 @@ function TodoDelDia() {
       setErrorTitulo(true)
       return
     }
-    setTareas([...tareas, { id: Date.now(), ...nuevaTarea, titulo: nuevaTarea.titulo.trim(), pasos: [] }])
-    setNuevaTarea({ ...TAREA_VACIA, dia: nuevaTarea.dia })
+    const clienteId = clienteActivoId || nuevaTarea.clienteId || ''
+    const clienteNombre = cliente?.razonSocial || nombreCliente(clienteId)
+    setTodas([...todas, {
+      id: Date.now(),
+      ...nuevaTarea,
+      titulo: nuevaTarea.titulo.trim(),
+      pasos: [],
+      clienteId: clienteId || null,
+      clienteNombre: clienteId ? clienteNombre : null
+    }])
+    setNuevaTarea({ ...TAREA_VACIA, dia: nuevaTarea.dia, clienteId: nuevaTarea.clienteId })
     setMostrarFormulario(false)
   }
 
   const completarTarea = (tareaId) => {
-    setTareas(tareas.map((t) => (t.id === tareaId ? { ...t, completada: !t.completada } : t)))
+    setTodas(todas.map((t) => (t.id === tareaId ? { ...t, completada: !t.completada } : t)))
   }
 
   const eliminarTarea = (tareaId) => {
-    setTareas(tareas.filter((t) => t.id !== tareaId))
+    setTodas(todas.filter((t) => t.id !== tareaId))
   }
 
   const ordenar = (a, b) => (a.hora || '').localeCompare(b.hora || '') || (NIVEL[b.prioridad] || 0) - (NIVEL[a.prioridad] || 0)
@@ -126,8 +157,10 @@ function TodoDelDia() {
   return (
     <div className="todo-del-dia">
       <PageHead
-        title="Tareas de la Semana"
-        lede="Organiza tus tareas por día, de lunes a viernes."
+        title={cliente ? 'Tareas de la semana' : 'Tareas de la Semana'}
+        lede={cliente
+          ? `Lo que agendaste para ${cliente.razonSocial} en tu semana. Las tareas que agregues acá también aparecen en tu agenda personal.`
+          : 'Organiza tus tareas por día, de lunes a viernes. Asigná cada tarea a un cliente para verla dentro de su espacio de trabajo.'}
         equation={[{ n: `${tareasCompletadas} de ${tareas.length} ` }, { v: 'tareas hechas' }]}
         caption={tareas.length ? `${avance} % de la semana ${semana.numero} · ${semana.rango}` : `semana ${semana.numero} · ${semana.rango}`}
         status={syncStatus}
@@ -216,6 +249,23 @@ function TodoDelDia() {
               </div>
             </fieldset>
 
+            {!cliente && (
+              <fieldset className="wk-param">
+                <legend>Cliente</legend>
+                <select
+                  className="wk-client-select"
+                  value={nuevaTarea.clienteId || ''}
+                  onChange={(e) => setNuevaTarea({ ...nuevaTarea, clienteId: e.target.value })}
+                  aria-label="Cliente"
+                >
+                  <option value="">Sin cliente (personal)</option>
+                  {clientesOrdenados.map((c) => (
+                    <option key={c.id} value={String(c.id)}>{c.razonSocial}</option>
+                  ))}
+                </select>
+              </fieldset>
+            )}
+
             <fieldset className="wk-param wk-param--grow">
               <legend>Categoría</legend>
               <div className="wk-cats">
@@ -286,6 +336,12 @@ function TodoDelDia() {
                         <span className="wk-task__title">{tarea.titulo}</span>
                         <span className="wk-task__meta">
                           <span className="wk-task__cat">{cat?.label}</span>
+                          {!cliente && tarea.clienteId && (
+                            <span className="wk-task__client" title={`Cliente: ${nombreCliente(tarea.clienteId) || tarea.clienteNombre}`}>
+                              <Briefcase size={10} strokeWidth={2} aria-hidden="true" />
+                              {nombreCliente(tarea.clienteId) || tarea.clienteNombre}
+                            </span>
+                          )}
                           <Prioridad nivel={NIVEL[tarea.prioridad] || 2} />
                         </span>
                       </div>
