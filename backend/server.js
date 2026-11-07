@@ -32,14 +32,8 @@ const verifyToken = (req, res, next) => {
 
   supabase.auth.getUser(token)
     .then(({ data: { user }, error }) => {
-      if (error) {
-        console.error('🔴 Supabase auth error:', error);
-        return res.status(401).json({ error: 'Token inválido', details: error.message });
-      }
-      if (!user) {
-        console.error('🔴 No user found for token');
-        return res.status(401).json({ error: 'Token inválido' });
-      }
+      // Token vencido o inválido: respuesta normal, sin ensuciar los logs.
+      if (error || !user) return res.status(401).json({ error: 'Token inválido' });
       req.user = { id: user.id, email: user.email };
       // Cliente con el token del usuario: las consultas pasan por RLS como ese usuario.
       req.supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
@@ -49,8 +43,8 @@ const verifyToken = (req, res, next) => {
       next();
     })
     .catch((err) => {
-      console.error('🔴 verifyToken exception:', err);
-      res.status(401).json({ error: 'Token inválido', details: err.message });
+      console.error('verifyToken: no se pudo validar el token con Supabase:', err.message);
+      res.status(401).json({ error: 'Token inválido' });
     });
 };
 
