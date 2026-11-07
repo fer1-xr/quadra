@@ -6,6 +6,7 @@ import ForgotPassword from './components/ForgotPassword'
 import ResetPassword from './components/ResetPassword'
 import leccionScheduler from './services/leccionScheduler'
 import { authService } from './services/authService'
+import { supabase } from './services/supabaseClient'
 import './App.css'
 
 function App() {
@@ -19,13 +20,28 @@ function App() {
     const token = localStorage.getItem('quaedra_token')
     const storedUser = localStorage.getItem('quaedra_user')
 
-    // Verificar si hay un token de recuperación de contraseña en la URL
+    // Enlace de recuperación de contraseña de Supabase:
+    // llega a /reset-password con #access_token=...&type=recovery (o ?code=...).
+    // supabase-js crea la sesión sola; aquí sólo mostramos la pantalla correcta.
     const params = new URLSearchParams(window.location.search)
-    const resetTokenFromUrl = params.get('token')
+    const hash = new URLSearchParams(window.location.hash.slice(1))
+    const resetTokenFromUrl =
+      window.location.pathname === '/reset-password' ||
+      hash.get('type') === 'recovery' ||
+      params.get('type') === 'recovery'
+        ? 'recovery'
+        : null
     if (resetTokenFromUrl) {
       setResetToken(resetTokenFromUrl)
       setAuthPage('reset-password')
     }
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        setResetToken('recovery')
+        setAuthPage('reset-password')
+      }
+    })
 
     if (token && storedUser && !resetTokenFromUrl) {
       setUser(JSON.parse(storedUser))
@@ -37,6 +53,7 @@ function App() {
     // Limpiar el scheduler cuando se desmonta el componente
     return () => {
       leccionScheduler.stop()
+      authListener?.subscription?.unsubscribe()
     }
   }, [])
 
@@ -94,7 +111,14 @@ function App() {
         <ForgotPassword onBackToLogin={() => setAuthPage('login')} />
       )}
       {authPage === 'reset-password' && resetToken && (
-        <ResetPassword token={resetToken} onBackToLogin={() => setAuthPage('login')} />
+        <ResetPassword
+          token={resetToken}
+          onBackToLogin={() => {
+            window.history.replaceState(null, '', '/')
+            setResetToken(null)
+            setAuthPage('login')
+          }}
+        />
       )}
     </>
   )
