@@ -604,3 +604,33 @@
     padding: 8px;
   }
 }
+
+/* Revisión de datos leídos y planilla editable */
+.cp-falta {
+  color: var(--q-ink-3);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.cp-link {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--q-ink);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.control-pagos-sheet .cp-mini {
+  width: 9.5rem;
+  min-height: 0;
+  padding: 4px 8px;
+  font-size: 0.85rem;
+}
+
+.control-pagos-sheet .cp-accion {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+}

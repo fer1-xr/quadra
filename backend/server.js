@@ -7,6 +7,7 @@ import XLSX from 'xlsx';
 import ocrRoutes from './routes/ocr.js';
 import controlPagosRoutes from './routes/control-pagos.js';
 import { uploadErrorHandler } from './middleware/upload-handler.js';
+import { cotizacionDelDia, MONEDAS_DNIT, FUENTE_URL } from './services/cotizaciones-dnit.js';
 
 dotenv.config();
 
@@ -928,120 +929,71 @@ app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
 });
 
 // ==================== COTIZACIÓN DNIT ====================
-// Datos simulados de cotizaciones del DNIT (en un caso real, esto vendría de una API o web scraping)
-const cotizacionesDNIT = {
-  'USD': [
-    { fecha: '2026-10-19', comprador: 6850.00, vendedor: 6920.00 },
-    { fecha: '2026-10-18', comprador: 6840.00, vendedor: 6910.00 },
-    { fecha: '2026-10-17', comprador: 6830.00, vendedor: 6900.00 },
-    { fecha: '2026-10-16', comprador: 6820.00, vendedor: 6890.00 },
-    { fecha: '2026-10-15', comprador: 6810.00, vendedor: 6880.00 },
-  ],
-  'ARS': [
-    { fecha: '2026-10-19', comprador: 65.50, vendedor: 66.50 },
-    { fecha: '2026-10-18', comprador: 65.00, vendedor: 66.00 },
-    { fecha: '2026-10-17', comprador: 64.50, vendedor: 65.50 },
-  ],
-  'BRL': [
-    { fecha: '2026-10-19', comprador: 1250.00, vendedor: 1270.00 },
-    { fecha: '2026-10-18', comprador: 1240.00, vendedor: 1260.00 },
-  ],
-  'EUR': [
-    { fecha: '2026-10-19', comprador: 7100.00, vendedor: 7180.00 },
-    { fecha: '2026-10-18', comprador: 7090.00, vendedor: 7170.00 },
-  ],
-  'CLP': [
-    { fecha: '2026-10-19', comprador: 7.50, vendedor: 7.62 },
-    { fecha: '2026-10-18', comprador: 7.48, vendedor: 7.60 },
-  ],
-  'CHF': [
-    { fecha: '2026-10-19', comprador: 7600.00, vendedor: 7700.00 },
-    { fecha: '2026-10-18', comprador: 7590.00, vendedor: 7690.00 },
-  ],
-  'JPY': [
-    { fecha: '2026-10-19', comprador: 45.50, vendedor: 46.20 },
-    { fecha: '2026-10-18', comprador: 45.00, vendedor: 45.70 },
-  ],
-  'GBP': [
-    { fecha: '2026-10-19', comprador: 8500.00, vendedor: 8620.00 },
-    { fecha: '2026-10-18', comprador: 8480.00, vendedor: 8600.00 },
-  ]
-};
+// Tipos de cambio oficiales publicados por la DNIT (ver services/cotizaciones-dnit.js).
+// Nunca se devuelve otro día en silencio: si la fecha no está publicada, se informa.
+const fFechaPY = (iso) => iso.split('-').reverse().join('/');
 
 app.post('/api/cotizacion', verifyToken, async (req, res) => {
   try {
-    const { fecha, moneda } = req.body;
+    const { fecha, moneda } = req.body || {};
 
     if (!fecha || !moneda) {
+      return res.status(400).json({ success: false, message: 'Fecha y moneda son requeridas' });
+    }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || Number.isNaN(Date.parse(fecha))) {
+      return res.status(400).json({ success: false, message: 'Fecha inválida' });
+    }
+    if (!MONEDAS_DNIT.includes(moneda)) {
       return res.status(400).json({
         success: false,
-        message: 'Fecha y moneda son requeridas'
+        message: `La DNIT no publica cotización para ${moneda}. Monedas disponibles: ${MONEDAS_DNIT.join(', ')}`
       });
     }
 
-    const monedaCotizaciones = cotizacionesDNIT[moneda];
-    if (!monedaCotizaciones) {
-      return res.status(400).json({
+    let resultado;
+    try {
+      resultado = await cotizacionDelDia(fecha, moneda);
+    } catch (err) {
+      console.error('Cotización DNIT no disponible:', err.message);
+      return res.status(503).json({
         success: false,
-        message: `Moneda ${moneda} no disponible`
+        message: 'No se pudo consultar la página de cotizaciones de la DNIT. Intentá de nuevo en unos minutos.'
       });
     }
 
-    // Buscar la cotización exacta
-    let cotizacion = monedaCotizaciones.find(c => c.fecha === fecha);
-
-    // Si no existe la fecha exacta, buscar la más cercana
-    if (!cotizacion && monedaCotizaciones.length > 0) {
-      const fechaDate = new Date(fecha);
-      let fechaMasCercana = monedaCotizaciones[0];
-      let diferenciaMenor = Math.abs(new Date(fechaMasCercana.fecha) - fechaDate);
-
-      for (const cot of monedaCotizaciones) {
-        const diferencia = Math.abs(new Date(cot.fecha) - fechaDate);
-        if (diferencia < diferenciaMenor) {
-          diferenciaMenor = diferencia;
-          fechaMasCercana = cot;
-        }
-      }
-
-      cotizacion = fechaMasCercana;
+    if (!resultado.encontrada) {
+      const ultima = resultado.ultimaFecha ? fFechaPY(resultado.ultimaFecha) : null;
+      const message = resultado.motivo === 'no-publicada'
+        ? `La DNIT todavía no publicó la cotización del ${fFechaPY(fecha)}. Última fecha publicada: ${ultima}.`
+        : `La DNIT no tiene cotización de ${moneda} para el ${fFechaPY(fecha)}.`;
+      return res.status(404).json({ success: false, message, ultimaFecha: resultado.ultimaFecha });
     }
 
-    if (!cotizacion) {
-      return res.status(404).json({
-        success: false,
-        message: `No hay cotización disponible para ${moneda} en la fecha ${fecha}`
-      });
-    }
-
-    // Guardar en la base de datos para historial
+    // Registro de consultas (no bloquea la respuesta)
     const { error: insertError } = await req.supabase.from('cotizaciones')
       .insert([{
         user_id: req.user.id,
-        fecha: cotizacion.fecha,
+        fecha: resultado.fecha,
         moneda,
-        comprador: cotizacion.comprador,
-        vendedor: cotizacion.vendedor,
-        created_at: new Date().toISOString()
-      }])
-      .select();
+        comprador: resultado.comprador,
+        vendedor: resultado.vendedor
+      }]);
     if (insertError) console.error('No se pudo guardar la cotización en el historial:', insertError.message);
 
     res.json({
       success: true,
       data: {
-        fecha: cotizacion.fecha,
+        fecha: resultado.fecha,
         moneda,
-        comprador: cotizacion.comprador,
-        vendedor: cotizacion.vendedor
+        comprador: resultado.comprador,
+        vendedor: resultado.vendedor,
+        fuente: 'DNIT',
+        fuenteUrl: FUENTE_URL
       }
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({
-      success: false,
-      message: err.message
-    });
+    console.error('Error en /api/cotizacion:', err);
+    res.status(500).json({ success: false, message: 'Error al consultar la cotización' });
   }
 });
 

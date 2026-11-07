@@ -7,16 +7,18 @@ import GuardarEnNube from './GuardarEnNube'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Cotizacion.css'
 
+// Monedas que publica la DNIT en su tabla oficial de tipos de cambio
 const MONEDAS = [
   { code: 'USD', name: 'Dólar Estadounidense' },
-  { code: 'ARS', name: 'Peso Argentino' },
   { code: 'BRL', name: 'Real Brasileño' },
-  { code: 'CLP', name: 'Peso Chileno' },
+  { code: 'ARS', name: 'Peso Argentino' },
   { code: 'EUR', name: 'Euro' },
-  { code: 'CHF', name: 'Franco Suizo' },
   { code: 'JPY', name: 'Yen Japonés' },
   { code: 'GBP', name: 'Libra Esterlina' },
 ]
+
+// "2026-11-06" → "06/11/2026" sin desfase de zona horaria
+const fFecha = (iso) => (iso || '').split('-').reverse().join('/')
 
 function Cotizacion({ restaurar = null }) {
   const [fecha, setFecha] = useState(restaurar?.consulta?.fecha || new Date().toISOString().split('T')[0])
@@ -51,7 +53,7 @@ function Cotizacion({ restaurar = null }) {
         setError(response.data.message || 'Error al obtener cotización')
       }
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al consultar cotización')
+      setError(err.response?.data?.message || err.response?.data?.error || 'Error al consultar cotización')
     } finally {
       setLoading(false)
     }
@@ -137,7 +139,12 @@ function Cotizacion({ restaurar = null }) {
         {cotizacion && (
           <div className="cotizacion-resultado">
             <h3>Cotización para {monedaSeleccionada?.name} ({moneda})</h3>
-            <p className="fecha-resultado">Fecha: {new Date(cotizacion.fecha).toLocaleDateString('es-PY')}</p>
+            <p className="fecha-resultado">
+              Fecha: {fFecha(cotizacion.fecha)} · Fuente:{' '}
+              <a href={cotizacion.fuenteUrl || 'https://www.dnit.gov.py/web/portal-institucional/cotizaciones'} target="_blank" rel="noopener noreferrer">
+                DNIT, tipos de cambio oficiales
+              </a>
+            </p>
 
             <div className="cotizacion-grid">
               <div className="cotizacion-item">
@@ -161,7 +168,7 @@ function Cotizacion({ restaurar = null }) {
 
             <GuardarEnNube
               modulo="cotizacion"
-              titulo={`Cotización ${moneda} · ${new Date(cotizacion.fecha).toLocaleDateString('es-PY')}`}
+              titulo={`Cotización ${moneda} · ${fFecha(cotizacion.fecha)}`}
               resumen={{ Comprador: parseFloat(cotizacion.comprador), Vendedor: parseFloat(cotizacion.vendedor) }}
               datos={{ consulta: { fecha, moneda }, cotizacion }}
             />
@@ -185,7 +192,7 @@ function Cotizacion({ restaurar = null }) {
                 <tbody>
                   {historico.map((item, idx) => (
                     <tr key={idx}>
-                      <td>{new Date(item.fecha).toLocaleDateString('es-PY')}</td>
+                      <td>{fFecha(item.fecha)}</td>
                       <td>{item.moneda}</td>
                       <td className="valor-comprador">₲ {parseFloat(item.comprador).toFixed(2)}</td>
                       <td className="valor-vendedor">₲ {parseFloat(item.vendedor).toFixed(2)}</td>
