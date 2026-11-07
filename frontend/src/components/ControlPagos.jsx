@@ -7,11 +7,8 @@ import html2canvas from 'html2canvas'
 import { Card, CardBody, CardHeader, Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
 import { Upload, FileText, Download, CheckCircle, X } from 'lucide-react'
 import GuardarEnNube from './GuardarEnNube'
+import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/ControlPagos.css'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
 
 function ControlPagos({ restaurar = null }) {
   const [dragActive, setDragActive] = useState(false)
@@ -88,10 +85,10 @@ function ControlPagos({ restaurar = null }) {
       formData.append('file', file)
       formData.append('documentType', documentType)
 
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(`${API_BASE_URL}/api/control-pagos/process`, formData, {
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...auth,
           'Content-Type': 'multipart/form-data',
         },
       })

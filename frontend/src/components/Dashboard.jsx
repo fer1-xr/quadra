@@ -22,14 +22,11 @@ import AyudaMemoria from './AyudaMemoria'
 import NotasReuniones from './NotasReuniones'
 import { ContribuyenteContext } from '../services/historialService'
 import PageHead, { Figures, Eq } from './PageHead'
+import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Dashboard.css'
 import '../styles/QuadraModules.css'
 import '../styles/QuadraLedger.css'
 import '../styles/QuadraMath.css'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
 
 const CONTRIBUYENTE_KEY = 'quadra_contribuyente'
 const ULTIMO_CONTRIBUYENTE_KEY = 'quadra_ultimo_contribuyente'
@@ -133,10 +130,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
         const fileData = await readFile(file)
         marangatuData.push(fileData)
       }
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(`${API_BASE_URL}/api/reconciliation`,
         { rg90Data: monthlyData, libroData: marangatuData },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { ...auth } }
       )
       setDiscrepancies(response.data.discrepancies)
       setSessionId(response.data.sessionId)
@@ -152,10 +149,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   const handleExport = async () => {
     if (!sessionId) return
     try {
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.get(`${API_BASE_URL}/api/export/${sessionId}`, {
         responseType: 'blob',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...auth }
       })
       const url = window.URL.createObjectURL(new Blob([response.data]))
       const link = document.createElement('a')

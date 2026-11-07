@@ -4,11 +4,8 @@ import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Divider } from '@heroui/react'
 import { DollarSign, TrendingUp, Copy, Download } from 'lucide-react'
 import GuardarEnNube from './GuardarEnNube'
+import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Cotizacion.css'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
 
 const MONEDAS = [
   { code: 'USD', name: 'Dólar Estadounidense' },
@@ -40,11 +37,11 @@ function Cotizacion({ restaurar = null }) {
     setCotizacion(null)
 
     try {
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(
         `${API_BASE_URL}/api/cotizacion`,
         { fecha, moneda },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { ...auth } }
       )
 
       if (response.data.success) {

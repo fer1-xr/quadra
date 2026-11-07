@@ -3,11 +3,8 @@ import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Spinner, Progress, Chip } from '@heroui/react'
 import { Upload, File, X, FileUp, CheckCircle2, Paperclip } from 'lucide-react'
+import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/ImportarDocumentos.css'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
 
 function ImportarDocumentos() {
   const [dragActive, setDragActive] = useState(false)
@@ -81,11 +78,11 @@ function ImportarDocumentos() {
         formData.append('files', file)
       })
 
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(`${API_BASE_URL}/api/ocr/batch`, formData, {
         responseType: 'blob',
         headers: {
-          Authorization: `Bearer ${token}`,
+          ...auth,
         },
       })
 

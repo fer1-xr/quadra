@@ -5,11 +5,8 @@ import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Checkbox
 import { Download } from 'lucide-react'
 import { Var, MoneyInput, IntInput, SetChoice, TermToggle, Step, F, fmtGs } from './MathInputs'
 import GuardarEnNube from './GuardarEnNube'
+import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/LiquidacionSalarial.css'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
 
 /** Cálculo de la liquidación (Código Laboral, Ley 213/93). Puro: sirve para la vista previa y el resultado. */
 function liquidar(formData) {
@@ -160,10 +157,10 @@ function LiquidacionSalarial({ restaurar = null }) {
 
     try {
       setLoading(true)
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(`${API_BASE_URL}/api/liquidacion/excel`, resultado, {
         responseType: 'blob',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...auth }
       })
 
       const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -186,10 +183,10 @@ function LiquidacionSalarial({ restaurar = null }) {
 
     try {
       setLoading(true)
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.post(`${API_BASE_URL}/api/liquidacion/pdf`, resultado, {
         responseType: 'blob',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...auth }
       })
 
       const url = window.URL.createObjectURL(new Blob([response.data]))

@@ -1,9 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
+import { API_BASE_URL, authHeaders } from '../services/api'
 
 function History({ onSelectSession }) {
   const [history, setHistory] = useState([])
@@ -16,9 +13,9 @@ function History({ onSelectSession }) {
   const fetchHistory = async () => {
     setLoading(true)
     try {
-      const token = localStorage.getItem('quaedra_token')
+      const auth = await authHeaders()
       const response = await axios.get(`${API_BASE_URL}/api/sessions`, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { ...auth }
       })
       setHistory(response.data || [])
     } catch (err) {

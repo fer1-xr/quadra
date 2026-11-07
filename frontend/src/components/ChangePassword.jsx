@@ -1,11 +1,7 @@
 import React, { useState } from 'react'
-import axios from 'axios'
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Spinner } from '@heroui/react'
 import { Lock, Eye, EyeOff } from 'lucide-react'
-
-const API_BASE_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:3000'
-  : 'https://quadra-45d6.onrender.com'
+import { supabase } from '../services/supabaseClient'
 
 function ChangePassword({ onClose, onSuccess }) {
   const [currentPassword, setCurrentPassword] = useState('')
@@ -37,18 +33,25 @@ function ChangePassword({ onClose, onSuccess }) {
 
     setLoading(true)
     try {
-      const token = localStorage.getItem('quaedra_token')
-      await axios.post(`${API_BASE_URL}/api/auth/change-password`,
-        { newPassword },
-        { headers: { Authorization: `Bearer ${token}` } }
-      )
-      setSuccess('Contraseña cambiad correctamente')
+      // Confirmar la contraseña actual antes de cambiarla
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user?.email) throw new Error('Tu sesión expiró. Vuelve a iniciar sesión.')
+      const { error: signInError } = await supabase.auth.signInWithPassword({ email: user.email, password: currentPassword })
+      if (signInError) throw new Error('La contraseña actual no es correcta')
+      if (currentPassword === newPassword) throw new Error('La nueva contraseña no puede ser igual a la actual')
+
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword })
+      if (updateError) throw new Error(updateError.message)
+
+      const { data: { session } } = await supabase.auth.getSession()
+      if (session?.access_token) localStorage.setItem('quaedra_token', session.access_token)
+      setSuccess('Contraseña cambiada correctamente')
       setTimeout(() => {
         onSuccess()
         onClose()
       }, 1500)
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al cambiar la contraseña')
+      setError(err.message || 'Error al cambiar la contraseña')
     } finally {
       setLoading(false)
     }
