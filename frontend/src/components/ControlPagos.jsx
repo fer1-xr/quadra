@@ -4,8 +4,8 @@ import axios from 'axios'
 import { utils, writeFile } from 'xlsx'
 import jsPDF from 'jspdf'
 import html2canvas from 'html2canvas'
-import { Card, CardBody, CardHeader, Button, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
-import { Upload, FileText, Download, X, PencilLine } from 'lucide-react'
+import { Card, CardBody } from '@heroui/react'
+import { Upload, FileText, Download, X, PencilLine, Loader2 } from 'lucide-react'
 import GuardarEnNube from './GuardarEnNube'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/ControlPagos.css'
@@ -293,32 +293,28 @@ function ControlPagos({ restaurar = null }) {
       </div>
 
       {file && (
-        <Card>
-          <CardBody className="flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-3 flex-1">
-              <FileText className="w-6 h-6 text-accent flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold text-primary truncate">{file.name}</p>
-                <p className="text-sm text-text-secondary">{(file.size / 1024).toFixed(1)} KB</p>
-              </div>
-            </div>
-            <Button isIconOnly variant="light" size="sm" onClick={() => setFile(null)} aria-label="Quitar archivo">
-              <X size={14} strokeWidth={1.8} />
-            </Button>
-          </CardBody>
-        </Card>
+        <div className="cp-archivo">
+          <FileText size={20} strokeWidth={1.6} aria-hidden="true" />
+          <div className="cp-archivo__info">
+            <p className="cp-archivo__nombre">{file.name}</p>
+            <p className="cp-archivo__peso">{(file.size / 1024).toFixed(1)} KB</p>
+          </div>
+          <button type="button" className="q-btn q-btn--line cp-accion" onClick={() => setFile(null)} aria-label="Quitar archivo">
+            <X size={14} strokeWidth={1.8} />
+          </button>
+        </div>
       )}
 
-      <div className="flex gap-3 flex-wrap">
+      <div className="cp-botones">
         {file && (
-          <Button color="primary" size="lg" className="font-semibold" onClick={processFile} disabled={loading}
-            startContent={loading ? <Spinner size="sm" /> : <Upload size={20} />}>
+          <button type="button" className="q-btn q-btn--primary" onClick={processFile} disabled={loading}>
+            {loading ? <Loader2 size={16} className="cp-gira" /> : <Upload size={16} />}
             {loading ? 'Leyendo documento...' : 'Leer documento'}
-          </Button>
+          </button>
         )}
-        <Button variant="bordered" size="lg" onClick={cargarManual} startContent={<PencilLine size={18} />}>
-          Cargar datos a mano
-        </Button>
+        <button type="button" className="q-btn q-btn--line" onClick={cargarManual}>
+          <PencilLine size={16} /> Cargar datos a mano
+        </button>
       </div>
     </div>
   )
@@ -359,7 +355,7 @@ function ControlPagos({ restaurar = null }) {
       </div>
 
       {doc.cuotas?.length > 0 && (
-        <p className="text-sm text-text-secondary">
+        <p className="cp-resumen__nota">
           El documento trae el detalle de {doc.cuotas.length} cuotas; la planilla se arma con esas fechas y montos.{' '}
           <button type="button" className="cp-link" onClick={() => setDoc({ ...doc, cuotas: [] })}>Ignorarlas y usar los datos de arriba</button>
         </p>
@@ -371,96 +367,83 @@ function ControlPagos({ restaurar = null }) {
         </ul>
       )}
 
-      <div className="flex gap-3 flex-wrap">
-        <Button color="primary" size="lg" onClick={armarPlanilla} isDisabled={erroresDoc.length > 0}>Armar planilla</Button>
-        <Button variant="bordered" size="lg" onClick={reiniciar}>Cancelar</Button>
+      <div className="cp-botones">
+        <button type="button" className="q-btn q-btn--primary" onClick={armarPlanilla} disabled={erroresDoc.length > 0}>Armar planilla</button>
+        <button type="button" className="q-btn q-btn--line" onClick={reiniciar}>Cancelar</button>
       </div>
     </div>
   )
 
-  const colorEstado = (e) => (e === 'Pagado' ? 'success' : e === 'Vencido' ? 'danger' : 'warning')
-
   const renderPlanillaStep = () => (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-col items-start gap-3">
-          <h2 className="text-xl font-bold text-primary">Planilla de Control de Pagos</h2>
-          <div className="flex flex-wrap gap-6 w-full">
-            <div>
-              <p className="text-sm text-text-secondary">Tipo de Documento</p>
-              <p className="font-semibold text-primary">{documentType === 'poliza' ? 'Póliza de Seguros' : 'Liquidación de Préstamo'}</p>
-            </div>
-            {doc.numeroDocumento && (
-              <div><p className="text-sm text-text-secondary">Documento</p><p className="font-semibold text-primary">{doc.numeroDocumento}</p></div>
-            )}
-            {doc.emisor && (
-              <div><p className="text-sm text-text-secondary">Emisor</p><p className="font-semibold text-primary">{doc.emisor}</p></div>
-            )}
-            <div><p className="text-sm text-text-secondary">Total del plan</p><p className="font-semibold text-accent">{fMonto(resumen.total, moneda)}</p></div>
-            <div><p className="text-sm text-text-secondary">Pagado</p><p className="font-semibold">{fMonto(resumen.pagado, moneda)} · {resumen.pagadas}/{cuotas.length} cuotas</p></div>
-            <div><p className="text-sm text-text-secondary">Pendiente</p><p className="font-semibold">{fMonto(resumen.pendiente, moneda)}</p></div>
-            {resumen.vencidas > 0 && (
-              <div><p className="text-sm text-text-secondary">Vencidas sin pagar</p><p className="font-semibold text-danger">{resumen.vencidas}</p></div>
-            )}
-          </div>
-          <p className="text-sm text-text-secondary">Marcá cada cuota cuando se pague; podés corregir la fecha y el monto pagado.</p>
-        </CardHeader>
-      </Card>
+      <section className="cp-resumen" aria-label="Resumen de la planilla">
+        <h2 className="cp-resumen__titulo">Planilla de Control de Pagos</h2>
+        <dl className="cp-resumen__datos">
+          <div><dt>Tipo</dt><dd>{documentType === 'poliza' ? 'Póliza de Seguros' : 'Liquidación de Préstamo'}</dd></div>
+          {doc.numeroDocumento && <div><dt>Documento</dt><dd>{doc.numeroDocumento}</dd></div>}
+          {doc.emisor && <div><dt>Emisor</dt><dd>{doc.emisor}</dd></div>}
+          <div><dt>Total del plan</dt><dd className="cp-num">{fMonto(resumen.total, moneda)}</dd></div>
+          <div><dt>Pagado</dt><dd className="cp-num">{fMonto(resumen.pagado, moneda)} · {resumen.pagadas}/{cuotas.length}</dd></div>
+          <div><dt>Pendiente</dt><dd className="cp-num">{fMonto(resumen.pendiente, moneda)}</dd></div>
+          {resumen.vencidas > 0 && <div><dt>Vencidas sin pagar</dt><dd className="cp-num cp-alerta">{resumen.vencidas}</dd></div>}
+        </dl>
+        <p className="cp-resumen__nota">Marcá cada cuota cuando se pague; podés corregir la fecha y el monto pagado.</p>
+      </section>
 
-      <div id="payment-preview">
-        <Table aria-label="Tabla de control de pagos" isCompact removeWrapper>
-          <TableHeader>
-            <TableColumn>Cuota</TableColumn>
-            <TableColumn>Vencimiento</TableColumn>
-            <TableColumn align="end">Monto</TableColumn>
-            <TableColumn align="center">Estado</TableColumn>
-            <TableColumn>Fecha de pago</TableColumn>
-            <TableColumn align="end">Monto pagado</TableColumn>
-            <TableColumn align="end">Saldo del plan</TableColumn>
-            <TableColumn align="center">Acción</TableColumn>
-          </TableHeader>
-          <TableBody>
+      <div id="payment-preview" className="cp-tabla-wrap">
+        <table className="q-table cp-tabla" aria-label="Tabla de control de pagos">
+          <thead>
+            <tr>
+              <th>Cuota</th>
+              <th>Vencimiento</th>
+              <th className="cp-der">Monto</th>
+              <th>Estado</th>
+              <th>Fecha de pago</th>
+              <th className="cp-der">Monto pagado</th>
+              <th className="cp-der">Saldo del plan</th>
+              <th><span className="sr-only">Acción</span></th>
+            </tr>
+          </thead>
+          <tbody>
             {filas.map((f) => (
-              <TableRow key={f.numero}>
-                <TableCell>{f.numero}</TableCell>
-                <TableCell>{fFecha(f.vencimiento)}</TableCell>
-                <TableCell className="text-right font-semibold">{fMonto(f.monto, moneda)}</TableCell>
-                <TableCell className="text-center">
-                  <Chip size="sm" color={colorEstado(f.estado)} variant="flat">{f.estado}</Chip>
-                </TableCell>
-                <TableCell>
+              <tr key={f.numero}>
+                <td>{f.numero}</td>
+                <td className="cp-num">{fFecha(f.vencimiento)}</td>
+                <td className="cp-der cp-num">{fMonto(f.monto, moneda)}</td>
+                <td><span className={`cp-estado cp-estado--${f.estado.toLowerCase()}`}>{f.estado}</span></td>
+                <td>
                   {f.fechaPago
                     ? <input type="date" className="q-input cp-mini" aria-label={`Fecha de pago cuota ${f.numero}`} value={f.fechaPago} onChange={(e) => cambiarPago(f.numero, 'fechaPago', e.target.value || hoyISO())} />
                     : '—'}
-                </TableCell>
-                <TableCell className="text-right">
+                </td>
+                <td className="cp-der">
                   {f.fechaPago
                     ? <input type="number" min="0" step="any" className="q-input q-input--num cp-mini" aria-label={`Monto pagado cuota ${f.numero}`} value={f.montoPagado} onChange={(e) => cambiarPago(f.numero, 'montoPagado', e.target.value)} />
                     : '—'}
-                </TableCell>
-                <TableCell className="text-right">{fMonto(f.saldo, moneda)}</TableCell>
-                <TableCell className="text-center">
+                </td>
+                <td className="cp-der cp-num">{fMonto(f.saldo, moneda)}</td>
+                <td>
                   <button type="button" className="q-btn q-btn--line cp-accion" onClick={() => alternarPago(f.numero)}>
                     {f.fechaPago ? 'Deshacer' : 'Marcar pagada'}
                   </button>
-                </TableCell>
-              </TableRow>
+                </td>
+              </tr>
             ))}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       </div>
 
-      <div className="flex gap-3 flex-wrap items-center">
+      <div className="cp-botones">
         <GuardarEnNube
           modulo="control-pagos"
           titulo={`Control de pagos · ${documentType === 'prestamo' ? 'Préstamo' : 'Póliza'}${doc.numeroDocumento ? ` · ${doc.numeroDocumento}` : file?.name ? ` · ${file.name}` : ''}`}
           resumen={{ Cuotas: cuotas.length, Pagadas: resumen.pagadas, Total: resumen.total, Pendiente: resumen.pendiente }}
           datos={{ documentType, archivo: file?.name || restaurar?.archivo || null, paymentData }}
         />
-        <Button color="success" startContent={<Download size={18} />} onClick={exportToExcel}>Descargar Excel</Button>
-        <Button color="secondary" startContent={<Download size={18} />} onClick={exportToPDF}>Descargar PDF</Button>
-        <Button variant="bordered" onClick={() => setStep('revisar')} startContent={<PencilLine size={16} />}>Editar datos</Button>
-        <Button color="primary" variant="bordered" onClick={reiniciar}>Procesar otro documento</Button>
+        <button type="button" className="q-btn q-btn--line" onClick={exportToExcel}><Download size={16} /> Descargar Excel</button>
+        <button type="button" className="q-btn q-btn--line" onClick={exportToPDF}><Download size={16} /> Descargar PDF</button>
+        <button type="button" className="q-btn q-btn--line" onClick={() => setStep('revisar')}><PencilLine size={16} /> Editar datos</button>
+        <button type="button" className="q-btn q-btn--line" onClick={reiniciar}>Procesar otro documento</button>
       </div>
     </div>
   )
@@ -480,10 +463,10 @@ function ControlPagos({ restaurar = null }) {
 
           {step === 'upload' && renderUploadStep()}
           {step === 'processing' && (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <Spinner size="lg" color="primary" />
-              <p className="text-lg font-semibold text-primary">Leyendo el documento...</p>
-              <p className="text-sm text-text-secondary">Esto puede tomar unos segundos</p>
+            <div className="cp-procesando" role="status">
+              <Loader2 size={28} className="cp-gira" aria-hidden="true" />
+              <p className="cp-procesando__titulo">Leyendo el documento...</p>
+              <p className="cp-resumen__nota">Esto puede tomar unos segundos</p>
             </div>
           )}
           {step === 'revisar' && renderRevisarStep()}
