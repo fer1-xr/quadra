@@ -711,3 +711,6 @@
   position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
+
+/* El cuerpo de la tarjeta es grid: sin esto la tabla ensancha la página en vez de desplazarse dentro de su caja */
+.control-pagos-sheet .q-card__body > * { min-width: 0; }
