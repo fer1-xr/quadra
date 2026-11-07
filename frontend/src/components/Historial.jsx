@@ -1,16 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import * as XLSX from 'xlsx'
-import { Cloud, CloudOff, HardDrive, Search, RefreshCw, Trash2, FileSpreadsheet, ChevronDown, FolderOpen, Clock } from 'lucide-react'
+import { Cloud, CloudOff, HardDrive, Search, Trash2, FileSpreadsheet, ChevronDown, FolderOpen } from 'lucide-react'
 import PageHead from './PageHead'
 import {
-  listarHistorial, eliminarDeHistorial, extenderHistorial,
-  useContribuyente, MODULOS, RETENCION_MESES
+  listarHistorial, eliminarDeHistorial,
+  useContribuyente, MODULOS
 } from '../services/historialService'
 import '../styles/Historial.css'
 
 const fFecha = (iso) => new Date(iso).toLocaleDateString('es-PY', { day: '2-digit', month: '2-digit', year: 'numeric' })
 const fHora = (iso) => new Date(iso).toLocaleTimeString('es-PY', { hour: '2-digit', minute: '2-digit' })
-const diasHasta = (iso) => Math.ceil((new Date(iso) - new Date()) / 86400000)
 
 const humanizar = (k) => k
   .replace(/([a-z])([A-Z0-9])/g, '$1 $2')
@@ -151,24 +150,15 @@ function Historial({ onAbrir }) {
     }
   }
 
-  const renovar = async (item) => {
-    try {
-      const nuevo = await extenderHistorial(item)
-      setItems((prev) => prev.map((i) => (i.id === item.id ? nuevo : i)))
-    } catch {
-      setError('No se pudo renovar el plazo')
-    }
-  }
-
   if (!contribuyente) return null
 
   return (
     <div className="q-sheet q-sheet--wide q-hist">
       <PageHead
         title="Historial"
-        lede={`Conciliaciones y cálculos guardados de ${contribuyente.razonSocial}. Cada registro se conserva ${RETENCION_MESES} meses y podés renovarlo.`}
-        equation={[{ v: 'Vence' }, { op: '=' }, { v: 'Guardado' }, { op: '+' }, { n: String(RETENCION_MESES) }, { v: 'meses' }]}
-        caption="retención mínima"
+        lede={`Conciliaciones y cálculos guardados de ${contribuyente.razonSocial}. Quedan guardados hasta que los elimines.`}
+        equation={[{ v: 'Guardado' }, { op: '=' }, { v: 'Conservado' }]}
+        caption="sin vencimiento"
       />
 
       <div className="q-hist__bar">
@@ -210,7 +200,6 @@ function Historial({ onAbrir }) {
       ) : (
         <ul className="q-hist__list">
           {visibles.map((item) => {
-            const dias = diasHasta(item.expiresAt)
             const open = abierto === item.id
             return (
               <li key={item.id} className={`q-hist__item ${open ? 'is-open' : ''}`}>
@@ -227,9 +216,6 @@ function Historial({ onAbrir }) {
                     )}
                     <span className="q-hist__dates">
                       <span>{fFecha(item.createdAt)} · {fHora(item.createdAt)}</span>
-                      <span className={dias <= 15 ? 'is-soon' : ''}>
-                        <Clock size={12} strokeWidth={1.8} /> Vence {fFecha(item.expiresAt)}{dias <= 15 ? ` (${dias} d)` : ''}
-                      </span>
                       {item.origen === 'local' && <span className="is-local"><HardDrive size={12} strokeWidth={1.8} /> Pendiente de subir</span>}
                     </span>
                     <ChevronDown className="q-hist__caret" size={16} strokeWidth={1.8} aria-hidden="true" />
@@ -242,9 +228,6 @@ function Historial({ onAbrir }) {
                     )}
                     <button type="button" className="q-hist__act" onClick={() => exportarExcel(item)} title="Descargar Excel">
                       <FileSpreadsheet size={15} strokeWidth={1.8} /> Excel
-                    </button>
-                    <button type="button" className="q-hist__act" onClick={() => renovar(item)} title={`Renovar: vence en ${RETENCION_MESES} meses desde hoy`}>
-                      <RefreshCw size={15} strokeWidth={1.8} /> Renovar
                     </button>
                     <button type="button" className="q-hist__act q-hist__act--danger" onClick={() => eliminar(item)} aria-label={`Eliminar ${item.titulo}`} title="Eliminar">
                       <Trash2 size={15} strokeWidth={1.8} />

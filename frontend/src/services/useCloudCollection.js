@@ -18,7 +18,7 @@ const readCache = (key) => {
  * Lista persistida en Supabase (tabla workspace_items), con copia local
  * para mostrar los datos al instante y seguir funcionando sin conexión.
  *
- * kind:      'cliente' | 'tarea' | 'meta'
+ * kind:      'cliente' | 'tarea' | 'meta' | 'recordatorio' | 'nota' | 'favorito'
  * legacyKey: clave antigua de localStorage; si la cuenta aún no tiene datos
  *            en la nube, lo guardado ahí se sube una sola vez.
  *

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { CloudUpload, CloudCheck, HardDrive, AlertCircle } from 'lucide-react'
-import { guardarEnHistorial, useContribuyente, RETENCION_MESES } from '../services/historialService'
+import { guardarEnHistorial, useContribuyente } from '../services/historialService'
 import '../styles/Historial.css'
 
 /**
@@ -50,10 +50,10 @@ function GuardarEnNube({ modulo, titulo, resumen, datos, disabled, className = '
         {label}
       </button>
       <span className="q-save__hint" role="status">
-        {estado === 'nube' && `Disponible en Historial por ${RETENCION_MESES} meses`}
+        {estado === 'nube' && 'Disponible en el Historial'}
         {estado === 'local' && 'Sin conexión a la nube: se subirá al abrir el Historial'}
         {estado === 'error' && mensaje}
-        {estado === 'idle' && `Se conserva ${RETENCION_MESES} meses en ${contribuyente.razonSocial}`}
+        {estado === 'idle' && `Se guarda en el Historial de ${contribuyente.razonSocial}`}
       </span>
     </span>
   )

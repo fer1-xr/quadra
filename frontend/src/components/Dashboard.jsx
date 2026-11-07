@@ -2,7 +2,6 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
-import History from './History'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
@@ -164,13 +163,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     } catch (err) {
       setError('Error al descargar')
     }
-  }
-
-  const handleViewHistory = (session) => {
-    setDiscrepancies(session.data.discrepancies)
-    setSessionId(session.id)
-    setTotalCoincidencias(session.data.discrepancies.filter(d => d.status === 'success').length)
-    setView('rg90-results')
   }
 
   const handleNavigate = (viewId) => {

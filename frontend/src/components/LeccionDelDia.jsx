@@ -6,8 +6,10 @@ import {
   obtenerLeccionPorId,
   leccionAHtml,
 } from '../services/leccionesCatalogo'
+import { useCloudCollection } from '../services/useCloudCollection'
 
-// Clave de favoritos por usuario para que cada cuenta tenga su propia lista
+// Clave antigua (por usuario) donde se guardaban los favoritos en este equipo.
+// useCloudCollection la usa para subirlos a la nube la primera vez.
 const obtenerClaveFavoritos = () => {
   try {
     const user = JSON.parse(localStorage.getItem('quaedra_user') || 'null')
@@ -15,16 +17,6 @@ const obtenerClaveFavoritos = () => {
     return id ? `quadra_lecciones_favoritas_${id}` : 'quadra_lecciones_favoritas'
   } catch (e) {
     return 'quadra_lecciones_favoritas'
-  }
-}
-
-// Solo se conservan favoritos con id de lección (formato actual)
-const cargarFavoritos = () => {
-  try {
-    const guardados = JSON.parse(localStorage.getItem(obtenerClaveFavoritos()) || '[]')
-    return Array.isArray(guardados) ? guardados.filter(f => f && typeof f.id === 'string') : []
-  } catch (e) {
-    return []
   }
 }
 
@@ -39,12 +31,12 @@ function LeccionDelDia() {
   const [leccionHoy] = useState(() => obtenerLeccionDelDia(hoy))
   const [leccion, setLeccion] = useState(leccionHoy)
   const [vista, setVista] = useState('hoy') // 'hoy' | 'favoritos'
-  const [favoritos, setFavoritos] = useState(cargarFavoritos)
+  // Favoritos en la nube (workspace_items, kind 'favorito'): se ven desde cualquier equipo
+  const [claveFavoritos] = useState(obtenerClaveFavoritos)
+  const [guardados, setFavoritos] = useCloudCollection('favorito', claveFavoritos)
+  // Solo favoritos con id de lección (formato actual)
+  const favoritos = guardados.filter(f => f && typeof f.id === 'string')
   const [aviso, setAviso] = useState('')
-
-  useEffect(() => {
-    localStorage.setItem(obtenerClaveFavoritos(), JSON.stringify(favoritos))
-  }, [favoritos])
 
   useEffect(() => {
     if (!aviso) return
@@ -88,7 +80,8 @@ function LeccionDelDia() {
     setVista('hoy')
   }
 
-  const leccionesFavoritas = favoritos
+  const leccionesFavoritas = [...favoritos]
+    .sort((a, b) => String(b.guardadoEn || '').localeCompare(String(a.guardadoEn || '')))
     .map(f => {
       const l = obtenerLeccionPorId(f.id)
       return l ? { ...l, guardadoEn: f.guardadoEn } : null

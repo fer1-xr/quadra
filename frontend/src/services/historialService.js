@@ -3,12 +3,11 @@ import { supabase } from './supabaseClient'
 
 /**
  * Historial de trabajo por contribuyente.
- * Se guarda en Supabase (tabla historial_trabajo) y vive al menos 3 meses.
+ * Se guarda en Supabase (tabla historial_trabajo) y queda hasta que el usuario lo elimine.
  * Si la nube no está disponible, queda en este equipo y se sube en cuanto se pueda.
  */
 
 const TABLE = 'historial_trabajo'
-export const RETENCION_MESES = 3
 
 export const ContribuyenteContext = createContext(null)
 export const useContribuyente = () => useContext(ContribuyenteContext)
@@ -21,14 +20,6 @@ export const MODULOS = {
   flujo: 'Flujo de Caja',
   cotizacion: 'Cotización',
   'control-pagos': 'Control de Pagos'
-}
-
-export const sumarMeses = (fecha, meses) => {
-  const d = new Date(fecha)
-  const dia = d.getDate()
-  d.setMonth(d.getMonth() + meses)
-  if (d.getDate() < dia) d.setDate(0) // 31/01 + 1 mes → fin de febrero
-  return d
 }
 
 const nuevoId = () => (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(16).slice(2)}`)
@@ -67,8 +58,7 @@ const aFila = (item) => ({
   titulo: item.titulo,
   resumen: item.resumen,
   datos: item.datos,
-  created_at: item.createdAt,
-  expires_at: item.expiresAt
+  created_at: item.createdAt
 })
 
 const deFila = (row) => ({
@@ -80,7 +70,6 @@ const deFila = (row) => ({
   resumen: row.resumen || {},
   datos: row.datos,
   createdAt: row.created_at,
-  expiresAt: row.expires_at,
   origen: 'nube'
 })
 
@@ -107,8 +96,7 @@ export async function guardarEnHistorial({ contribuyente, modulo, titulo, resume
     resumen: Object.fromEntries(Object.entries(resumen || {}).filter(([, v]) => v != null && v !== '')),
     // copia profunda y sin funciones/fechas raras
     datos: JSON.parse(JSON.stringify(datos ?? null)),
-    createdAt: ahora.toISOString(),
-    expiresAt: sumarMeses(ahora, RETENCION_MESES).toISOString()
+    createdAt: ahora.toISOString()
   }
 
   const userId = await sesion()
@@ -129,28 +117,22 @@ export async function guardarEnHistorial({ contribuyente, modulo, titulo, resume
 async function subirPendientes(userId) {
   const local = leerLocal(userId)
   if (!local.length) return
-  const vigentes = local.filter((i) => new Date(i.expiresAt) > new Date())
-  if (!vigentes.length) { escribirLocal(userId, []); return }
-  const { error } = await supabase.from(TABLE).upsert(vigentes.map(aFila), { onConflict: 'id' })
+  const { error } = await supabase.from(TABLE).upsert(local.map(aFila), { onConflict: 'id' })
   if (!error) escribirLocal(userId, [])
 }
 
 /**
- * Lista el historial vigente de un contribuyente (o de todos si clienteId es null).
+ * Lista el historial de un contribuyente (o de todos si clienteId es null).
  * Devuelve { items, nube: boolean }.
  */
 export async function listarHistorial(clienteId) {
   const userId = await sesion()
-  const ahora = new Date()
   let remotos = []
   let nube = false
 
   if (userId) {
     await subirPendientes(userId)
-    // borrar los vencidos (la base además puede limpiarlos con pg_cron)
-    await supabase.from(TABLE).delete().lt('expires_at', ahora.toISOString())
-
-    let q = supabase.from(TABLE).select('*').gt('expires_at', ahora.toISOString()).order('created_at', { ascending: false })
+    let q = supabase.from(TABLE).select('*').order('created_at', { ascending: false })
     if (clienteId != null) q = q.eq('cliente_id', String(clienteId))
     const { data, error } = await q
     if (error) {
@@ -161,11 +143,7 @@ export async function listarHistorial(clienteId) {
     }
   }
 
-  const local = leerLocal(userId)
-  const localVigente = local.filter((i) => new Date(i.expiresAt) > ahora)
-  if (localVigente.length !== local.length) escribirLocal(userId, localVigente)
-
-  const locales = localVigente
+  const locales = leerLocal(userId)
     .filter((i) => clienteId == null || String(i.clienteId) === String(clienteId))
     .map((i) => ({ ...i, origen: 'local' }))
 
@@ -181,17 +159,4 @@ export async function eliminarDeHistorial(item) {
   } else {
     escribirLocal(userId, leerLocal(userId).filter((i) => i.id !== item.id))
   }
-}
-
-/** Renueva el plazo: vence 3 meses después de hoy. */
-export async function extenderHistorial(item) {
-  const userId = await sesion()
-  const expiresAt = sumarMeses(new Date(), RETENCION_MESES).toISOString()
-  if (item.origen === 'nube') {
-    const { error } = await supabase.from(TABLE).update({ expires_at: expiresAt }).eq('id', item.id)
-    if (error) throw error
-  } else {
-    escribirLocal(userId, leerLocal(userId).map((i) => (i.id === item.id ? { ...i, expiresAt } : i)))
-  }
-  return { ...item, expiresAt }
 }
