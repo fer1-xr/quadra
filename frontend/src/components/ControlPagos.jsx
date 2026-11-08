@@ -362,7 +362,7 @@ function ControlPagos({ restaurar = null }) {
       )}
 
       {erroresDoc.length > 0 && (
-        <ul className="q-alert" role="alert">
+        <ul className="q-alert cp-errores" role="alert">
           {erroresDoc.map((e) => <li key={e}>{e}</li>)}
         </ul>
       )}

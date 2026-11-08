@@ -714,3 +714,12 @@
 
 /* El cuerpo de la tarjeta es grid: sin esto la tabla ensancha la página en vez de desplazarse dentro de su caja */
 .control-pagos-sheet .q-card__body > * { min-width: 0; }
+
+/* q-alert es flex en fila: la lista de faltantes va una debajo de otra */
+.q-alert.cp-errores {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin: 0;
+  list-style: none;
+}
