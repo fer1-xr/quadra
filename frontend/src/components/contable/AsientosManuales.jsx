@@ -10,6 +10,7 @@ import { useContable } from './ContableContext'
 import { MontoInput, exportarExcel } from './ui'
 import '../../styles/AsientosManuales.css'
 import { armarDiario, armarMayor, gs, fechaCorta, hoyISO, n0, nuevoId, naturaleza, MESES, CTA } from '../../services/contabilidad'
+import { useRucDnit, estadoDnit } from '../../services/rucDnit'
 
 /* ── constantes ─────────────────────────────────────────────── */
 
@@ -70,8 +71,13 @@ const totalDe = (lado) => lado.reduce((s, l) => s + n0(l.valor), 0)
 
 /* ── buscador con autocompletado (cuentas y personas) ───────── */
 
-export function Buscador({ id, items, valor, onElegir, placeholder, inputRef, onEnterVacio, ariaLabel, onTexto, inputProps = {} }) {
-  const elegido = items.find((x) => x.value === valor)
+/**
+ * `dnit`: además de `items`, sugiere contribuyentes del padrón de RUC de la DNIT.
+ * Al elegir uno de esos, `onElegir(ruc, item)` recibe el item con `dnit: true` y su nombre en `text`.
+ */
+export function Buscador({ id, items, valor, onElegir, placeholder, inputRef, onEnterVacio, ariaLabel, onTexto, inputProps = {}, dnit = false }) {
+  const remotoElegido = useRef(null)
+  const elegido = items.find((x) => x.value === valor) || (remotoElegido.current?.value === valor ? remotoElegido.current : undefined)
   const [texto, setTexto] = useState(elegido?.label || valor || '')
   const [abierto, setAbierto] = useState(false)
   const [activo, setActivo] = useState(0)
@@ -80,7 +86,7 @@ export function Buscador({ id, items, valor, onElegir, placeholder, inputRef, on
   useEffect(() => { setTexto(elegido?.label || valor || '') }, [valor]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const q = normalizar(texto)
-  const resultados = useMemo(() => {
+  const locales = useMemo(() => {
     if (!q || (elegido && texto === elegido.label)) return items.slice(0, 40)
     // orden: código que empieza igual → nombre que empieza igual → palabra que empieza igual → contiene
     const nombre = (x) => normalizar(x.text || x.search)
@@ -90,8 +96,21 @@ export function Buscador({ id, items, valor, onElegir, placeholder, inputRef, on
     return [...porCodigo, ...resto.sort((a, b) => rango(a) - rango(b))].slice(0, 40)
   }, [items, q, elegido, texto])
 
+  const consulta = dnit && abierto && !(elegido && texto === elegido.label) ? texto : ''
+  const { resultados: padron, cargando } = useRucDnit(consulta)
+  const resultados = useMemo(() => {
+    if (!consulta || !padron.length) return locales
+    const ya = new Set(items.map((x) => x.value))
+    const extra = padron.filter((r) => !ya.has(r.ruc)).map((r) => ({
+      value: r.ruc, code: r.ruc, text: r.nombre, label: `${r.ruc} · ${r.nombre}`, search: `${r.ruc} ${r.nombre}`,
+      extra: estadoDnit(r.estado) ? `DNIT · ${estadoDnit(r.estado)}` : 'DNIT', estado: r.estado, dnit: true
+    }))
+    return [...locales.slice(0, 40 - extra.length), ...extra]
+  }, [locales, padron, consulta, items])
+
   const elegir = (it) => {
-    onElegir(it.value)
+    remotoElegido.current = it.dnit ? it : null
+    onElegir(it.value, it)
     setTexto(it.label)
     setAbierto(false)
   }
@@ -126,6 +145,9 @@ export function Buscador({ id, items, valor, onElegir, placeholder, inputRef, on
           if (e.key === 'Escape' && abierto) { e.stopPropagation(); setAbierto(false) }
         }}
       />
+      {dnit && abierto && cargando && !resultados.length && (
+        <ul id={listaId} className="am-busca__lista" role="listbox"><li className="am-busca__nota" aria-disabled="true">Buscando en el padrón de la DNIT…</li></ul>
+      )}
       {abierto && resultados.length > 0 && (
         <ul id={listaId} className="am-busca__lista" role="listbox">
           {resultados.map((it, i) => (

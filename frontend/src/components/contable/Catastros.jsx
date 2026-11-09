@@ -3,6 +3,8 @@ import { Plus, Pencil, X } from 'lucide-react'
 import PageHead, { Figures } from '../PageHead'
 import { useContable } from './ContableContext'
 import { Errores, Vacio } from './ui'
+import CampoDnit from '../CampoDnit'
+import { rucDnitExacto } from '../../services/rucDnit'
 import {
   analizarRuc, dvRuc, nivelDe, padreDe, compararCodigos, naturaleza, TIPOS_TIMBRADO, timbradoValido,
   timbradoVigente, fechaCorta, hoyISO, lineasDe, armarDiario
@@ -32,6 +34,13 @@ export function Personas() {
 
   const set = (c) => { setForm((f) => ({ ...f, ...c })); setErrores([]) }
   const base = (form?.rucBase || '').replace(/\D/g, '')
+  const desdeDnit = (r) => set({ rucBase: r.base, dv: String(r.dv), nombre: r.nombre })
+  // RUC escrito completo y sin nombre: lo trae del padrón de la DNIT
+  const completarNombre = async () => {
+    if (base.length < 5 || form.nombre.trim()) return
+    const r = await rucDnitExacto(base)
+    if (r) setForm((f) => (f && !f.nombre.trim() && f.rucBase === base ? { ...f, dv: String(r.dv), nombre: r.nombre } : f))
+  }
 
   const guardar = (e) => {
     e.preventDefault()
@@ -94,8 +103,9 @@ export function Personas() {
             <div className="q-field">
               <label className="q-label" htmlFor="pe-ruc">RUC</label>
               <div className="ct-ruc">
-                <input id="pe-ruc" className="q-input q-input--num" inputMode="numeric" maxLength={9} value={form.rucBase} placeholder="80012345"
-                  onChange={(e) => { const v = e.target.value.replace(/\D/g, ''); set({ rucBase: v, dv: v.length >= 3 ? String(dvRuc(v)) : form.dv }) }} />
+                <CampoDnit id="pe-ruc" className="q-input q-input--num" inputMode="numeric" maxLength={9} value={form.rucBase} placeholder="80012345"
+                  onChange={(t) => { const v = t.replace(/\D/g, ''); set({ rucBase: v, dv: v.length >= 3 ? String(dvRuc(v)) : form.dv }) }}
+                  onElegir={desdeDnit} inputProps={{ onBlur: completarNombre }} />
                 <span aria-hidden="true">−</span>
                 <input className="q-input q-input--num ct-dv" inputMode="numeric" maxLength={1} value={form.dv} aria-label="Dígito verificador" onChange={(e) => set({ dv: e.target.value.replace(/\D/g, '') })} />
               </div>
@@ -103,7 +113,7 @@ export function Personas() {
             </div>
             <div className="q-field ct-span-2">
               <label className="q-label" htmlFor="pe-nom">Nombre o razón social</label>
-              <input id="pe-nom" className="q-input" value={form.nombre} onChange={(e) => set({ nombre: e.target.value })} />
+              <CampoDnit id="pe-nom" value={form.nombre} onChange={(t) => set({ nombre: t })} onElegir={desdeDnit} placeholder="Escribí para buscar en el padrón de la DNIT" />
             </div>
             <div className="q-field">
               <label className="q-label" htmlFor="pe-tipo">Tipo</label>

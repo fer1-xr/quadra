@@ -9,6 +9,7 @@ import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
 import { MontoInput, AsientoPreview, exportarExcel } from './ui'
 import { Buscador } from './AsientosManuales'
+import { rucDnitExacto } from '../../services/rucDnit'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
   TIPOS, CTA, totalesDe, lineasDe, gs, fechaCorta, hoyISO, formatearNumero, numeroValido, timbradoValido,
@@ -134,7 +135,11 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
   const opcionesPersona = useMemo(() => personas.items
     .filter((p) => p.tipo === 'ambos' || p.tipo === (esCompra ? 'proveedor' : 'cliente') || !p.tipo)
     .concat(personas.items.filter((p) => p.tipo && p.tipo !== 'ambos' && p.tipo !== (esCompra ? 'proveedor' : 'cliente')))
-    .map((p) => ({ value: p.ruc, code: p.ruc, text: p.nombre, label: `${p.ruc} · ${p.nombre}`, search: `${p.ruc} ${p.nombre}` })), [personas.items, esCompra])
+    .map((p) => ({ value: p.ruc, code: p.ruc, text: p.nombre, label: `${p.ruc} · ${p.nombre}`, search: `${p.ruc} ${p.nombre}` }))
+    // persona elegida del padrón de la DNIT que todavía no está en Personas
+    .concat(f.personaRuc && f.personaNombre && !personas.items.some((p) => p.ruc === f.personaRuc)
+      ? [{ value: f.personaRuc, code: f.personaRuc, text: f.personaNombre, label: `${f.personaRuc} · ${f.personaNombre}`, search: `${f.personaRuc} ${f.personaNombre}`, extra: 'nuevo' }]
+      : []), [personas.items, esCompra, f.personaRuc, f.personaNombre])
   const opcionesCuenta = useMemo(() => imputables.map((c) => ({
     value: c.codigo, code: c.codigo, text: c.nombre, label: `${c.codigo} · ${c.nombre}`, search: `${c.codigo} ${c.nombre}`
   })), [imputables])
@@ -174,17 +179,18 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     return c
   }
 
-  const elegirPersona = (ruc) => {
+  // `item.dnit`: viene del padrón de RUC de la DNIT, se agrega a Personas al guardar
+  const elegirPersona = (ruc, item) => {
     if (!ruc) { set({ personaRuc: '', personaNombre: '' }); return }
     const p = personas.items.find((x) => x.ruc === ruc)
     setPersonaNueva(false)
-    setF((prev) => recordar(ruc, { ...prev, personaRuc: ruc, personaNombre: p?.nombre || prev.personaNombre }))
+    setF((prev) => recordar(ruc, { ...prev, personaRuc: ruc, personaNombre: p?.nombre || (item?.dnit ? item.text : prev.personaNombre) }))
     setErrores([])
     setTimeout(() => siguiente(document.getElementById('lf-persona')), 0)
   }
 
   /** RUC escrito que no está en Personas: completa el DV y pide el nombre */
-  const rucLibre = (texto) => {
+  const rucLibre = async (texto) => {
     const limpio = String(texto || '').trim()
     if (!limpio) { siguiente(document.getElementById('lf-persona')); return }
     let ruc = limpio
@@ -192,6 +198,8 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     if (!analizarRuc(ruc).formato) { setErrores(['Escribí un RUC (80012345-6) o buscá por nombre.']); return }
     const p = personas.items.find((x) => x.ruc === ruc)
     if (p) { elegirPersona(ruc); return }
+    const enPadron = await rucDnitExacto(ruc)
+    if (enPadron) { elegirPersona(enPadron.ruc, { dnit: true, text: enPadron.nombre }); return }
     setF((prev) => recordar(ruc, { ...prev, personaRuc: ruc, personaNombre: '' }))
     setPersonaNueva(true)
     setTimeout(() => document.getElementById('lf-nombre')?.focus(), 0)
@@ -501,6 +509,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
                       valor={f.personaRuc}
                       onElegir={elegirPersona}
                       onEnterVacio={rucLibre}
+                      dnit
                       onTexto={() => setPersonaNueva(false)}
                       placeholder="RUC o nombre"
                       ariaLabel={quien}

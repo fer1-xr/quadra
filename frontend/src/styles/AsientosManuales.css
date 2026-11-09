@@ -305,3 +305,4 @@
   .am-balance__estado { grid-column: 1 / -1; justify-self: start; }
   .q-app .q-content .am-buscar .q-input { width: 100%; }
 }
+.am-busca__lista li.am-busca__nota { display: block; color: var(--q-ink-3); cursor: default; }

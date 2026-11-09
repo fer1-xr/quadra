@@ -6,6 +6,8 @@ import jsPDF from 'jspdf'
 import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Chip } from '@heroui/react'
 import { Plus, Edit2, Trash2, Download, Users, X, Pencil, Check, LogIn } from 'lucide-react'
 import '../styles/GestionClientes.css'
+import CampoDnit from './CampoDnit'
+import { rucDnitExacto } from '../services/rucDnit'
 
 // Impuestos vigentes en Paraguay
 export const TIPOS_IMPUESTO = [
@@ -59,6 +61,15 @@ function GestionClientes({ onTrabajar }) {
   const [editandoId, setEditandoId] = useState(null)
   const [busqueda, setBusqueda] = useState('')
   const [nuevoCliente, setNuevoCliente] = useState(CLIENTE_VACIO)
+
+  const desdeDnit = (r) => setNuevoCliente((c) => ({ ...c, ruc: r.ruc, razonSocial: r.nombre }))
+  // RUC escrito sin razón social: la trae del padrón de la DNIT
+  const completarRazonSocial = async () => {
+    const ruc = nuevoCliente.ruc.trim()
+    if (nuevoCliente.razonSocial.trim() || ruc.split('-')[0].replace(/\D/g, '').length < 5) return
+    const r = await rucDnitExacto(ruc)
+    if (r) setNuevoCliente((c) => (c.razonSocial.trim() || c.ruc.trim() !== ruc ? c : { ...c, ruc: r.ruc, razonSocial: r.nombre }))
+  }
 
   const agregarOActualizarCliente = () => {
     if (!nuevoCliente.razonSocial.trim() || !nuevoCliente.ruc.trim()) {
@@ -308,20 +319,27 @@ function GestionClientes({ onTrabajar }) {
           <div className="form-row-2">
             <div className="form-group">
               <label>Razón Social *</label>
-              <input
+              <CampoDnit
+                id="cli-razon"
+                className=""
                 type="text"
                 value={nuevoCliente.razonSocial}
-                onChange={(e) => setNuevoCliente({ ...nuevoCliente, razonSocial: e.target.value })}
-                placeholder="Ej: Empresa XYZ S.A."
+                onChange={(t) => setNuevoCliente((c) => ({ ...c, razonSocial: t }))}
+                onElegir={desdeDnit}
+                placeholder="Ej: Empresa XYZ S.A. (busca en el padrón de la DNIT)"
                 autoFocus
               />
             </div>
             <div className="form-group">
               <label>RUC *</label>
-              <input
+              <CampoDnit
+                id="cli-ruc"
+                className=""
                 type="text"
                 value={nuevoCliente.ruc}
-                onChange={(e) => setNuevoCliente({ ...nuevoCliente, ruc: e.target.value })}
+                onChange={(t) => setNuevoCliente((c) => ({ ...c, ruc: t }))}
+                onElegir={desdeDnit}
+                inputProps={{ onBlur: completarRazonSocial }}
                 placeholder="Ej: 80123456-7"
               />
             </div>
