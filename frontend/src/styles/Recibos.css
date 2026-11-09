@@ -1,0 +1,132 @@
+/* ── Recibos de cobro y de pago ─────────────────────────────── */
+
+/* grilla */
+.rc-lista .rc-col-ancha { width: 40%; }
+.rc-persona-cel { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.rc-ruc { font-size: 12px; color: var(--q-ink-3); }
+.rc-col-fac { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.rc-acuenta { font-family: var(--q-sans); font-size: 12px; color: var(--q-ink-3); }
+.rc-lista .am-fila:focus-visible td { outline: none; background: var(--q-accent-bg); }
+.rc-lista .am-fila.is-anulado td { color: var(--q-ink-3); }
+.rc-lista .am-fila.is-anulado .ct-strong { text-decoration: line-through; }
+
+.rc-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  font-family: var(--q-sans);
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--q-ink-2);
+  background: var(--q-surface-2);
+  vertical-align: 1px;
+}
+.rc-tag--anulado { color: var(--q-err); background: var(--q-err-bg); }
+
+/* ventana */
+.am-modal.rc-modal { width: min(980px, 100%); }
+
+.rc-resumen {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) auto;
+  align-items: center;
+  gap: 4px 18px;
+  margin: 14px 24px 0 28px;
+  padding: 10px 14px;
+  border: 1px solid var(--q-line);
+  border-radius: 12px;
+  background: var(--q-surface-2);
+}
+.rc-resumen > div { display: grid; gap: 1px; }
+.rc-resumen span { font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--q-ink-3); }
+.rc-resumen strong { font-size: 17px; font-weight: 600; text-align: left; color: var(--q-ink); }
+.rc-resumen__estado { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 600; color: var(--q-ink-2); background: var(--q-surface); }
+.rc-resumen.is-anulado { border-color: var(--q-err-line); background: var(--q-err-bg); }
+.rc-resumen.is-anulado .rc-resumen__estado { color: var(--q-err); }
+
+.rc-body { min-height: 340px; }
+
+/* encabezado: etiquetas a la izquierda, como en los sistemas contables de escritorio */
+.rc-form {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1.4fr) 104px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px 12px;
+}
+.rc-label { font-size: 13.5px; color: var(--q-ink-2); text-align: right; white-space: nowrap; }
+.rc-persona { grid-column: 2 / -1; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+.rc-persona:has(> .q-input) { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.rc-fila-full { grid-column: 2 / -1; }
+
+.rc-pendiente {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  margin-top: -4px;
+  padding: 8px 12px;
+  border: 1px dashed var(--q-line);
+  border-radius: 10px;
+  font-size: 13px;
+  color: var(--q-ink-2);
+}
+.rc-pendiente strong { color: var(--q-ink); }
+.q-app .q-content .rc-mini { height: 30px; padding: 0 10px; gap: 6px; font-size: 12.5px; border-radius: 8px; }
+
+.rc-nro { display: grid; grid-template-columns: 64px 64px minmax(0, 1fr); gap: 6px; }
+.q-app .q-content .rc-nro .q-input { padding-left: 8px; padding-right: 8px; text-align: center; }
+.rc-anulado { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--q-ink-2); cursor: pointer; }
+.rc-anulado input { width: 18px; height: 18px; accent-color: var(--q-err); }
+
+/* fila fecha / moneda / tasa: la tasa ocupa las dos últimas columnas */
+.rc-fecha { max-width: 160px; }
+.rc-tc { grid-column: 2; display: grid; gap: 4px; }
+.rc-form > #rc-mon { grid-column: 4 / -1; }
+.rc-form > label[for="rc-tc"] { grid-column: 1; }
+.rc-total { grid-column: 4 / -1; display: grid; gap: 4px; justify-items: start; }
+.rc-total .q-input { width: 100%; }
+.rc-form > #rc-pago { grid-column: 2 / -1; }
+.rc-repartir { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; }
+.rc-obs { resize: vertical; min-height: 56px; }
+
+/* facturas */
+.rc-facturas { display: grid; gap: 12px; }
+.rc-facturas__barra { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 10px 20px; }
+.rc-facturas__barra .rc-nota { max-width: 560px; }
+.rc-facturas__acciones { display: flex; gap: 6px; }
+.rc-facturas__wrap { max-height: 360px; overflow: auto; border: 1px solid var(--q-line); border-radius: 12px; }
+.rc-tabla tbody tr.is-on td { background: var(--q-accent-bg); }
+.rc-col-chk { width: 40px; text-align: center; }
+.rc-col-chk input { width: 16px; height: 16px; accent-color: var(--q-accent); cursor: pointer; }
+.rc-col-aplicar { width: 170px; }
+.q-app .q-content .rc-col-aplicar .q-input { height: 32px; padding: 4px 10px; }
+.rc-dias { display: inline-block; min-width: 46px; padding: 1px 8px; border-radius: 999px; font-size: 12px; color: var(--q-ink-2); background: var(--q-surface-2); }
+.rc-dias.is-30 { color: var(--q-warn); background: color-mix(in srgb, var(--q-warn) 10%, transparent); }
+.rc-dias.is-60 { color: var(--q-err); background: var(--q-err-bg); }
+.rc-dias.is-90 { color: #fff; background: var(--q-err); }
+
+.rc-nota { margin: 0; font-size: 13px; line-height: 1.5; color: var(--q-ink-3); }
+.rc-nota--vacio { padding: 18px 14px; border-radius: 10px; background: var(--q-surface-2); }
+
+/* asiento */
+.rc-asiento { display: grid; gap: 14px; }
+.rc-asiento__cuentas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+
+/* informaciones */
+.rc-info { display: grid; gap: 0; margin: 0; }
+.rc-info > div { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; padding: 12px 2px; border-bottom: 1px solid var(--q-line); }
+.rc-info dt { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; color: var(--q-ink-3); }
+.rc-info dd { display: grid; gap: 2px; margin: 0; font-size: 14px; font-weight: 550; color: var(--q-ink); }
+.rc-info dd small { font-size: 12.5px; font-weight: 400; color: var(--q-ink-3); }
+.rc-info > .rc-nota { padding-top: 12px; }
+
+@media (max-width: 860px) {
+  .rc-form { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+  .rc-label { text-align: left; margin-top: 6px; }
+  .rc-persona, .rc-fila-full, .rc-tc, .rc-total, .rc-form > #rc-mon, .rc-form > #rc-pago, .rc-form > label[for="rc-tc"] { grid-column: auto; }
+  .rc-persona:has(> .q-input) { grid-template-columns: minmax(0, 1fr); }
+  .rc-resumen { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .rc-resumen__estado { grid-column: 1 / -1; justify-self: start; }
+  .rc-asiento__cuentas, .rc-info > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}

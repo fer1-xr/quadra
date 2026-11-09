@@ -3,6 +3,9 @@ import { ContableProvider } from './ContableContext'
 import RegistroFiscal from './Comprobantes'
 import { RegistroMovimientos } from './Movimientos'
 import AsientosManuales from './AsientosManuales'
+import NotasCredito from './NotasCredito'
+import Retenciones from './Retenciones'
+import Recibos from './Recibos'
 import { LibroDiario, LibroMayor } from './Libros'
 import { Personas, PlanCuentas, Timbrados } from './Catastros'
 import { ActivosFijos, RevaluoDepreciacion } from './ActivosFijos'
@@ -37,18 +40,19 @@ function Vista({ vista }) {
     case 'ct-libro-ventas':
       return <RegistroFiscal key={vista} libro titulo="Libro Ventas" lede="Facturas, notas de débito y notas de crédito emitidas a tus clientes, con el débito fiscal liquidado. Cada carga genera su asiento en el Diario." tipos={['venta', 'nd-venta', 'nc-venta']} />
     case 'ct-nc-compra':
-      return <RegistroFiscal key={vista} titulo="Notas de crédito por compra" lede="Las que te emiten tus proveedores por devoluciones o descuentos. Restan del crédito fiscal y del saldo con el proveedor." tipos={['nc-compra']} />
+      return <NotasCredito key={vista} tipo="nc-compra" />
     case 'ct-nc-venta':
-      return <RegistroFiscal key={vista} titulo="Notas de crédito por venta" lede="Las que emitís a tus clientes por devoluciones o descuentos. Restan del débito fiscal y del saldo a cobrar." tipos={['nc-venta']} />
+      return <NotasCredito key={vista} tipo="nc-venta" />
     case 'ct-nd-compra':
       return <RegistroFiscal key={vista} titulo="Notas de débito por compra" lede="Las que te emiten tus proveedores por intereses, recargos o diferencias de precio. Suman al crédito fiscal." tipos={['nd-compra']} />
     case 'ct-nd-venta':
       return <RegistroFiscal key={vista} titulo="Notas de débito por venta" lede="Las que emitís a tus clientes por intereses, recargos o diferencias de precio. Suman al débito fiscal." tipos={['nd-venta']} />
     case 'ct-recibo-cobro':
     case 'ct-recibo-pago':
+      return <Recibos key={vista} tipo={vista.slice(3)} />
     case 'ct-ret-emitida':
     case 'ct-ret-recibida':
-      return <RegistroMovimientos key={vista} tipo={vista.slice(3)} />
+      return <Retenciones key={vista} tipo={vista.slice(3)} />
     case 'ct-asientos': return <AsientosManuales />
     case 'ct-diario': return <LibroDiario />
     case 'ct-mayor': return <LibroMayor />

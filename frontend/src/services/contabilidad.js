@@ -367,6 +367,7 @@ export const lineasDe = (doc) => {
     return out
   }
 
+  if (doc.anulado) return []
   const monto = n0(doc.monto)
   if (!monto) return []
   switch (doc.tipo) {
@@ -482,10 +483,108 @@ export const saldoPersona = (docs, ruc, lado) => {
       if (d.condicion !== 'credito') return
       saldo += t.signo * totalesDe(d).total
     } else if (['recibo-cobro', 'recibo-pago', 'ret-recibida', 'ret-emitida'].includes(d.tipo)) {
-      saldo -= n0(d.monto)
+      if (!d.anulado) saldo -= n0(d.monto)
     }
   })
   return saldo
+}
+
+/**
+ * Facturas a crédito de una persona con su saldo pendiente.
+ * Los recibos y retenciones se aplican primero a las facturas que nombran
+ * (aplicaciones o número de factura); lo que no nombra ninguna factura,
+ * y las notas de crédito sin factura asociada, cancelan las más antiguas primero.
+ * `excluirId` deja afuera el recibo que se está editando.
+ */
+export const facturasPendientes = (docs, ruc, lado, excluirId) => {
+  if (!ruc) return []
+  const tipos = lado === 'venta' ? ['venta', 'nd-venta'] : ['compra', 'nd-compra']
+  const nc = lado === 'venta' ? 'nc-venta' : 'nc-compra'
+  const deLaPersona = docs.filter((d) => d.personaRuc === ruc && d.id !== excluirId)
+  const facturas = deLaPersona
+    .filter((d) => tipos.includes(d.tipo) && d.condicion === 'credito')
+    .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.numero || '').localeCompare(b.numero || ''))
+    .map((d) => ({ id: d.id, tipo: d.tipo, numero: d.numero, fecha: d.fecha, timbrado: d.timbrado, total: totalesDe(d).total, saldo: totalesDe(d).total }))
+  const porNumero = new Map(facturas.map((f) => [f.numero, f]))
+  const porId = new Map(facturas.map((f) => [f.id, f]))
+  let suelto = 0
+  const aplicar = (f, monto) => {
+    if (!f) { suelto += monto; return }
+    const m = Math.min(f.saldo, monto)
+    f.saldo -= m
+    suelto += monto - m
+  }
+
+  deLaPersona.forEach((d) => {
+    if (d.anulado) return
+    if (d.tipo === nc) {
+      const total = totalesDe(d).total
+      const filas = (d.facturas || []).filter((r) => r.factura)
+      if (filas.length) {
+        const tc = d.moneda && d.moneda !== 'PYG' ? Number(d.cambio) || 1 : 1
+        let usado = 0
+        filas.forEach((r) => {
+          const m = Math.round((n0(r.g10) + n0(r.g5) + n0(r.ex)) * tc)
+          usado += m
+          aplicar(porNumero.get(r.factura), m)
+        })
+        if (total > usado) suelto += total - usado
+      } else aplicar(d.asociado ? porNumero.get(d.asociado) : null, total)
+      return
+    }
+    if (!['recibo-cobro', 'recibo-pago', 'ret-recibida', 'ret-emitida'].includes(d.tipo) || TIPOS[d.tipo].lado !== lado) return
+    const monto = n0(d.monto)
+    if (d.aplicaciones?.length) {
+      let usado = 0
+      d.aplicaciones.forEach((a) => {
+        usado += n0(a.monto)
+        aplicar(porId.get(a.facturaId) || porNumero.get(a.numero), n0(a.monto))
+      })
+      if (monto > usado) suelto += monto - usado
+    } else {
+      const refs = String(d.facturaRef || '').split(/[,;\s]+/).map((x) => porNumero.get(formatearNumero(x))).filter(Boolean)
+      let resto = monto
+      refs.forEach((f) => { const m = Math.min(f.saldo, resto); f.saldo -= m; resto -= m })
+      suelto += resto
+    }
+  })
+
+  // lo que no nombra factura cancela las más antiguas
+  facturas.forEach((f) => {
+    if (suelto <= 0) return
+    const m = Math.min(f.saldo, suelto)
+    f.saldo -= m
+    suelto -= m
+  })
+  return facturas.filter((f) => f.saldo > 0)
+}
+
+/** importe en letras, para imprimir recibos («un millón doscientos mil») */
+export const enLetras = (n) => {
+  const U = ['', 'uno', 'dos', 'tres', 'cuatro', 'cinco', 'seis', 'siete', 'ocho', 'nueve', 'diez', 'once', 'doce', 'trece', 'catorce', 'quince', 'dieciséis', 'diecisiete', 'dieciocho', 'diecinueve', 'veinte', 'veintiuno', 'veintidós', 'veintitrés', 'veinticuatro', 'veinticinco', 'veintiséis', 'veintisiete', 'veintiocho', 'veintinueve']
+  const D = ['', '', '', 'treinta', 'cuarenta', 'cincuenta', 'sesenta', 'setenta', 'ochenta', 'noventa']
+  const C = ['', 'ciento', 'doscientos', 'trescientos', 'cuatrocientos', 'quinientos', 'seiscientos', 'setecientos', 'ochocientos', 'novecientos']
+  const cientos = (x) => {
+    if (x === 100) return 'cien'
+    const c = Math.floor(x / 100)
+    const r = x % 100
+    const dec = r < 30 ? U[r] : `${D[Math.floor(r / 10)]}${r % 10 ? ` y ${U[r % 10]}` : ''}`
+    return [C[c], dec].filter(Boolean).join(' ')
+  }
+  // «uno» se apocopa delante de mil / millones: veintiún mil, un millón
+  const apocope = (txt) => txt.replace(/veintiuno$/, 'veintiún').replace(/uno$/, 'un')
+  const miles = (x) => {
+    const m = Math.floor(x / 1000)
+    const r = x % 1000
+    const pre = m === 0 ? '' : m === 1 ? 'mil' : `${apocope(cientos(m))} mil`
+    return [pre, cientos(r)].filter(Boolean).join(' ')
+  }
+  let v = Math.round(Math.abs(Number(n) || 0))
+  if (!v) return 'cero'
+  const mill = Math.floor(v / 1e6)
+  v %= 1e6
+  const pre = mill === 0 ? '' : mill === 1 ? 'un millón' : `${apocope(miles(mill))} millones`
+  return [pre, miles(v)].filter(Boolean).join(' ')
 }
 
 /* ── activo fijo: revalúo y depreciación ────────────────────── */

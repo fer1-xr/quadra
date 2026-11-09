@@ -1,0 +1,36 @@
+/* Retenciones de IVA (emitidas / recibidas) — reutiliza la ventana de NotasCredito.css */
+
+.rt-modal { width: min(980px, 100%); }
+
+.rt-fila--timb { grid-template-columns: 112px minmax(0, 336px) 96px 106px 1fr auto auto; }
+.rt-fila--145 { grid-template-columns: 112px 214px; }
+.rt-fila--num { grid-template-columns: 112px auto 1fr auto 106px; }
+.rt-fila--moneda { grid-template-columns: 112px 296px 1fr auto minmax(0, 232px); }
+
+.rt-numero { display: grid; grid-template-columns: 80px 80px 150px; gap: 4px; }
+
+/* importes: 4 pares etiqueta + campo */
+.rt-grid {
+  display: grid; align-items: center; gap: 7px 6px;
+  grid-template-columns: 112px minmax(0, 1fr) 96px minmax(0, 1fr) 96px 56px 132px minmax(0, 1fr);
+}
+.rt-porc { text-align: right; }
+.rt-check { width: 20px; height: 20px; margin: 0 4px 0 2px; accent-color: #1e8fdd; cursor: pointer; }
+
+.rt-obs { min-height: 50px; padding: 6px 8px; resize: vertical; font: inherit; }
+.rt-aviso-anul { margin: 0; color: #a45a00; }
+
+/* grilla */
+.rt-tag {
+  display: inline-block; margin-left: 8px; padding: 1px 6px; border-radius: 3px;
+  background: #fdecea; font: 600 10.5px var(--q-sans); letter-spacing: 0.04em; color: #b42318; vertical-align: 1px;
+}
+.rt-anulada-fila td { color: var(--q-ink-3); }
+.rt-anulada-fila td:last-child { text-decoration: line-through; }
+
+@media (max-width: 860px) {
+  .rt-fila--timb, .rt-fila--num, .rt-fila--moneda, .rt-grid { grid-template-columns: 112px 1fr; }
+  .rt-fila--timb > span:empty, .rt-fila--num > span:empty, .rt-fila--moneda > span:empty, .rt-grid > span:empty { display: none; }
+  .rt-fila--timb .rt-check { justify-self: start; }
+  .rt-numero { grid-template-columns: 64px 64px 1fr; }
+}
