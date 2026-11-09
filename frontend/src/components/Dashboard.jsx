@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, ArrowLeftRight, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
@@ -19,6 +19,8 @@ import MiCuenta from './MiCuenta'
 import GuardarEnNube from './GuardarEnNube'
 import AyudaMemoria from './AyudaMemoria'
 import NotasReuniones from './NotasReuniones'
+import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
+import MenuContable, { MarangatuLink } from './contable/MenuContable'
 import { ContribuyenteContext } from '../services/historialService'
 import PageHead, { Figures, Eq } from './PageHead'
 import { API_BASE_URL, authHeaders } from '../services/api'
@@ -38,7 +40,8 @@ const leerJSON = (key) => {
 // Vistas que solo existen dentro del espacio de trabajo de un contribuyente
 const VISTAS_CONTRIBUYENTE = new Set([
   'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
-  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial', 'memoria', 'notas'
+  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial', 'memoria', 'notas',
+  ...Object.keys(VISTAS_CONTABLES)
 ])
 
 const FLUJO_VACIO = { periodo: '', ingresos: '', egresos: '', saldo: '', inversiones: '', financiamientos: '' }
@@ -272,7 +275,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     flujo: 'Flujo de Caja',
     cotizacion: 'Cotización',
     clientes: 'Gestión de Clientes',
-    cuenta: 'Mi Cuenta'
+    cuenta: 'Mi Cuenta',
+    ...Object.fromEntries(Object.entries(VISTAS_CONTABLES).map(([id, v]) => [id, v.titulo]))
   }
 
   const viewGroups = {
@@ -284,7 +288,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     'importar-documentos': 'Conciliación', 'control-pagos': 'Conciliación',
     liquidacion: 'Cálculo', activofijo: 'Cálculo', flujo: 'Cálculo', cotizacion: 'Cálculo',
     clientes: 'Gestión',
-    historial: 'Nube'
+    historial: 'Nube',
+    ...Object.fromEntries(Object.entries(VISTAS_CONTABLES).map(([id, v]) => [id, v.grupo]))
   }
 
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
@@ -321,6 +326,15 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       ]
     },
     {
+      group: 'Contabilidad',
+      items: [
+        { id: 'ct-libro-compras', title: 'Libro Compras', desc: 'Facturas y notas de proveedores con su crédito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'CF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
+        { id: 'ct-libro-ventas', title: 'Libro Ventas', desc: 'Facturas y notas emitidas con su débito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'DF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
+        { id: 'ct-diario', title: 'Libro Diario', desc: 'Asientos automáticos y manuales del ejercicio', icon: BookOpen, eq: [{ op: 'Σ' }, { v: 'D' }, { op: '=' }, { op: 'Σ' }, { v: 'H' }] },
+        { id: 'ct-mayor', title: 'Libro Mayor', desc: 'Saldo corrido de cada cuenta y sumas y saldos', icon: Scale, eq: [{ v: 'S', sub: 'n' }, { op: '=' }, { v: 'S', sub: 'n−1' }, { op: '+' }, { v: 'D' }, { op: '−' }, { v: 'H' }] }
+      ]
+    },
+    {
       group: 'Agenda del cliente',
       items: [
         { id: 'todo', title: 'Tareas de la semana', desc: 'Lo que agendaste para este cliente en tu semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
@@ -354,47 +368,46 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       />
 
       <div className="q-main">
-        <header className={`q-topbar ${contribuyente ? 'q-topbar--client' : ''}`}>
-          <div className="q-topbar__lead">
-            <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú" title="Abrir menú">
-              <Menu size={20} strokeWidth={1.6} />
-            </button>
-            <div>
-              <p className="q-topbar__date">{today}</p>
-              <h2 className="q-topbar__title">
-                {viewGroups[view] && <span className="q-topbar__crumb">{viewGroups[view]}</span>}
-                {viewTitles[view] || 'QUADRA'}
-              </h2>
-            </div>
-          </div>
+        <div className="q-topwrap">
+        <header className="q-topbar q-topbar--compacta">
+          <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú" title="Abrir menú">
+            <Menu size={18} strokeWidth={1.6} />
+          </button>
+          <MenuContable vista={view} onNavigate={handleNavigate} habilitado={!!contribuyente} />
+          <span className="q-topbar__spacer" />
           {contribuyente && (
             <button
               type="button"
-              className="q-taxpayer"
+              className="q-taxpayer q-taxpayer--linea"
               onClick={cambiarContribuyente}
               title="Cambiar contribuyente"
               aria-label={`Contribuyente activo: ${contribuyente.razonSocial}, RUC ${contribuyente.ruc}. Cambiar contribuyente`}
             >
-              <span className="q-taxpayer__label">Contribuyente</span>
+              <ArrowLeftRight size={13} strokeWidth={1.8} aria-hidden="true" />
               <span className="q-taxpayer__name">{contribuyente.razonSocial}</span>
-              <span className="q-taxpayer__meta">
-                <span>RUC {contribuyente.ruc}</span>
-                <span aria-hidden="true">·</span>
-                <span>Ej. {contribuyente.ejercicio}</span>
-                {contribuyente.sucursalLabel && <><span aria-hidden="true">·</span><span>{contribuyente.sucursalLabel}</span></>}
-              </span>
             </button>
           )}
-          <div className="q-topbar__meta">
-            <span className="q-topbar__hello">Hola, <strong>{user?.name || user?.email}</strong></span>
-            <span className="q-quota">
-              <span className="q-quota__value">8/10</span> Conciliaciones
-            </span>
-            <button type="button" className="q-ghost-icon" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
-              <LogOut size={18} strokeWidth={1.6} />
-            </button>
-          </div>
+          <MarangatuLink />
+          <span className="q-quota" title="Conciliaciones usadas este mes">
+            <span className="q-quota__value">8/10</span>
+          </span>
+          <button type="button" className="q-ghost-icon" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
+            <LogOut size={17} strokeWidth={1.6} />
+          </button>
         </header>
+        <div className="q-ctxbar" role="status">
+          <strong className="q-ctxbar__titulo">{viewTitles[view] || 'Quadra'}</strong>
+          {contribuyente ? (
+            <>
+              <span className="q-ctxbar__item"><b>Contribuyente:</b> {contribuyente.ruc} - {contribuyente.razonSocial}</span>
+              <span className="q-ctxbar__item"><b>Ejercicio:</b> {contribuyente.ejercicio}{contribuyente.sucursalLabel ? ` / ${contribuyente.sucursalLabel}` : ''}</span>
+            </>
+          ) : (
+            <span className="q-ctxbar__item">Hola, {user?.name || user?.email}</span>
+          )}
+          <span className="q-ctxbar__fecha">{today}</span>
+        </div>
+        </div>
 
         <main className="main-content q-content">
           <div className="container">
@@ -871,6 +884,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
 
             {view === 'historial' && contribuyente && (
               <Historial onAbrir={abrirDesdeHistorial} />
+            )}
+
+            {VISTAS_CONTABLES[view] && contribuyente && (
+              <Contabilidad key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} vista={view} contribuyente={contribuyente} />
             )}
 
             {view === 'clientes' && (
