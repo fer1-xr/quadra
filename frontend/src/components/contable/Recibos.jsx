@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import axios from 'axios'
 import {
@@ -99,8 +99,10 @@ function ModalRecibo({ inicial, onCerrar, mesRef }) {
   const personaRef = useRef(null)
   const nombreRef = useRef(null)
   const totalRef = useRef(null)
-  // después de elegir el cliente, el cursor sigue al próximo dato
-  const enfocar = (ref) => setTimeout(() => ref.current?.focus(), 0)
+  // después de elegir el cliente, el cursor sigue al próximo dato (apenas se pinta, sin perder teclas)
+  const [foco, setFoco] = useState(null)
+  const enfocar = (ref) => setFoco({ ref })
+  useLayoutEffect(() => { foco?.ref.current?.focus() }, [foco])
 
   const t = TIPOS[f.tipo]
   const c = COPY[f.tipo]
