@@ -24,7 +24,7 @@ const usePorCliente = (kind, key, clienteId) => {
  * Comprobantes, cuentas propias, activos y timbrados son de cada contribuyente;
  * las personas (RUC de clientes y proveedores) se comparten entre todos.
  */
-export function ContableProvider({ contribuyente, children }) {
+export function ContableProvider({ contribuyente, onNavigate, children }) {
   const clienteId = String(contribuyente.clienteId)
   const comprobantes = usePorCliente('comprobante', 'quadra_ct_comprobantes', clienteId)
   const cuentas = usePorCliente('cuenta', 'quadra_ct_cuentas', clienteId)
@@ -69,7 +69,9 @@ export function ContableProvider({ contribuyente, children }) {
     personas,
     plan,
     imputables,
-    nombreCuenta
+    nombreCuenta,
+    /** abre otra hoja de Quadra (libros, conciliación…) */
+    ir: onNavigate || (() => {})
   }
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }

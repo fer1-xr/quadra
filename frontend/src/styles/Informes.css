@@ -1,0 +1,262 @@
+/* ─────────────────────────────────────────────
+   QUADRA · Informes e Importar-Exportar
+   Centro de libros, estados contables, libros auxiliares,
+   liquidación de IVA, importador y exportaciones.
+   ───────────────────────────────────────────── */
+
+.q-mb__hint {
+  font-size: 11.5px;
+  font-weight: 400;
+  color: var(--q-ink-3);
+  white-space: nowrap;
+}
+
+/* secciones del centro de libros */
+.inf-seccion { display: grid; gap: 10px; }
+
+.inf-seccion__titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 6px 0 0;
+  font-family: var(--q-sans);
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--q-ink);
+}
+
+.inf-seccion__titulo svg { color: var(--q-ink-3); }
+
+.inf-seccion__nota {
+  max-width: 78ch;
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--q-ink-2);
+}
+
+.inf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 12px;
+}
+
+.inf-libro {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  gap: 8px;
+  padding: 16px 16px 12px;
+  border: 1px solid var(--q-line);
+  border-radius: var(--q-r-card, 14px);
+  background: var(--q-surface);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.inf-libro:hover { border-color: color-mix(in srgb, var(--q-accent) 35%, var(--q-line)); box-shadow: 0 2px 10px rgba(10, 26, 47, 0.06); }
+
+.inf-libro__head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.inf-libro__base { font-size: 11.5px; color: var(--q-ink-3); text-align: right; }
+
+.inf-badge {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+}
+
+.inf-badge.is-obligatorio { color: var(--q-accent); background: var(--q-accent-bg); }
+.inf-badge.is-auxiliar { color: var(--q-ink-2); background: var(--q-surface-2); }
+
+.inf-libro__titulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+  font-family: var(--q-sans);
+  font-size: 15.5px;
+  font-weight: 650;
+  text-align: left;
+  color: var(--q-ink);
+  background: none;
+  cursor: pointer;
+}
+
+.inf-libro__titulo svg { color: var(--q-ink-3); transition: transform 0.15s ease; }
+.inf-libro__titulo:hover svg { transform: translate(2px, -2px); color: var(--q-accent); }
+.inf-libro__titulo:focus-visible { outline: 2px solid var(--q-accent); outline-offset: 2px; border-radius: 4px; }
+
+.inf-libro__que { margin: 0; font-size: 13px; line-height: 1.5; color: var(--q-ink-2); }
+
+.inf-libro__pie {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--q-line);
+}
+
+.inf-libro__dato { font-family: var(--q-mono); font-size: 12px; font-variant-numeric: tabular-nums; color: var(--q-ink-2); }
+.inf-libro__dato.is-warn { color: var(--q-err); }
+
+/* estados contables */
+.inf-acciones { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.inf-dos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.inf-card__titulo {
+  margin: 0;
+  padding: 14px 14px 4px;
+  font-family: var(--q-sans);
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--q-ink);
+}
+
+.inf-previa .inf-card__titulo, .inf-exist .inf-card__titulo { padding: 0; }
+
+.inf-estado td:last-child { width: 1%; white-space: nowrap; }
+.inf-estado .inf-n1 td { font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; font-size: 12.5px; background: var(--q-surface-2); }
+.inf-estado .inf-n2 td { font-weight: 650; }
+.inf-estado .inf-n3 td { font-weight: 550; color: var(--q-ink-2); }
+.inf-estado .inf-n3 td:nth-child(2) { padding-left: 22px; }
+.inf-estado .inf-n4 td:nth-child(2) { padding-left: 36px; }
+.inf-estado .inf-det td:nth-child(2) { padding-left: 52px; font-size: 12.5px; }
+.inf-det--oculto { display: none; }
+.ct-num.is-neg { color: var(--q-err); }
+
+/* recuento físico */
+.inf-exist { display: grid; gap: 0; }
+
+.inf-exist__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 16px;
+}
+
+.inf-exist__head > div { display: grid; gap: 4px; }
+
+.inf-exist__cifras { display: flex; gap: 20px; margin: 0; }
+.inf-exist__cifras div { display: grid; gap: 2px; text-align: right; }
+.inf-exist__cifras dt { font-size: 11.5px; color: var(--q-ink-3); }
+.inf-exist__cifras dd { margin: 0; font-family: var(--q-mono); font-size: 15px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.inf-exist__cifras .is-warn dd { color: var(--q-err); }
+.inf-exist__cifras .is-ok dd { color: var(--q-ok); }
+
+.inf-exist__tabla .q-input { min-height: 34px; padding-block: 6px; }
+.inf-corto { width: 90px; }
+
+.inf-exist__pie {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--q-line);
+}
+
+.inf-exist__pie .ct-toolbar__end { display: flex; gap: 8px; margin-left: auto; }
+
+/* liquidación de IVA */
+.inf-hoy td { background: color-mix(in srgb, var(--q-accent) 7%, transparent); }
+.inf-hoy td:first-child { font-weight: 650; }
+.inf-sin td { color: var(--q-ink-3); }
+
+/* exportar */
+.inf-acciones-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 12px;
+}
+
+.inf-accion {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--q-line);
+  border-radius: var(--q-r-card, 14px);
+  font-family: var(--q-sans);
+  text-align: left;
+  color: var(--q-ink);
+  background: var(--q-surface);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.inf-accion:hover { border-color: color-mix(in srgb, var(--q-accent) 40%, var(--q-line)); }
+.inf-accion:focus-visible { outline: 2px solid var(--q-accent); outline-offset: 2px; }
+.inf-accion > svg:first-child { color: var(--q-accent); margin-top: 1px; }
+.inf-accion__txt { display: grid; gap: 4px; }
+.inf-accion__txt strong { font-size: 14.5px; font-weight: 650; }
+.inf-accion__txt small { font-size: 13px; line-height: 1.5; color: var(--q-ink-2); }
+.inf-accion__ico { color: var(--q-ink-3); }
+.inf-accion.is-principal { grid-column: 1 / -1; background: var(--q-accent-bg); border-color: color-mix(in srgb, var(--q-accent) 25%, var(--q-line)); }
+
+/* importar */
+.inf-drop {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 36px 20px;
+  border: 1.5px dashed color-mix(in srgb, var(--q-ink-3) 45%, var(--q-line));
+  border-radius: var(--q-r-card, 14px);
+  text-align: center;
+  color: var(--q-ink-2);
+  background: var(--q-surface);
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.inf-drop.is-over { border-color: var(--q-accent); background: var(--q-accent-bg); }
+.inf-drop > svg { color: var(--q-ink-3); }
+.inf-drop__t { margin: 0; font-size: 15px; font-weight: 600; color: var(--q-ink); }
+.inf-drop__s { margin: 0 0 6px; font-size: 13px; }
+
+.inf-aviso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+}
+
+.inf-aviso.is-ok { color: var(--q-ok); background: var(--q-ok-bg); }
+.inf-aviso.is-err { color: var(--q-err); background: var(--q-err-bg); }
+
+.q-app .q-content .inf-previa { display: grid; gap: 14px; padding: 18px 20px; }
+.inf-previa__head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.inf-previa__head p { margin: 2px 0 0; font-size: 14px; color: var(--q-ink-2); }
+
+.inf-solo-print { display: none; }
+
+@media (max-width: 960px) {
+  .inf-dos { grid-template-columns: 1fr; }
+  .q-mb__hint { display: none; }
+}
+
+@media print {
+  .q-topwrap, .q-sidebar, .sidebar, .ct-toolbar, .inf-acciones, .q-head__aside, .inf-exist, .q-sync { display: none !important; }
+  .inf-solo-print { display: block; font-weight: 600; }
+  .inf-det--oculto { display: table-row; }
+  .inf-dos { grid-template-columns: 1fr 1fr; }
+  .q-card, .inf-libro { box-shadow: none !important; break-inside: avoid; }
+}
+
+/* acciones justo debajo del encabezado oculto: dejan lugar al estado de sincronización */
+.q-app .q-content .ct-sheet > .q-head + .ct-toolbar { margin-top: 12px; }

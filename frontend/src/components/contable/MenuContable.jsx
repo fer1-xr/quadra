@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import '../../styles/Contabilidad.css'
-import { FolderOpen, ArrowLeftRight, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { FolderOpen, ArrowLeftRight, BarChart3, ArrowDownUp, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 
 const MENUS = [
   {
@@ -26,28 +26,14 @@ const MENUS = [
     label: 'Movimientos',
     icon: ArrowLeftRight,
     items: [
+      { id: 'ct-libro-compras', label: 'Compras', hint: 'facturas, ND y NC recibidas' },
+      { id: 'ct-libro-ventas', label: 'Ventas', hint: 'facturas, ND y NC emitidas' },
       { id: 'ct-asientos', label: 'Asientos Manuales' },
-      {
-        label: 'Libros',
-        items: [
-          { id: 'ct-libro-compras', label: 'Libro Compras' },
-          { id: 'ct-libro-ventas', label: 'Libro Ventas' },
-          { id: 'ct-diario', label: 'Libro Diario' },
-          { id: 'ct-mayor', label: 'Libro Mayor' }
-        ]
-      },
       {
         label: 'Notas de Crédito',
         items: [
           { id: 'ct-nc-compra', label: 'Por compra (recibidas)' },
           { id: 'ct-nc-venta', label: 'Por venta (emitidas)' }
-        ]
-      },
-      {
-        label: 'Notas de Débito',
-        items: [
-          { id: 'ct-nd-compra', label: 'Por compra (recibidas)' },
-          { id: 'ct-nd-venta', label: 'Por venta (emitidas)' }
         ]
       },
       {
@@ -64,6 +50,51 @@ const MENUS = [
           { id: 'ct-ret-recibida', label: 'Recibidas' }
         ]
       }
+    ]
+  },
+  {
+    id: 'informes',
+    label: 'Informes',
+    icon: BarChart3,
+    items: [
+      { id: 'ct-libros', label: 'Todos los libros', hint: 'estado y descarga en un clic' },
+      {
+        label: 'Libros obligatorios',
+        items: [
+          { id: 'ct-diario', label: 'Libro Diario' },
+          { id: 'ct-mayor', label: 'Libro Mayor' },
+          { id: 'ct-inventario', label: 'Libro Inventario y Balances' },
+          { id: 'ct-libro-compras', label: 'Libro IVA Compras' },
+          { id: 'ct-libro-ventas', label: 'Libro IVA Ventas' }
+        ]
+      },
+      {
+        label: 'Libros auxiliares',
+        items: [
+          { id: 'ct-caja', label: 'Libro Caja' },
+          { id: 'ct-bancos', label: 'Libro Bancos' },
+          { id: 'ct-ctacte-clientes', label: 'Cuentas corrientes de clientes' },
+          { id: 'ct-ctacte-proveedores', label: 'Cuentas corrientes de proveedores' }
+        ]
+      },
+      {
+        label: 'Estados contables',
+        items: [
+          { id: 'ct-balance', label: 'Balance General' },
+          { id: 'ct-resultados', label: 'Estado de Resultados' },
+          { id: 'ct-mayor', label: 'Balance de sumas y saldos' }
+        ]
+      },
+      { id: 'ct-iva', label: 'Liquidación de IVA', hint: 'Formulario 120, mes a mes' }
+    ]
+  },
+  {
+    id: 'impexp',
+    label: 'Importar-Exportar',
+    icon: ArrowDownUp,
+    items: [
+      { id: 'ct-importar', label: 'Importar', hint: 'Marangatu, Excel o respaldo' },
+      { id: 'ct-exportar', label: 'Exportar', hint: 'libros, respaldo y plantillas' }
     ]
   }
 ]
@@ -126,6 +157,7 @@ function Lista({ items, vista, onElegir, nivel = 0 }) {
           ) : (
             <button type="button" role="menuitem" className={`q-mb__item ${it.id === vista ? 'is-current' : ''}`} aria-current={it.id === vista ? 'page' : undefined} onClick={() => onElegir(it.id)}>
               <span>{it.label}</span>
+              {it.hint && <small className="q-mb__hint">{it.hint}</small>}
             </button>
           )}
         </li>
@@ -145,7 +177,7 @@ export function MarangatuLink() {
   )
 }
 
-/** Menús del sistema contable (Catastros / Movimientos) */
+/** Menús del sistema contable (Catastros / Movimientos / Informes / Importar-Exportar) */
 export default function MenuContable({ vista, onNavigate, habilitado }) {
   const [abierto, setAbierto] = useState(null)
   const ref = useRef(null)

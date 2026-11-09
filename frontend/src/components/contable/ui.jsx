@@ -147,10 +147,12 @@ export function AsientoPreview({ lineas, titulo = 'Asiento que se registrará' }
 }
 
 /** descarga una hoja de cálculo a partir de filas (arrays) */
-export const exportarExcel = (nombre, hoja, filas) => {
-  const ws = XLSX.utils.aoa_to_sheet(filas)
+export const exportarExcel = (nombre, hoja, filas) => exportarHojas(nombre, [{ hoja, filas }])
+
+/** descarga un libro con varias hojas: [{ hoja, filas }] */
+export const exportarHojas = (nombre, hojas) => {
   const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, hoja.slice(0, 31))
+  hojas.forEach(({ hoja, filas }) => XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(filas), hoja.replace(/[\\/?*[\]:]/g, ' ').slice(0, 31)))
   XLSX.writeFile(wb, `${nombre}.xlsx`)
 }
 

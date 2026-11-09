@@ -1,7 +1,6 @@
 import React from 'react'
 import { ContableProvider } from './ContableContext'
 import RegistroFiscal from './Comprobantes'
-import { RegistroMovimientos } from './Movimientos'
 import AsientosManuales from './AsientosManuales'
 import NotasCredito from './NotasCredito'
 import Retenciones from './Retenciones'
@@ -9,19 +8,17 @@ import Recibos from './Recibos'
 import { LibroDiario, LibroMayor } from './Libros'
 import { Personas, PlanCuentas, Timbrados } from './Catastros'
 import { ActivosFijos, RevaluoDepreciacion } from './ActivosFijos'
+import { CentroLibros, LibroInventario, EstadosContables, LibroDisponibilidades, CuentasCorrientes, LiquidacionIVA } from './Informes'
+import ImportarExportar from './ImportarExportar'
 import '../../styles/Contabilidad.css'
 
 /** vistas del sistema contable: id → { título, grupo } */
 export const VISTAS_CONTABLES = {
-  'ct-libro-compras': { titulo: 'Libro Compras', grupo: 'Movimientos · Libros' },
-  'ct-libro-ventas': { titulo: 'Libro Ventas', grupo: 'Movimientos · Libros' },
-  'ct-diario': { titulo: 'Libro Diario', grupo: 'Movimientos · Libros' },
-  'ct-mayor': { titulo: 'Libro Mayor', grupo: 'Movimientos · Libros' },
+  'ct-libro-compras': { titulo: 'Libro Compras', grupo: 'Movimientos' },
+  'ct-libro-ventas': { titulo: 'Libro Ventas', grupo: 'Movimientos' },
   'ct-asientos': { titulo: 'Asientos Manuales', grupo: 'Movimientos' },
   'ct-nc-compra': { titulo: 'Notas de crédito por compra', grupo: 'Movimientos' },
   'ct-nc-venta': { titulo: 'Notas de crédito por venta', grupo: 'Movimientos' },
-  'ct-nd-compra': { titulo: 'Notas de débito por compra', grupo: 'Movimientos' },
-  'ct-nd-venta': { titulo: 'Notas de débito por venta', grupo: 'Movimientos' },
   'ct-recibo-cobro': { titulo: 'Recibos de cobro', grupo: 'Movimientos' },
   'ct-recibo-pago': { titulo: 'Recibos de pago', grupo: 'Movimientos' },
   'ct-ret-emitida': { titulo: 'Retenciones IVA emitidas', grupo: 'Movimientos' },
@@ -30,7 +27,20 @@ export const VISTAS_CONTABLES = {
   'ct-revaluo': { titulo: 'Revalúo y depreciación', grupo: 'Catastros' },
   'ct-personas': { titulo: 'Personas', grupo: 'Catastros' },
   'ct-plan': { titulo: 'Plan de cuentas', grupo: 'Catastros' },
-  'ct-timbrados': { titulo: 'Timbrados', grupo: 'Catastros' }
+  'ct-timbrados': { titulo: 'Timbrados', grupo: 'Catastros' },
+  'ct-libros': { titulo: 'Libros contables', grupo: 'Informes' },
+  'ct-diario': { titulo: 'Libro Diario', grupo: 'Informes · Obligatorios' },
+  'ct-mayor': { titulo: 'Libro Mayor', grupo: 'Informes · Obligatorios' },
+  'ct-inventario': { titulo: 'Libro Inventario y Balances', grupo: 'Informes · Obligatorios' },
+  'ct-caja': { titulo: 'Libro Caja', grupo: 'Informes · Auxiliares' },
+  'ct-bancos': { titulo: 'Libro Bancos', grupo: 'Informes · Auxiliares' },
+  'ct-ctacte-clientes': { titulo: 'Cuentas corrientes de clientes', grupo: 'Informes · Auxiliares' },
+  'ct-ctacte-proveedores': { titulo: 'Cuentas corrientes de proveedores', grupo: 'Informes · Auxiliares' },
+  'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Estados contables' },
+  'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Estados contables' },
+  'ct-iva': { titulo: 'Liquidación de IVA', grupo: 'Informes' },
+  'ct-importar': { titulo: 'Importar', grupo: 'Importar-Exportar' },
+  'ct-exportar': { titulo: 'Exportar', grupo: 'Importar-Exportar' }
 }
 
 function Vista({ vista }) {
@@ -43,10 +53,6 @@ function Vista({ vista }) {
       return <NotasCredito key={vista} tipo="nc-compra" />
     case 'ct-nc-venta':
       return <NotasCredito key={vista} tipo="nc-venta" />
-    case 'ct-nd-compra':
-      return <RegistroFiscal key={vista} titulo="Notas de débito por compra" lede="Las que te emiten tus proveedores por intereses, recargos o diferencias de precio. Suman al crédito fiscal." tipos={['nd-compra']} />
-    case 'ct-nd-venta':
-      return <RegistroFiscal key={vista} titulo="Notas de débito por venta" lede="Las que emitís a tus clientes por intereses, recargos o diferencias de precio. Suman al débito fiscal." tipos={['nd-venta']} />
     case 'ct-recibo-cobro':
     case 'ct-recibo-pago':
       return <Recibos key={vista} tipo={vista.slice(3)} />
@@ -61,13 +67,25 @@ function Vista({ vista }) {
     case 'ct-personas': return <Personas />
     case 'ct-plan': return <PlanCuentas />
     case 'ct-timbrados': return <Timbrados />
+    case 'ct-libros': return <CentroLibros />
+    case 'ct-inventario': return <LibroInventario />
+    case 'ct-balance': return <EstadosContables key={vista} tipo="balance" />
+    case 'ct-resultados': return <EstadosContables key={vista} tipo="resultados" />
+    case 'ct-caja': return <LibroDisponibilidades key={vista} tipo="caja" />
+    case 'ct-bancos': return <LibroDisponibilidades key={vista} tipo="bancos" />
+    case 'ct-ctacte-clientes': return <CuentasCorrientes key={vista} lado="venta" />
+    case 'ct-ctacte-proveedores': return <CuentasCorrientes key={vista} lado="compra" />
+    case 'ct-iva': return <LiquidacionIVA />
+    case 'ct-importar':
+    case 'ct-exportar':
+      return <ImportarExportar key={vista} modo={vista.slice(3)} />
     default: return null
   }
 }
 
-export default function Contabilidad({ vista, contribuyente }) {
+export default function Contabilidad({ vista, contribuyente, onNavigate }) {
   return (
-    <ContableProvider contribuyente={contribuyente}>
+    <ContableProvider contribuyente={contribuyente} onNavigate={onNavigate}>
       <Vista vista={vista} />
     </ContableProvider>
   )

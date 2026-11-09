@@ -208,7 +208,9 @@ export const TIPOS = {
   'ret-recibida': { label: 'Retención de IVA recibida', corto: 'Retención', lado: 'venta', emitido: false },
   'ret-emitida': { label: 'Retención de IVA emitida', corto: 'Retención', lado: 'compra', emitido: true, timbradoTipo: 'retencion' },
   asiento: { label: 'Asiento manual', corto: 'Asiento' },
-  depreciacion: { label: 'Revalúo y depreciación', corto: 'Activo fijo' }
+  depreciacion: { label: 'Revalúo y depreciación', corto: 'Activo fijo' },
+  // recuento físico de existencias al cierre: respalda el Libro Inventario, no genera asiento
+  inventario: { label: 'Inventario de existencias', corto: 'Inventario' }
 }
 
 export const TIPOS_FISCALES = ['compra', 'nd-compra', 'nc-compra', 'venta', 'nd-venta', 'nc-venta']

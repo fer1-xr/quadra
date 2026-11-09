@@ -330,8 +330,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       items: [
         { id: 'ct-libro-compras', title: 'Libro Compras', desc: 'Facturas y notas de proveedores con su crédito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'CF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
         { id: 'ct-libro-ventas', title: 'Libro Ventas', desc: 'Facturas y notas emitidas con su débito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'DF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
-        { id: 'ct-diario', title: 'Libro Diario', desc: 'Asientos automáticos y manuales del ejercicio', icon: BookOpen, eq: [{ op: 'Σ' }, { v: 'D' }, { op: '=' }, { op: 'Σ' }, { v: 'H' }] },
-        { id: 'ct-mayor', title: 'Libro Mayor', desc: 'Saldo corrido de cada cuenta y sumas y saldos', icon: Scale, eq: [{ v: 'S', sub: 'n' }, { op: '=' }, { v: 'S', sub: 'n−1' }, { op: '+' }, { v: 'D' }, { op: '−' }, { v: 'H' }] }
+        { id: 'ct-libros', title: 'Libros contables', desc: 'Obligatorios y auxiliares, con su estado y descarga en un clic', icon: BookOpen, eq: [{ v: 'Comprobantes' }, { op: '→' }, { v: 'Libros' }] },
+        { id: 'ct-balance', title: 'Balance General', desc: 'Activo, pasivo y patrimonio al cierre del ejercicio', icon: Scale, eq: [{ v: 'A' }, { op: '=' }, { v: 'P' }, { op: '+' }, { v: 'PN' }] },
+        { id: 'ct-iva', title: 'Liquidación de IVA', desc: 'Débito menos crédito fiscal, mes a mes', icon: Calculator, eq: [{ v: 'DF' }, { op: '−' }, { v: 'CF' }, { op: '−' }, { v: 'Ret' }] },
+        { id: 'ct-importar', title: 'Importar', desc: 'Marangatu, Excel o respaldo: Quadra reconoce el archivo', icon: FileText, eq: [{ v: 'Archivo' }, { op: '→' }, { v: 'Libros' }] }
       ]
     },
     {
@@ -887,7 +889,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             )}
 
             {VISTAS_CONTABLES[view] && contribuyente && (
-              <Contabilidad key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} vista={view} contribuyente={contribuyente} />
+              <Contabilidad key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} vista={view} contribuyente={contribuyente} onNavigate={handleNavigate} />
             )}
 
             {view === 'clientes' && (

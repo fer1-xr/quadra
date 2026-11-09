@@ -485,7 +485,7 @@ const fechaExcel = (v) => {
   return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ''
 }
 
-const leerImportacion = async (file, plan, ejercicio) => {
+export const leerImportacion = async (file, plan, ejercicio) => {
   const wb = XLSX.read(await file.arrayBuffer(), { cellDates: true })
   const filas = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' })
   const iCab = filas.findIndex((f) => f.some((c) => normalizar(c) === 'cuenta'))
