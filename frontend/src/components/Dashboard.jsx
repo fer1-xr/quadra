@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import axios from 'axios'
 import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, ArrowLeftRight, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
+import HeroCharts from './HeroCharts'
 import ChangePassword from './ChangePassword'
 import Sidebar from './Sidebar'
 import LiquidacionSalarial from './LiquidacionSalarial'
@@ -486,33 +487,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                     </div>
                   </div>
 
-                  <figure className="q-hero__figure" aria-hidden="true">
-                    <svg viewBox="0 0 320 220" className="q-plot">
-                      <defs>
-                        <linearGradient id="q-curve" x1="0" x2="1" y1="0" y2="0">
-                          <stop offset="0" stopColor="#12B886" stopOpacity="0.2" />
-                          <stop offset="1" stopColor="#7EE8C4" />
-                        </linearGradient>
-                        <linearGradient id="q-area" x1="0" x2="0" y1="0" y2="1">
-                          <stop offset="0" stopColor="#12B886" stopOpacity="0.3" />
-                          <stop offset="1" stopColor="#12B886" stopOpacity="0" />
-                        </linearGradient>
-                      </defs>
-                      <g className="q-plot__grid">
-                        {Array.from({ length: 9 }).map((_, i) => <line key={`v${i}`} x1={20 + i * 35} y1="10" x2={20 + i * 35} y2="190" />)}
-                        {Array.from({ length: 6 }).map((_, i) => <line key={`h${i}`} x1="20" y1={10 + i * 36} x2="300" y2={10 + i * 36} />)}
-                      </g>
-                      <line className="q-plot__axis" x1="20" y1="190" x2="304" y2="190" />
-                      <line className="q-plot__axis" x1="20" y1="190" x2="20" y2="6" />
-                      <path d="M20 170 C 70 168, 95 150, 125 128 S 190 70, 230 52 S 285 30, 300 26 L 300 190 L 20 190 Z" fill="url(#q-area)" />
-                      <path className="q-plot__curve" d="M20 170 C 70 168, 95 150, 125 128 S 190 70, 230 52 S 285 30, 300 26" fill="none" stroke="url(#q-curve)" strokeWidth="2" />
-                      <circle cx="230" cy="52" r="4" className="q-plot__point" />
-                      <line className="q-plot__guide" x1="230" y1="52" x2="230" y2="190" />
-                    </svg>
-                    <figcaption className="q-hero__formula">
-                      <span>Σ</span><i>Debe</i> − <span>Σ</span><i>Haber</i> = 0
-                    </figcaption>
-                  </figure>
+                  <HeroCharts />
                 </section>
 
                 <section className="q-modules" aria-labelledby="q-modules-title">

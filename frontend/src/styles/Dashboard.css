@@ -343,6 +343,68 @@
 
 .q-hero__formula span { color: var(--q-mint); margin-right: 2px; }
 .q-hero__formula i { margin-right: 8px; }
+.q-hero__figure .q-hero__formula { animation: q-fade 500ms var(--q-ease) both; }
+
+/* gráficos intercambiables del hero */
+.q-plot__draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: q-draw 1400ms var(--q-ease) 150ms forwards;
+}
+.q-plot__draw--alt { stroke: rgba(107, 151, 255, 0.85); }
+.q-plot__ref { stroke: rgba(255, 255, 255, 0.22); stroke-width: 1; stroke-dasharray: 2 4; }
+.q-plot__label { font-family: inherit; font-size: 9.5px; letter-spacing: 0.02em; fill: rgba(231, 237, 245, 0.55); }
+.q-plot__label--mint { fill: #7ee8c4; }
+.q-plot__fade { animation: q-fade 700ms var(--q-ease) 500ms both; }
+.q-plot__pop { animation: q-fade 400ms var(--q-ease) 1100ms both; }
+.q-plot__bar {
+  fill: rgba(126, 232, 196, 0.75);
+  transform-box: fill-box;
+  transform-origin: bottom;
+  animation: q-grow 700ms var(--q-ease) both;
+}
+.q-plot__bar--alt { fill: rgba(107, 151, 255, 0.7); }
+.q-plot__bar--neg { fill: rgba(255, 122, 122, 0.6); transform-origin: top; }
+
+@keyframes q-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes q-grow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+.q-chart-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 14px;
+  padding: 4px;
+  width: fit-content;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin-left: auto;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.q-chart-tabs__tab {
+  padding: 5px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: #8fa0b7;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: color 160ms var(--q-ease), background-color 160ms var(--q-ease), border-color 160ms var(--q-ease);
+}
+.q-chart-tabs__tab:hover { color: #e7edf5; background: rgba(255, 255, 255, 0.05); }
+.q-chart-tabs__tab.is-active {
+  color: #7ee8c4;
+  background: rgba(18, 184, 134, 0.14);
+  border-color: rgba(126, 232, 196, 0.3);
+}
+.q-chart-tabs__tab:focus-visible { outline: 2px solid #7ee8c4; outline-offset: 2px; }
 
 /* ── inicio: módulos ────────────────────────── */
 
@@ -696,7 +758,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .q-home > *, .q-panel, .q-plot__curve { animation: none; stroke-dashoffset: 0; }
+  .q-home > *, .q-panel, .q-plot__curve, .q-plot__draw, .q-plot__fade, .q-plot__pop, .q-plot__bar, .q-hero__figure .q-hero__formula { animation: none; stroke-dashoffset: 0; }
   .q-feature, .q-btn, .q-ledger__arrow { transition: none; }
 }
 
@@ -722,6 +784,7 @@
   .q-app .q-content { padding: 18px 16px 40px; }
   .q-hero { padding: 28px 22px; border-radius: 18px; }
   .q-hero__formula { text-align: left; font-size: 20px; }
+  .q-chart-tabs { margin-left: 0; }
   .q-hero__figure { max-width: 260px; }
   .q-hero__actions .q-btn { flex: 1 1 100%; }
   .q-section-head { flex-direction: column; gap: 4px; }
