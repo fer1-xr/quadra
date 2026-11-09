@@ -376,7 +376,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
           <button type="button" className="q-menu-btn" onClick={() => setSidebarOpen(true)} aria-label="Abrir menú" title="Abrir menú">
             <Menu size={18} strokeWidth={1.6} />
           </button>
-          <MenuContable vista={view} onNavigate={handleNavigate} habilitado={!!contribuyente} />
+          {/* El menú contable sólo aplica dentro de un cliente; en el dashboard propio del usuario no se muestra. */}
+          {contribuyente && <MenuContable vista={view} onNavigate={handleNavigate} habilitado />}
           <span className="q-topbar__spacer" />
           {contribuyente && (
             <button
