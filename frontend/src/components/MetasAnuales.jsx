@@ -1,18 +1,19 @@
-import React, { useState, useEffect } from 'react'
-import PageHead, { Figures } from './PageHead'
+import React, { useState, useEffect, useRef } from 'react'
+import PageHead from './PageHead'
 import { useCloudCollection } from '../services/useCloudCollection'
 import jsPDF from 'jspdf'
-import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner, Progress, Chip } from '@heroui/react'
-import { Plus, Trash2, Download, Target, X, GraduationCap, Briefcase, Wallet } from 'lucide-react'
+import { Plus, X, GraduationCap, Briefcase, Wallet, Download } from 'lucide-react'
 import '../styles/MetasAnuales.css'
 import '../styles/ClienteAgenda.css'
 import Toast from './Toast'
-import MetasAvanceGeneral from './MetasAvanceGeneral'
+import MetasResumen from './MetasResumen'
+import MetaCard, { MontoInput, PasosEditor } from './MetaCard'
+import { avanceDe, conAvance, ahorradoDe, planAhorro, gs, fechaPY, esFinanciera, estaPagado, cuotasPendientes } from './metasCalc'
 
 const TIPOS_META = [
-  { id: 'educativo', label: 'Educativo', icon: GraduationCap, color: '#12B886' },
-  { id: 'profesional', label: 'Profesional', icon: Briefcase, color: '#1747D1' },
-  { id: 'financiero', label: 'Financiero', icon: Wallet, color: '#6B97FF' }
+  { id: 'educativo', label: 'Educativo', icon: GraduationCap },
+  { id: 'profesional', label: 'Profesional', icon: Briefcase },
+  { id: 'financiero', label: 'Financiero', icon: Wallet }
 ]
 
 const PERIODOS = [
@@ -20,102 +21,19 @@ const PERIODOS = [
   { id: 'mensual', label: 'Mensual' }
 ]
 
-const pct = (n) => `${Math.round(n)} %`
-
-function estadisticas(valores) {
-  const n = valores.length
-  if (!n) return { media: 0, mediana: 0, sigma: 0 }
-  const media = valores.reduce((a, b) => a + b, 0) / n
-  const orden = [...valores].sort((a, b) => a - b)
-  const mediana = n % 2 ? orden[(n - 1) / 2] : (orden[n / 2 - 1] + orden[n / 2]) / 2
-  const sigma = Math.sqrt(valores.reduce((a, v) => a + (v - media) ** 2, 0) / n)
-  return { media, mediana, sigma }
-}
-
-/** Avance por meta sobre escala graduada + composición por tipo. */
-function MetasCharts({ metas }) {
-  const progresos = metas.map((m) => Number(m.progreso) || 0)
-  const { media, mediana, sigma } = estadisticas(progresos)
-  const filas = [...metas].sort((a, b) => (Number(b.progreso) || 0) - (Number(a.progreso) || 0))
-  const total = metas.length
-  const completadas = metas.filter((m) => m.completada).length
-
-  const porTipo = TIPOS_META.map((t) => {
-    const delTipo = metas.filter((m) => m.tipo === t.id)
-    const st = estadisticas(delTipo.map((m) => Number(m.progreso) || 0))
-    return { ...t, n: delTipo.length, share: total ? (delTipo.length / total) * 100 : 0, media: st.media, hechas: delTipo.filter((m) => m.completada).length }
-  })
-
-  return (
-    <div className="mc">
-      <figure className="mc-panel mc-panel--wide">
-        <figcaption className="mc-head">
-          <h4>Avance por meta</h4>
-          <p className="mc-stats">
-            <span><i>x̄</i> = <b>{pct(media)}</b></span>
-            <span><i>Me</i> = <b>{pct(mediana)}</b></span>
-            <span><i>σ</i> = <b>{Math.round(sigma)}</b></span>
-          </p>
-        </figcaption>
-
-        <div className="mc-plot" style={{ '--mean': `${media}%` }}>
-          {filas.map((m) => {
-            const v = Math.max(0, Math.min(100, Number(m.progreso) || 0))
-            return (
-              <div key={m.id} className={`mc-row tipo-${m.tipo} ${m.completada ? 'is-done' : ''}`}>
-                <span className="mc-row__label" title={m.titulo}>{m.titulo}</span>
-                <span className="mc-row__track" role="img" aria-label={`${m.titulo}: ${v} %`}>
-                  <span className="mc-row__bar" style={{ width: `${v}%` }} />
-                  <span className="mc-mean" aria-hidden="true" />
-                </span>
-                <span className="mc-row__val">{v}<small>%</small></span>
-              </div>
-            )
-          })}
-          <div className="mc-axis" aria-hidden="true">
-            <span />
-            <span className="mc-axis__scale">
-              {[0, 25, 50, 75, 100].map((t) => <span key={t} style={{ left: `${t}%` }}>{t}</span>)}
-              <span className="mc-axis__mean" style={{ left: `${media}%` }}><i>x̄</i></span>
-            </span>
-            <span />
-          </div>
-        </div>
-      </figure>
-
-      <figure className="mc-panel">
-        <figcaption className="mc-head">
-          <h4>Composición por tipo</h4>
-          <p className="mc-stats"><span><b>{completadas}</b> / {total} completadas</span></p>
-        </figcaption>
-
-        <div className="mc-stack" role="img" aria-label={porTipo.map((t) => `${t.label} ${t.n}`).join(', ')}>
-          {porTipo.filter((t) => t.n).map((t) => (
-            <span key={t.id} className={`mc-stack__seg tipo-${t.id}`} style={{ flexGrow: t.n }} />
-          ))}
-        </div>
-
-        <table className="mc-table">
-          <thead>
-            <tr><th>Tipo</th><th>n</th><th>%</th><th><i>x̄</i> avance</th></tr>
-          </thead>
-          <tbody>
-            {porTipo.map((t) => (
-              <tr key={t.id} className={`tipo-${t.id} ${t.n ? '' : 'is-zero'}`}>
-                <td><span className="mc-dot" />{t.label}</td>
-                <td>{t.n}</td>
-                <td>{pct(t.share)}</td>
-                <td>{t.n ? pct(t.media) : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-          <tfoot>
-            <tr><td>Total</td><td>{total}</td><td>100 %</td><td>{pct(media)}</td></tr>
-          </tfoot>
-        </table>
-      </figure>
-    </div>
-  )
+const META_VACIA = {
+  titulo: '',
+  descripcion: '',
+  tipo: 'profesional',
+  periodo: 'anual',
+  fechaLimite: '',
+  comoSeAlcanzara: '',
+  imagenUrl: '',
+  montoFinanciero: 0,
+  aportes: [],
+  pasos: [],
+  progreso: 0,
+  completada: false
 }
 
 /**
@@ -123,6 +41,9 @@ function MetasCharts({ metas }) {
  * Con `cliente` (contribuyente activo): metas propias de ese cliente, totalmente
  * independientes de las personales y de las de otros clientes.
  * Ambas viven en la colección 'meta'; las de cliente llevan `clienteId`.
+ *
+ * El avance no se edita a mano: sale de los ahorros registrados (financieras)
+ * o de los pasos tildados (educativas y profesionales). Ver metasCalc.js.
  */
 function MetasAnuales({ cliente = null }) {
   const [todas, setTodas, syncStatus] = useCloudCollection('meta', 'quadra_metas_anuales')
@@ -135,105 +56,67 @@ function MetasAnuales({ cliente = null }) {
   }
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [periodo, setPeriodo] = useState('anual')
-  const [nuevaMeta, setNuevaMeta] = useState({
-    titulo: '',
-    descripcion: '',
-    tipo: 'profesional',
-    periodo: 'anual',
-    fechaLimite: '',
-    comoSeAlcanzara: '',
-    imagenUrl: '',
-    montoFinanciero: '',
-    progreso: 0,
-    completada: false
-  })
+  const [nuevaMeta, setNuevaMeta] = useState(META_VACIA)
   const [editandoId, setEditandoId] = useState(null)
   const [notificacion, setNotificacion] = useState(null)
+  const formRef = useRef(null)
 
+  // al editar, llevar el formulario a la vista
+  useEffect(() => {
+    if (mostrarFormulario && editandoId) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [mostrarFormulario, editandoId])
 
   const mostrarNotificacion = (mensaje, tipo = 'success') => {
     setNotificacion({ mensaje, tipo })
   }
 
-  const calcularAhorroMensual = (monto, fechaLimite) => {
-    if (!monto || !fechaLimite) return null
-
-    const hoy = new Date()
-    const fecha = new Date(fechaLimite)
-    const diasRestantes = Math.ceil((fecha - hoy) / (1000 * 60 * 60 * 24))
-    const mesesRestantes = Math.ceil(diasRestantes / 30)
-    const semanasRestantes = Math.ceil(diasRestantes / 7)
-
-    if (mesesRestantes <= 0) {
-      return { error: 'La fecha límite debe ser en el futuro' }
-    }
-
-    const ahorroMensual = (monto / mesesRestantes).toFixed(2)
-    const ahorroSemanal = (monto / semanasRestantes).toFixed(2)
-    const ahorroDiario = (monto / diasRestantes).toFixed(2)
-
-    return {
-      montoTotal: parseFloat(monto),
-      diasRestantes,
-      mesesRestantes,
-      semanasRestantes,
-      ahorroMensual: parseFloat(ahorroMensual),
-      ahorroSemanal: parseFloat(ahorroSemanal),
-      ahorroDiario: parseFloat(ahorroDiario)
-    }
-  }
-
   const exportarPDF = () => {
     const doc = new jsPDF()
-    const metasFiltradas = metas.filter(m => m.periodo === periodo)
+    const lista = metas.filter(m => (m.periodo || 'anual') === periodo)
 
     doc.setFontSize(20)
     doc.text(`Resumen de Metas ${periodo === 'anual' ? 'Anuales' : 'Mensuales'}${cliente ? ` · ${cliente.razonSocial}` : ''}`, 20, 20)
 
     doc.setFontSize(10)
     doc.text(`Generado: ${new Date().toLocaleDateString('es-PY')}`, 20, 30)
-    doc.text(`Total de metas: ${metasFiltradas.length}`, 20, 37)
-    doc.text(`Completadas: ${metasFiltradas.filter(m => m.completada).length}`, 20, 44)
+    doc.text(`Total de metas: ${lista.length}`, 20, 37)
+    doc.text(`Cumplidas: ${lista.filter(m => avanceDe(m) >= 100).length}`, 20, 44)
 
-    let yPosition = 55
+    let y = 55
+    const linea = (txt, salto = 6) => {
+      if (y > 275) { doc.addPage(); y = 20 }
+      doc.text(txt, 25, y)
+      y += salto
+    }
 
-    metasFiltradas.forEach((meta, index) => {
+    lista.forEach((meta, index) => {
       const tipo = TIPOS_META.find(t => t.id === meta.tipo)
-
-      if (yPosition > 250) {
-        doc.addPage()
-        yPosition = 20
-      }
+      const avance = Math.round(avanceDe(meta))
+      if (y > 250) { doc.addPage(); y = 20 }
 
       doc.setFontSize(12)
-      doc.setTextColor(meta.completada ? 150 : 0)
-      doc.text(`${index + 1}. ${meta.titulo}`, 20, yPosition)
-      yPosition += 8
+      doc.setTextColor(avance >= 100 ? 150 : 0)
+      doc.text(`${index + 1}. ${meta.titulo}`, 20, y)
+      y += 8
 
       doc.setFontSize(9)
       doc.setTextColor(100)
-      doc.text(`Tipo: ${tipo?.label || meta.tipo} | Estado: ${meta.completada ? 'Completada' : 'Pendiente'}`, 25, yPosition)
-      yPosition += 6
+      linea(`Tipo: ${tipo?.label || meta.tipo} | Avance: ${avance}% | Fecha límite: ${fechaPY(meta.fechaLimite)}`)
+      if (meta.descripcion) linea(`Descripción: ${meta.descripcion.substring(0, 90)}`)
 
-      doc.text(`Descripción: ${meta.descripcion.substring(0, 60)}...`, 25, yPosition)
-      yPosition += 6
-
-      doc.text(`Fecha Límite: ${new Date(meta.fechaLimite).toLocaleDateString('es-PY')}`, 25, yPosition)
-      yPosition += 6
-
-      doc.text(`Progreso: ${meta.progreso}%`, 25, yPosition)
-      yPosition += 8
-
-      if (meta.tipo === 'financiero' && meta.montoFinanciero) {
-        const ahorro = calcularAhorroMensual(meta.montoFinanciero, meta.fechaLimite)
-        if (ahorro && !ahorro.error) {
-          doc.setTextColor(80)
-          doc.text(`Ahorro Mensual: $${ahorro.ahorroMensual.toLocaleString('es-PY')}`, 25, yPosition)
-          yPosition += 6
-        }
+      if (esFinanciera(meta)) {
+        const plan = planAhorro(meta)
+        if (plan) linea(`Ahorrado: ${gs(plan.ahorrado)} de ${gs(plan.objetivo)} · faltan ${gs(plan.falta)}`)
+        ;(meta.aportes || []).filter(estaPagado).sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '')).forEach((a) => {
+          linea(`   ${fechaPY(a.fecha)}   + ${gs(a.monto)}${a.serie ? `   (cuota ${a.cuota}/${a.de})` : ''}`, 5)
+        })
+        const pend = cuotasPendientes(meta)
+        if (pend.length) linea(`Cuotas pendientes: ${pend.length} de ${gs(pend[0].monto)} · próxima ${fechaPY(pend[0].fecha)}`)
+      } else if (meta.pasos?.length) {
+        meta.pasos.forEach((p) => linea(`   [${p.hecho ? 'x' : ' '}] ${p.texto}`, 5))
       }
 
-      yPosition += 3
+      y += 4
     })
 
     doc.save(`metas-${periodo}-${Date.now()}.pdf`)
@@ -246,17 +129,18 @@ function MetasAnuales({ cliente = null }) {
       return
     }
 
-    if (nuevaMeta.tipo === 'financiero' && !nuevaMeta.montoFinanciero) {
+    if (nuevaMeta.tipo === 'financiero' && !Number(nuevaMeta.montoFinanciero)) {
       mostrarNotificacion('Para metas financieras, ingresa el monto objetivo', 'warning')
       return
     }
 
-    const meta = {
-      id: editandoId || Date.now(),
+    const meta = conAvance({
       ...nuevaMeta,
+      id: editandoId || Date.now(),
       creadaEn: nuevaMeta.creadaEn || new Date().toISOString(),
-      montoFinanciero: nuevaMeta.tipo === 'financiero' ? parseFloat(nuevaMeta.montoFinanciero) : null
-    }
+      montoFinanciero: nuevaMeta.tipo === 'financiero' ? Number(nuevaMeta.montoFinanciero) : null,
+      pasos: (nuevaMeta.pasos || []).filter((p) => p.texto.trim())
+    })
 
     if (editandoId) {
       setMetas(metas.map(m => m.id === editandoId ? meta : m))
@@ -267,18 +151,7 @@ function MetasAnuales({ cliente = null }) {
       mostrarNotificacion('Meta creada exitosamente', 'success')
     }
 
-    setNuevaMeta({
-      titulo: '',
-      descripcion: '',
-      tipo: 'profesional',
-      periodo: 'anual',
-      fechaLimite: '',
-      comoSeAlcanzara: '',
-      imagenUrl: '',
-      montoFinanciero: '',
-      progreso: 0,
-      completada: false
-    })
+    setNuevaMeta(META_VACIA)
     setMostrarFormulario(false)
   }
 
@@ -287,33 +160,48 @@ function MetasAnuales({ cliente = null }) {
     mostrarNotificacion('Meta eliminada', 'info')
   }
 
-  const actualizarProgreso = (id, progreso) => {
-    setMetas(metas.map(m => m.id === id ? { ...m, progreso: Math.min(100, Math.max(0, progreso)) } : m))
-  }
-
-  const completarMeta = (id) => {
-    setMetas(metas.map(m => {
-      if (m.id === id) {
-        const nuevaCompletada = !m.completada
-        if (nuevaCompletada) {
-          mostrarNotificacion('¡Felicitaciones! Meta completada', 'success')
-        }
-        return { ...m, completada: nuevaCompletada, progreso: nuevaCompletada ? 100 : m.progreso }
-      }
-      return m
-    }))
+  /** Guarda un aporte o un paso tildado y recalcula el avance. */
+  const cambiarMeta = (actualizada) => {
+    const antes = metas.find((m) => m.id === actualizada.id)
+    const nueva = conAvance(actualizada)
+    setMetas(metas.map((m) => (m.id === nueva.id ? nueva : m)))
+    if (nueva.completada && antes && avanceDe(antes) < 100) {
+      mostrarNotificacion('¡Felicitaciones! Meta cumplida', 'success')
+    } else if (esFinanciera(nueva) && antes && ahorradoDe(nueva) > ahorradoDe(antes)) {
+      mostrarNotificacion(`Ahorro registrado: ${gs(ahorradoDe(nueva) - ahorradoDe(antes))}`, 'success')
+    } else if (esFinanciera(nueva) && antes && cuotasPendientes(nueva).length > cuotasPendientes(antes).length) {
+      mostrarNotificacion(`${cuotasPendientes(nueva).length - cuotasPendientes(antes).length} cuotas programadas`, 'success')
+    }
   }
 
   const editarMeta = (meta) => {
-    setNuevaMeta(meta)
+    setNuevaMeta({ ...META_VACIA, ...meta, montoFinanciero: meta.montoFinanciero ?? 0, pasos: meta.pasos || [] })
     setEditandoId(meta.id)
     setMostrarFormulario(true)
   }
 
-  const metasFiltradas = metas.filter(m => m.periodo === periodo)
-  const tipoInfo = (tipoId) => TIPOS_META.find(t => t.id === tipoId)
+  const metasFiltradas = metas.filter(m => (m.periodo || 'anual') === periodo)
+  const tipoInfo = (tipoId) => TIPOS_META.find(t => t.id === tipoId) || TIPOS_META[1]
+  const campo = (k) => (e) => setNuevaMeta({ ...nuevaMeta, [k]: e.target.value })
 
-  const metasCompletadas = metasFiltradas.filter(m => m.completada).length
+  const abrirNueva = () => {
+    setEditandoId(null)
+    setNuevaMeta({ ...META_VACIA, periodo })
+    setMostrarFormulario(true)
+  }
+
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false)
+    setEditandoId(null)
+    setNuevaMeta(META_VACIA)
+  }
+
+  const campoImagen = (
+    <div className="form-group">
+      <label htmlFor="meta-imagen">Imagen de cabecera (URL)</label>
+      <input id="meta-imagen" type="url" value={nuevaMeta.imagenUrl || ''} onChange={campo('imagenUrl')} placeholder="https://…/imagen.jpg" />
+    </div>
+  )
 
   return (
     <div className="metas-anuales">
@@ -330,71 +218,63 @@ function MetasAnuales({ cliente = null }) {
         lede={cliente
           ? `Objetivos propios de ${cliente.razonSocial}, independientes de tus metas personales y de los demás clientes.`
           : 'Establece y alcanza tus objetivos.'}
-        equation={[{ n: `${metasCompletadas} de ${metasFiltradas.length} ` }, { v: 'metas cumplidas' }]}
         status={syncStatus}
-        caption={metasFiltradas.length ? `${Math.round((metasCompletadas / metasFiltradas.length) * 100)} % del período` : 'sin metas en el período'}
       />
-      <Figures items={[
-        { label: 'Metas', value: metasFiltradas.length },
-        { label: 'Completadas', value: metasCompletadas, tone: metasCompletadas ? 'ok' : undefined },
-        { label: 'En curso', value: metasFiltradas.length - metasCompletadas }
-      ]} />
 
-      {/* Selector de período y botones de acción */}
+      {/* Selector de período y acciones */}
       <div className="periodo-acciones">
-        <div className="periodo-selector">
+        <div className="periodo-selector" role="tablist" aria-label="Período">
           {PERIODOS.map(p => (
             <button
               key={p.id}
+              role="tab"
+              aria-selected={periodo === p.id}
               className={`periodo-btn ${periodo === p.id ? 'activo' : ''}`}
               onClick={() => setPeriodo(p.id)}
             >
               {p.label}
+              <span className="periodo-btn__n">{metas.filter(m => (m.periodo || 'anual') === p.id).length}</span>
             </button>
           ))}
         </div>
-        <button className="btn btn-exportar" onClick={exportarPDF}>
-          Exportar PDF
-        </button>
+        <div className="periodo-acciones__right">
+          <button className="btn btn-exportar" onClick={exportarPDF} disabled={!metasFiltradas.length}>
+            <Download size={15} strokeWidth={1.8} /> Exportar PDF
+          </button>
+          {!mostrarFormulario && (
+            <button className="btn btn-add-meta" onClick={abrirNueva}>
+              <Plus size={16} strokeWidth={1.8} /> Nueva meta
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Avance general: todas las metas, ambos períodos */}
-      {metas.length > 0 && <MetasAvanceGeneral metas={metas} />}
-
-      {/* Gráficos de Progreso */}
-      {metasFiltradas.length > 0 && <MetasCharts metas={metasFiltradas} />}
-
-      {/* Formulario para agregar meta */}
+      {/* Formulario compacto: 3 campos por fila */}
       {mostrarFormulario && (
-        <div className="meta-form">
-          <div className="form-group">
-            <label>Título de la Meta *</label>
-            <input
-              type="text"
-              value={nuevaMeta.titulo}
-              onChange={(e) => setNuevaMeta({ ...nuevaMeta, titulo: e.target.value })}
-              placeholder={cliente ? 'Ej: Regularizar las declaraciones de IVA atrasadas' : 'Ej: Obtener certificación en Excel Avanzado'}
-              autoFocus
-            />
-          </div>
+        <form ref={formRef} className="meta-form" style={{ scrollMarginTop: 24 }} onSubmit={(e) => { e.preventDefault(); agregarMeta() }}>
+          <header className="meta-form__head">
+            <h4>{editandoId ? 'Editar meta' : 'Nueva meta'}</h4>
+            <button type="button" className="meta-form__close" onClick={cerrarFormulario} aria-label="Cerrar formulario">
+              <X size={16} strokeWidth={1.8} />
+            </button>
+          </header>
 
-          <div className="form-group">
-            <label>Descripción *</label>
-            <textarea
-              value={nuevaMeta.descripcion}
-              onChange={(e) => setNuevaMeta({ ...nuevaMeta, descripcion: e.target.value })}
-              placeholder="Describe tu meta en detalle..."
-              rows="3"
-            ></textarea>
-          </div>
+          <div className="meta-form__grid">
+            <div className="form-group span-2">
+              <label htmlFor="meta-titulo">Título *</label>
+              <input
+                id="meta-titulo"
+                type="text"
+                value={nuevaMeta.titulo}
+                onChange={campo('titulo')}
+                placeholder={cliente ? 'Ej: Regularizar las declaraciones de IVA atrasadas' : 'Ej: Obtener certificación en Excel Avanzado'}
+                autoFocus
+              />
+            </div>
 
-          <div className="form-row">
             <div className="form-group">
-              <label>Tipo de Meta *</label>
-              <select
-                value={nuevaMeta.tipo}
-                onChange={(e) => setNuevaMeta({ ...nuevaMeta, tipo: e.target.value })}
-              >
+              <label htmlFor="meta-tipo">Tipo *</label>
+              <select id="meta-tipo" value={nuevaMeta.tipo} onChange={campo('tipo')}>
                 {TIPOS_META.map(tipo => (
                   <option key={tipo.id} value={tipo.id}>{tipo.label}</option>
                 ))}
@@ -402,216 +282,82 @@ function MetasAnuales({ cliente = null }) {
             </div>
 
             <div className="form-group">
-              <label>Fecha Límite *</label>
-              <input
-                type="date"
-                value={nuevaMeta.fechaLimite}
-                onChange={(e) => setNuevaMeta({ ...nuevaMeta, fechaLimite: e.target.value })}
-              />
+              <label htmlFor="meta-periodo">Período</label>
+              <select id="meta-periodo" value={nuevaMeta.periodo || 'anual'} onChange={campo('periodo')}>
+                {PERIODOS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
             </div>
-          </div>
 
-          <div className="form-group">
-            <label>¿Cómo se alcanzará? (Estrategia) *</label>
-            <textarea
-              value={nuevaMeta.comoSeAlcanzara}
-              onChange={(e) => setNuevaMeta({ ...nuevaMeta, comoSeAlcanzara: e.target.value })}
-              placeholder="Describe los pasos o acciones específicas para alcanzar esta meta..."
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div className="form-row">
             <div className="form-group">
-              <label>URL de Imagen (Cabecera)</label>
-              <input
-                type="url"
-                value={nuevaMeta.imagenUrl}
-                onChange={(e) => setNuevaMeta({ ...nuevaMeta, imagenUrl: e.target.value })}
-                placeholder="https://ejemplo.com/imagen.jpg"
-              />
+              <label htmlFor="meta-fecha">Fecha límite *</label>
+              <input id="meta-fecha" type="date" value={nuevaMeta.fechaLimite} onChange={campo('fechaLimite')} />
             </div>
 
-            {nuevaMeta.tipo === 'financiero' && (
+            {nuevaMeta.tipo === 'financiero' ? (
               <div className="form-group">
-                <label>Monto Objetivo ($) *</label>
-                <input
-                  type="number"
+                <label htmlFor="meta-monto">Monto objetivo (Gs.) *</label>
+                <MontoInput
+                  id="meta-monto"
                   value={nuevaMeta.montoFinanciero}
-                  onChange={(e) => setNuevaMeta({ ...nuevaMeta, montoFinanciero: e.target.value })}
-                  placeholder="Ej: 5000"
-                  step="100"
+                  onChange={(v) => setNuevaMeta({ ...nuevaMeta, montoFinanciero: v })}
+                  placeholder="Ej: 50.000.000"
+                />
+              </div>
+            ) : campoImagen}
+
+            <div className="form-group">
+              <label htmlFor="meta-desc">Descripción *</label>
+              <textarea id="meta-desc" value={nuevaMeta.descripcion} onChange={campo('descripcion')} placeholder="¿Qué querés lograr?" rows="2" />
+            </div>
+
+            <div className={`form-group ${nuevaMeta.tipo === 'financiero' ? '' : 'span-2'}`}>
+              <label htmlFor="meta-estrategia">¿Cómo lo vas a lograr?</label>
+              <textarea id="meta-estrategia" value={nuevaMeta.comoSeAlcanzara || ''} onChange={campo('comoSeAlcanzara')} placeholder="Pasos o acciones concretas" rows="2" />
+            </div>
+
+            {nuevaMeta.tipo === 'financiero' ? campoImagen : (
+              <div className="form-group span-3">
+                <label htmlFor="meta-paso-nuevo">Pasos para lograrla</label>
+                <PasosEditor
+                  pasos={nuevaMeta.pasos || []}
+                  onChange={(pasos) => setNuevaMeta({ ...nuevaMeta, pasos })}
                 />
               </div>
             )}
           </div>
 
           <div className="form-buttons">
-            <button className="btn btn-primary" onClick={agregarMeta}>
-              {editandoId ? 'Actualizar Meta' : 'Crear Meta'}
-            </button>
-            <button className="btn btn-secondary" onClick={() => {
-              setMostrarFormulario(false)
-              setEditandoId(null)
-              setNuevaMeta({
-                titulo: '',
-                descripcion: '',
-                tipo: 'profesional',
-                periodo: 'anual',
-                fechaLimite: '',
-                comoSeAlcanzara: '',
-                imagenUrl: '',
-                montoFinanciero: '',
-                progreso: 0,
-                completada: false
-              })
-            }}>
-              Cancelar
-            </button>
+            <button type="button" className="btn btn-secondary" onClick={cerrarFormulario}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">{editandoId ? 'Guardar cambios' : 'Crear meta'}</button>
           </div>
-        </div>
+        </form>
       )}
 
-      {/* Botón para mostrar formulario */}
-      {!mostrarFormulario && (
-        <button className="btn btn-add-meta" onClick={() => setMostrarFormulario(true)}>
-          <Plus size={16} strokeWidth={1.8} /> Crear Nueva Meta
-        </button>
-      )}
+      {/* Resumen gráfico del período */}
+      {metasFiltradas.length > 0 && <MetasResumen metas={metasFiltradas} />}
 
       {/* Grid de metas */}
       <div className="metas-grid">
         {metasFiltradas.length === 0 ? (
           <div className="metas-vacio">
-            <p>No hay metas {periodo === 'anual' ? 'anuales' : 'mensuales'} aún</p>
+            <p>No hay metas {periodo === 'anual' ? 'anuales' : 'mensuales'} aún.</p>
+            {!mostrarFormulario && (
+              <button className="btn btn-secondary" onClick={abrirNueva}>
+                <Plus size={15} strokeWidth={1.8} /> Crear la primera
+              </button>
+            )}
           </div>
         ) : (
-          metasFiltradas.map(meta => {
-            const tipo = tipoInfo(meta.tipo)
-            const ahorroData = meta.tipo === 'financiero' ? calcularAhorroMensual(meta.montoFinanciero, meta.fechaLimite) : null
-
-            return (
-              <div key={meta.id} className={`meta-card ${meta.completada ? 'completada' : ''}`}>
-                {/* Cabecera con imagen */}
-                {meta.imagenUrl && (
-                  <div className="meta-imagen">
-                    <img src={meta.imagenUrl} alt={meta.titulo} />
-                    <div className="meta-type-badge">
-                      <span><tipo.icon size={13} strokeWidth={1.8} /> {tipo.label}</span>
-                    </div>
-                  </div>
-                )}
-
-                {!meta.imagenUrl && (
-                  <div className="meta-imagen-placeholder">
-                    <span className="placeholder-icon"><tipo.icon size={30} strokeWidth={1.4} /></span>
-                    <span className="placeholder-label">{tipo.label}</span>
-                  </div>
-                )}
-
-                {/* Contenido */}
-                <div className="meta-content">
-                  <div className="meta-header-content">
-                    <h4 className={meta.completada ? 'completada' : ''}>{meta.titulo}</h4>
-                    <button className="btn-opciones" onClick={() => {
-                      if (window.confirm('¿Deseas eliminar esta meta?')) {
-                        eliminarMeta(meta.id)
-                      }
-                    }}>
-                      <X size={14} strokeWidth={1.8} />
-                    </button>
-                  </div>
-
-                  <p className="meta-descripcion">{meta.descripcion}</p>
-
-                  {/* Detalles SMART */}
-                  <div className="meta-detalles">
-                    <div className="detalle-item">
-                      <span className="detalle-label">Fecha Límite:</span>
-                      <span className="detalle-valor">{new Date(meta.fechaLimite).toLocaleDateString('es-PY')}</span>
-                    </div>
-                    <div className="detalle-item">
-                      <span className="detalle-label">Estrategia:</span>
-                      <span className="detalle-valor">{meta.comoSeAlcanzara}</span>
-                    </div>
-                  </div>
-
-                  {/* Cálculo de ahorro para metas financieras */}
-                  {ahorroData && !ahorroData.error && (
-                    <div className="ahorro-desglose">
-                      <h5>Plan de Ahorro</h5>
-                      <div className="ahorro-grid">
-                        <div className="ahorro-item">
-                          <span className="ahorro-label">Monto Total</span>
-                          <span className="ahorro-valor">${ahorroData.montoTotal.toLocaleString('es-PY')}</span>
-                        </div>
-                        <div className="ahorro-item">
-                          <span className="ahorro-label">Días Restantes</span>
-                          <span className="ahorro-valor">{ahorroData.diasRestantes}</span>
-                        </div>
-                        <div className="ahorro-item">
-                          <span className="ahorro-label">Ahorro Mensual</span>
-                          <span className="ahorro-valor" style={{ color: '#4ECDC4', fontWeight: 'bold' }}>
-                            ${ahorroData.ahorroMensual.toLocaleString('es-PY')}
-                          </span>
-                        </div>
-                        <div className="ahorro-item">
-                          <span className="ahorro-label">Ahorro Semanal</span>
-                          <span className="ahorro-valor">${ahorroData.ahorroSemanal.toLocaleString('es-PY')}</span>
-                        </div>
-                        <div className="ahorro-item">
-                          <span className="ahorro-label">Ahorro Diario</span>
-                          <span className="ahorro-valor">${ahorroData.ahorroDiario.toLocaleString('es-PY')}</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {ahorroData?.error && (
-                    <div className="error-message">{ahorroData.error}</div>
-                  )}
-
-                  {/* Barra de progreso */}
-                  <div className="progreso-section">
-                    <div className="progreso-header">
-                      <span className="progreso-label">Progreso</span>
-                      <span className="progreso-porcentaje">{meta.progreso}%</span>
-                    </div>
-                    <div className="progreso-bar">
-                      <div
-                        className="progreso-fill"
-                        style={{ width: `${meta.progreso}%` }}
-                      ></div>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={meta.progreso}
-                      onChange={(e) => actualizarProgreso(meta.id, parseInt(e.target.value))}
-                      className="progreso-slider"
-                    />
-                  </div>
-
-                  {/* Botones de acción */}
-                  <div className="meta-acciones">
-                    <button
-                      className="btn btn-small btn-completar"
-                      onClick={() => completarMeta(meta.id)}
-                    >
-                      {meta.completada ? 'Reactivar' : 'Completar'}
-                    </button>
-                    <button
-                      className="btn btn-small btn-editar"
-                      onClick={() => editarMeta(meta)}
-                    >
-                      Editar
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )
-          })
+          metasFiltradas.map(meta => (
+            <MetaCard
+              key={meta.id}
+              meta={meta}
+              tipo={tipoInfo(meta.tipo)}
+              onEditar={() => editarMeta(meta)}
+              onEliminar={() => eliminarMeta(meta.id)}
+              onCambiar={cambiarMeta}
+            />
+          ))
         )}
       </div>
     </div>
