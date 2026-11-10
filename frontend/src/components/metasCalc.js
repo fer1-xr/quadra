@@ -1,7 +1,8 @@
 /**
  * El avance de una meta no se carga a mano: se deriva de lo registrado.
  *  · Financiera: suma de los aportes / monto objetivo.
- *  · Educativa o profesional: pasos tildados / pasos totales.
+ *  · Educativa o profesional: pasos tildados / pasos totales. Un paso con
+ *    sub-pasos vale lo mismo que uno simple y avanza según sus sub-pasos.
  * Metas antiguas sin aportes ni pasos conservan su `progreso` guardado.
  */
 
@@ -44,12 +45,40 @@ export function generarCuotas({ monto, inicio, veces, pagarVencidas }) {
   })
 }
 
+/** 0–1: un paso simple vale 1 si está tildado; uno con sub-pasos, la proporción de sub-pasos hechos. */
+export function fraccionPaso(p) {
+  const subs = p.subpasos || []
+  if (!subs.length) return p.hecho ? 1 : 0
+  return subs.filter((s) => s.hecho).length / subs.length
+}
+
+export const pasoHecho = (p) => fraccionPaso(p) >= 1
+
+/** Tilda o destilda un paso; si tiene sub-pasos, los marca a todos igual. */
+export function alternarPaso(p) {
+  const hecho = !pasoHecho(p)
+  const cuando = hecho ? new Date().toISOString() : null
+  return {
+    ...p,
+    hecho,
+    hechoEn: cuando,
+    ...(p.subpasos?.length ? { subpasos: p.subpasos.map((s) => ({ ...s, hecho, hechoEn: cuando })) } : {})
+  }
+}
+
+/** Tilda o destilda un sub-paso; el paso queda hecho cuando lo están todos sus sub-pasos. */
+export function alternarSubpaso(p, subId) {
+  const subpasos = p.subpasos.map((s) => (s.id === subId ? { ...s, hecho: !s.hecho, hechoEn: !s.hecho ? new Date().toISOString() : null } : s))
+  const hecho = subpasos.every((s) => s.hecho)
+  return { ...p, subpasos, hecho, hechoEn: hecho ? (p.hechoEn || new Date().toISOString()) : null }
+}
+
 export function avanceDe(m) {
   if (esFinanciera(m)) {
     const objetivo = Number(m.montoFinanciero) || 0
     if (objetivo > 0) return clamp((ahorradoDe(m) / objetivo) * 100)
   } else if (m.pasos?.length) {
-    return (m.pasos.filter((p) => p.hecho).length / m.pasos.length) * 100
+    return (m.pasos.reduce((a, p) => a + fraccionPaso(p), 0) / m.pasos.length) * 100
   }
   return m.completada ? 100 : clamp(Number(m.progreso) || 0)
 }

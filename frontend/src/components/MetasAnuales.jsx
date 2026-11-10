@@ -8,7 +8,7 @@ import '../styles/ClienteAgenda.css'
 import Toast from './Toast'
 import MetasResumen from './MetasResumen'
 import MetaCard, { MontoInput, PasosEditor } from './MetaCard'
-import { avanceDe, conAvance, ahorradoDe, planAhorro, gs, fechaPY, esFinanciera, estaPagado, cuotasPendientes } from './metasCalc'
+import { avanceDe, conAvance, ahorradoDe, planAhorro, gs, fechaPY, esFinanciera, estaPagado, cuotasPendientes, pasoHecho } from './metasCalc'
 
 const TIPOS_META = [
   { id: 'educativo', label: 'Educativo', icon: GraduationCap },
@@ -35,6 +35,15 @@ const META_VACIA = {
   progreso: 0,
   completada: false
 }
+
+/** Descarta pasos y sub-pasos sin texto; un paso con sub-pasos queda hecho solo si lo están todos. */
+const limpiarPasos = (pasos = []) =>
+  pasos
+    .filter((p) => p.texto.trim())
+    .map((p) => {
+      const subpasos = (p.subpasos || []).filter((s) => s.texto.trim())
+      return subpasos.length ? { ...p, subpasos, hecho: subpasos.every((s) => s.hecho) } : { ...p, subpasos: [] }
+    })
 
 /**
  * Sin `cliente`: metas personales del usuario.
@@ -113,7 +122,10 @@ function MetasAnuales({ cliente = null }) {
         const pend = cuotasPendientes(meta)
         if (pend.length) linea(`Cuotas pendientes: ${pend.length} de ${gs(pend[0].monto)} · próxima ${fechaPY(pend[0].fecha)}`)
       } else if (meta.pasos?.length) {
-        meta.pasos.forEach((p) => linea(`   [${p.hecho ? 'x' : ' '}] ${p.texto}`, 5))
+        meta.pasos.forEach((p) => {
+          linea(`   [${pasoHecho(p) ? 'x' : ' '}] ${p.texto}`, 5)
+          ;(p.subpasos || []).forEach((s) => linea(`         [${s.hecho ? 'x' : ' '}] ${s.texto}`, 5))
+        })
       }
 
       y += 4
@@ -139,7 +151,7 @@ function MetasAnuales({ cliente = null }) {
       id: editandoId || Date.now(),
       creadaEn: nuevaMeta.creadaEn || new Date().toISOString(),
       montoFinanciero: nuevaMeta.tipo === 'financiero' ? Number(nuevaMeta.montoFinanciero) : null,
-      pasos: (nuevaMeta.pasos || []).filter((p) => p.texto.trim())
+      pasos: limpiarPasos(nuevaMeta.pasos)
     })
 
     if (editandoId) {

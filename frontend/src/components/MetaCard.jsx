@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
-import { X, CalendarDays, Plus, Check, Trash2, Undo2 } from 'lucide-react'
+import { X, CalendarDays, Plus, Check, Trash2, Undo2, ListPlus, Minus } from 'lucide-react'
 import {
   avanceDe, estadoDe, planAhorro, gs, parseMonto, hoyISO, fechaPY, nuevoId, esFinanciera,
-  estaPagado, cuotasPendientes, generarCuotas, sumarMeses
+  estaPagado, cuotasPendientes, generarCuotas, sumarMeses, pasoHecho, alternarPaso, alternarSubpaso
 } from './metasCalc'
 
 const ESTADO_LABEL = { hecha: 'Cumplida', 'al-dia': 'A tiempo', atrasada: 'Atrasada', vencida: 'Vencida' }
@@ -24,15 +24,27 @@ export function MontoInput({ value, onChange, ...rest }) {
   )
 }
 
-/** Editor de pasos del formulario: agregar, renombrar y quitar (lo tildado se conserva). */
+/**
+ * Editor de pasos del formulario: agregar, renombrar y quitar pasos y sub-pasos
+ * (lo ya tildado se conserva). Los textos vacíos se descartan al guardar.
+ */
 export function PasosEditor({ pasos, onChange }) {
   const [texto, setTexto] = useState('')
+  const [enfocar, setEnfocar] = useState(null)
 
   const agregar = () => {
     const t = texto.trim()
     if (!t) return
-    onChange([...pasos, { id: nuevoId(), texto: t, hecho: false }])
+    onChange([...pasos, { id: nuevoId(), texto: t, hecho: false, subpasos: [] }])
     setTexto('')
+  }
+
+  const cambiarPaso = (id, f) => onChange(pasos.map((x) => (x.id === id ? f(x) : x)))
+
+  const agregarSub = (p) => {
+    const sub = { id: nuevoId(), texto: '', hecho: false }
+    cambiarPaso(p.id, (x) => ({ ...x, hecho: false, subpasos: [...(x.subpasos || []), sub] }))
+    setEnfocar(sub.id)
   }
 
   return (
@@ -40,22 +52,54 @@ export function PasosEditor({ pasos, onChange }) {
       {pasos.length > 0 && (
         <ol className="pasos-editor__lista">
           {pasos.map((p, i) => (
-            <li key={p.id} className={p.hecho ? 'is-hecho' : ''}>
-              <span className="pasos-editor__n">{p.hecho ? <Check size={12} strokeWidth={3} /> : i + 1}</span>
-              <input
-                type="text"
-                value={p.texto}
-                onChange={(e) => onChange(pasos.map((x) => (x.id === p.id ? { ...x, texto: e.target.value } : x)))}
-                aria-label={`Paso ${i + 1}`}
-              />
-              <button
-                type="button"
-                className="pasos-editor__del"
-                onClick={() => onChange(pasos.filter((x) => x.id !== p.id))}
-                aria-label={`Quitar paso ${i + 1}`}
-              >
-                <X size={14} strokeWidth={1.8} />
-              </button>
+            <li key={p.id} className={pasoHecho(p) ? 'is-hecho' : ''}>
+              <div className="pasos-editor__fila">
+                <span className="pasos-editor__n">{pasoHecho(p) ? <Check size={12} strokeWidth={3} /> : i + 1}</span>
+                <input
+                  type="text"
+                  value={p.texto}
+                  onChange={(e) => cambiarPaso(p.id, (x) => ({ ...x, texto: e.target.value }))}
+                  aria-label={`Paso ${i + 1}`}
+                />
+                <button type="button" className="pasos-editor__sub" onClick={() => agregarSub(p)} aria-label={`Agregar sub-paso a ${p.texto || `paso ${i + 1}`}`} title="Agregar sub-paso">
+                  <ListPlus size={15} strokeWidth={1.8} />
+                </button>
+                <button
+                  type="button"
+                  className="pasos-editor__del"
+                  onClick={() => onChange(pasos.filter((x) => x.id !== p.id))}
+                  aria-label={`Quitar paso ${i + 1}`}
+                >
+                  <X size={14} strokeWidth={1.8} />
+                </button>
+              </div>
+
+              {p.subpasos?.length > 0 && (
+                <ul className="pasos-editor__subs">
+                  {p.subpasos.map((s, j) => (
+                    <li key={s.id} className={s.hecho ? 'is-hecho' : ''}>
+                      <span className="pasos-editor__sn">{i + 1}.{j + 1}</span>
+                      <input
+                        type="text"
+                        value={s.texto}
+                        autoFocus={enfocar === s.id}
+                        placeholder="Sub-paso"
+                        onChange={(e) => cambiarPaso(p.id, (x) => ({ ...x, subpasos: x.subpasos.map((y) => (y.id === s.id ? { ...y, texto: e.target.value } : y)) }))}
+                        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); agregarSub(p) } }}
+                        aria-label={`Sub-paso ${i + 1}.${j + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className="pasos-editor__del"
+                        onClick={() => cambiarPaso(p.id, (x) => ({ ...x, subpasos: x.subpasos.filter((y) => y.id !== s.id) }))}
+                        aria-label={`Quitar sub-paso ${i + 1}.${j + 1}`}
+                      >
+                        <X size={13} strokeWidth={1.8} />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </li>
           ))}
         </ol>
@@ -300,17 +344,48 @@ function Aportes({ meta, onCambiarAportes }) {
   )
 }
 
-/** Lista de pasos con casillas: el avance es la proporción de pasos tildados. */
-function Pasos({ meta, onToggle, onAgregar }) {
+/** Campo en línea para agregar un sub-paso; Enter agrega y deja el campo listo para el siguiente, Esc cierra. */
+function SubpasoNuevo({ onAgregar, onCerrar }) {
   const [texto, setTexto] = useState('')
+  const enviar = (e) => {
+    e.preventDefault()
+    const t = texto.trim()
+    if (!t) return onCerrar()
+    onAgregar({ id: nuevoId(), texto: t, hecho: false })
+    setTexto('')
+  }
+  return (
+    <form className="pasos__add pasos__add--sub" onSubmit={enviar}>
+      <input
+        type="text"
+        value={texto}
+        autoFocus
+        onChange={(e) => setTexto(e.target.value)}
+        onKeyDown={(e) => { if (e.key === 'Escape') onCerrar() }}
+        placeholder="Sub-paso… (Enter)"
+        aria-label="Nuevo sub-paso"
+      />
+      <button type="button" className="btn btn-small" onClick={onCerrar} aria-label="Cerrar"><X size={14} strokeWidth={2} /></button>
+    </form>
+  )
+}
+
+/**
+ * Lista de pasos con casillas. Cada paso puede tener sub-pasos: el paso
+ * avanza según sus sub-pasos y queda hecho cuando están todos tildados.
+ */
+function Pasos({ meta, onCambiarPasos }) {
+  const [texto, setTexto] = useState('')
+  const [subEn, setSubEn] = useState(null)
   const pasos = meta.pasos || []
-  const hechos = pasos.filter((p) => p.hecho).length
+  const hechos = pasos.filter(pasoHecho).length
+  const cambiar = (id, f) => onCambiarPasos(pasos.map((p) => (p.id === id ? f(p) : p)))
 
   const agregar = (e) => {
     e.preventDefault()
     const t = texto.trim()
     if (!t) return
-    onAgregar({ id: nuevoId(), texto: t, hecho: false })
+    onCambiarPasos([...pasos, { id: nuevoId(), texto: t, hecho: false, subpasos: [] }])
     setTexto('')
   }
 
@@ -322,15 +397,57 @@ function Pasos({ meta, onToggle, onAgregar }) {
       </div>
       {pasos.length === 0 && <p className="meta-hint">Dividí la meta en pasos pequeños; cada paso tildado suma al avance.</p>}
       <ul className="pasos__lista">
-        {pasos.map((p) => (
-          <li key={p.id} className={p.hecho ? 'is-hecho' : ''}>
-            <label>
-              <input type="checkbox" checked={!!p.hecho} onChange={() => onToggle(p.id)} />
-              <span className="pasos__box" aria-hidden="true"><Check size={12} strokeWidth={3} /></span>
-              <span className="pasos__texto">{p.texto}</span>
-            </label>
-          </li>
-        ))}
+        {pasos.map((p) => {
+          const subs = p.subpasos || []
+          const subsHechos = subs.filter((s) => s.hecho).length
+          const hecho = pasoHecho(p)
+          const parcial = !hecho && subsHechos > 0
+          return (
+            <li key={p.id} className={`${hecho ? 'is-hecho' : ''} ${parcial ? 'is-parcial' : ''}`}>
+              <div className="pasos__fila">
+                <label>
+                  <input type="checkbox" checked={hecho} onChange={() => cambiar(p.id, alternarPaso)} />
+                  <span className="pasos__box" aria-hidden="true">
+                    {parcial ? <Minus size={12} strokeWidth={3} /> : <Check size={12} strokeWidth={3} />}
+                  </span>
+                  <span className="pasos__texto">{p.texto}</span>
+                  {subs.length > 0 && <span className="pasos__cuenta">{subsHechos}/{subs.length}</span>}
+                </label>
+                <button
+                  type="button"
+                  className="pasos__subbtn"
+                  onClick={() => setSubEn(subEn === p.id ? null : p.id)}
+                  aria-label={`Agregar sub-paso a ${p.texto}`}
+                  title="Agregar sub-paso"
+                >
+                  <ListPlus size={15} strokeWidth={1.8} />
+                </button>
+              </div>
+
+              {(subs.length > 0 || subEn === p.id) && (
+                <ul className="pasos__subs">
+                  {subs.map((s) => (
+                    <li key={s.id} className={s.hecho ? 'is-hecho' : ''}>
+                      <label>
+                        <input type="checkbox" checked={!!s.hecho} onChange={() => cambiar(p.id, (x) => alternarSubpaso(x, s.id))} />
+                        <span className="pasos__box" aria-hidden="true"><Check size={11} strokeWidth={3} /></span>
+                        <span className="pasos__texto">{s.texto}</span>
+                      </label>
+                    </li>
+                  ))}
+                  {subEn === p.id && (
+                    <li>
+                      <SubpasoNuevo
+                        onAgregar={(s) => cambiar(p.id, (x) => ({ ...x, hecho: false, hechoEn: null, subpasos: [...(x.subpasos || []), s] }))}
+                        onCerrar={() => setSubEn(null)}
+                      />
+                    </li>
+                  )}
+                </ul>
+              )}
+            </li>
+          )
+        })}
       </ul>
       <form className="pasos__add" onSubmit={agregar}>
         <input type="text" value={texto} onChange={(e) => setTexto(e.target.value)} placeholder="Agregar paso…" aria-label="Nuevo paso" />
@@ -398,8 +515,7 @@ function MetaCard({ meta, tipo, onEditar, onEliminar, onCambiar }) {
         ) : (
           <Pasos
             meta={meta}
-            onToggle={(id) => onCambiar({ ...meta, pasos: meta.pasos.map((p) => (p.id === id ? { ...p, hecho: !p.hecho, hechoEn: !p.hecho ? new Date().toISOString() : null } : p)) })}
-            onAgregar={(p) => onCambiar({ ...meta, pasos: [...(meta.pasos || []), p] })}
+            onCambiarPasos={(pasos) => onCambiar({ ...meta, pasos })}
           />
         )}
 

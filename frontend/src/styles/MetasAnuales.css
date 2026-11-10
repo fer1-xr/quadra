@@ -388,7 +388,7 @@
 .aportes__fecha { color: var(--q-ink-3); }
 .aportes__monto { text-align: right; color: var(--q-ink); }
 
-.aportes__del, .pasos-editor__del {
+.aportes__del, .pasos-editor__del, .pasos-editor__sub, .pasos__subbtn {
   display: grid;
   place-items: center;
   width: 24px;
@@ -403,6 +403,7 @@
 }
 
 .aportes__del:hover, .pasos-editor__del:hover { opacity: 1; background: var(--q-err-bg); color: var(--q-err); }
+.pasos-editor__sub:hover, .pasos__subbtn:hover, .pasos__subbtn:focus-visible { opacity: 1; background: var(--q-surface-2); color: var(--q-brand); }
 
 /* pasos de metas educativas y profesionales */
 .pasos { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--q-line-2); }
@@ -425,7 +426,7 @@
 }
 
 .pasos__lista label:hover { background: var(--q-surface-2); }
-.pasos__lista input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.pasos__lista input[type="checkbox"] { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 
 .pasos__box {
   display: grid;
@@ -446,12 +447,33 @@
 .pasos__lista li.is-hecho .pasos__texto { color: var(--q-ink-3); text-decoration: line-through; }
 
 .pasos__add { display: grid; grid-template-columns: minmax(0, 1fr) 36px; gap: 6px; }
+
+/* sub-pasos */
+.pasos__fila { display: flex; align-items: flex-start; gap: 2px; }
+.pasos__fila > label { flex: 1; min-width: 0; }
+.pasos__subbtn { flex: none; margin-top: 3px; opacity: 0; }
+.pasos__lista > li:hover .pasos__subbtn, .pasos__subbtn:focus-visible { opacity: 0.7; }
+@media (hover: none) { .pasos__subbtn { opacity: 0.6; } }
+.pasos__cuenta { margin-left: auto; padding-left: 8px; font-family: var(--q-mono); font-size: 11px; color: var(--q-ink-3); white-space: nowrap; }
+.pasos__lista li.is-parcial > .pasos__fila .pasos__box { border-color: var(--q-ok); color: var(--q-ok); }
+.pasos__lista li.is-hecho .pasos__cuenta { text-decoration: none; color: var(--q-ok); }
+.pasos__subs { display: grid; gap: 0; margin: 0 0 4px; padding: 0 0 0 26px; list-style: none; }
+.pasos__subs label { padding: 4px 6px; font-size: 12.5px; }
+.pasos__subs .pasos__box { width: 15px; height: 15px; border-radius: 4px; }
+.pasos__add--sub { grid-template-columns: minmax(0, 1fr) 32px; padding: 2px 0 4px; }
+.q-app .q-content .metas-anuales .pasos__add--sub :is(input, .btn) { min-height: 32px; font-size: 12.5px; }
 .q-app .q-content .metas-anuales .pasos__add .btn-small { flex: none; padding: 0; }
 
 /* editor de pasos en el formulario */
 .pasos-editor { display: grid; gap: 8px; }
 .pasos-editor__lista { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 6px 12px; margin: 0; padding: 0; list-style: none; }
-.pasos-editor__lista li { display: grid; grid-template-columns: 22px minmax(0, 1fr) 24px; align-items: center; gap: 8px; }
+.pasos-editor__lista > li { display: grid; gap: 4px; align-content: start; }
+.pasos-editor__fila { display: grid; grid-template-columns: 22px minmax(0, 1fr) 24px 24px; align-items: center; gap: 6px; }
+.pasos-editor__subs { display: grid; gap: 4px; margin: 0; padding: 0 0 0 28px; list-style: none; }
+.pasos-editor__subs li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 24px; align-items: center; gap: 6px; }
+.pasos-editor__sn { font-family: var(--q-mono); font-size: 10.5px; color: var(--q-ink-3); }
+.pasos-editor__subs li.is-hecho .pasos-editor__sn { color: var(--q-ok); }
+.q-app .q-content .metas-anuales .pasos-editor__subs input { min-height: 32px; font-size: 13px; }
 .pasos-editor__n {
   display: grid;
   place-items: center;
