@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react'
-import { Download, ArrowLeft, Printer, Plus, X, BookCheck, BookOpen, ArrowUpRight, Landmark, Scale } from 'lucide-react'
+import { Download, Printer, Plus, X, Landmark, Scale } from 'lucide-react'
 import PageHead, { Figures } from '../PageHead'
 import { useContable } from './ContableContext'
 import { PeriodoSelect, MontoInput, Vacio, exportarHojas } from './ui'
@@ -7,8 +7,7 @@ import {
   armarDiario, armarMayor, gs, fechaCorta, n0, TIPOS, TIPOS_FISCALES, totalesDe, compararCodigos
 } from '../../services/contabilidad'
 import {
-  LIBROS, librosObligatorios, impuestosActivos, ingresosEgresos, saldosJerarquicos, resultadoDe, filasEstado, esCaja, esBanco, libroDisponibilidad,
-  cuentasCorrientes, extractoPersona, liquidacionIVA, detallesInventario
+  ingresosEgresos, saldosJerarquicos, resultadoDe, filasEstado, liquidacionIVA, detallesInventario
 } from '../../services/informes'
 import '../../styles/Informes.css'
 
@@ -80,8 +79,6 @@ export const HOJAS = {
   },
   'ct-libro-compras': (L) => filasIVA(L.comprobantes.items.filter((d) => String(d.fecha || '').startsWith(String(L.ejercicio))), 'compra'),
   'ct-libro-ventas': (L) => filasIVA(L.comprobantes.items.filter((d) => String(d.fecha || '').startsWith(String(L.ejercicio))), 'venta'),
-  'ct-caja': (L) => filasDisponibilidad(L, esCaja),
-  'ct-bancos': (L) => filasDisponibilidad(L, esBanco),
   'ct-ingresos-egresos': (L) => {
     const filas = ingresosEgresos(L.comprobantes.items, L.ejercicio)
     const ing = filas.reduce((s, m) => s + m.ingreso, 0)
@@ -93,34 +90,15 @@ export const HOJAS = {
       ['', '', '', '', 'DIFERENCIA', ing - egr, '']
     ]
   },
-  'ct-ctacte-clientes': (L) => filasCtaCte(L, 'venta'),
-  'ct-ctacte-proveedores': (L) => filasCtaCte(L, 'compra'),
   'ct-iva': (L) => [
     ['Mes', 'Débito fiscal', 'Crédito fiscal', 'Retenciones', 'Saldo a favor anterior', 'A pagar', 'Saldo a favor'],
     ...liquidacionIVA(L.comprobantes.items, L.ejercicio).map((m) => [m.nombre, m.df, m.cf, m.ret, m.anterior, m.aPagar, m.aFavor])
   ]
 }
 
-function filasDisponibilidad(L, filtro) {
-  const cuentas = [...L.mayor.keys()].filter(filtro).sort(compararCodigos)
-  const filas = [['Cuenta', 'Asiento', 'Fecha', 'Concepto', 'Contrapartida', 'Ingreso', 'Egreso', 'Saldo']]
-  cuentas.forEach((c) => {
-    libroDisponibilidad(L.diario, [c], L.nombreCuenta).forEach((m) => filas.push([`${c} ${L.nombreCuenta(c)}`, m.numero, fechaCorta(m.fecha), m.concepto, m.contra, m.ingreso || '', m.egreso || '', m.saldo]))
-  })
-  return filas
-}
-
-function filasCtaCte(L, lado) {
-  return [
-    ['RUC', 'Nombre', 'Hasta 30 días', '31 a 60', '61 a 90', 'Más de 90', 'Saldo'],
-    ...cuentasCorrientes(L.comprobantes.items, lado).map((c) => [c.ruc, c.nombre, c.tramos.corriente, c.tramos.d30, c.tramos.d60, c.tramos.d90, c.saldo])
-  ]
-}
-
-const NOMBRE_HOJA = {
+export const NOMBRE_HOJA = {
   'ct-diario': 'Diario', 'ct-mayor': 'Mayor', 'ct-inventario': 'Inventario y Balances', 'ct-libro-compras': 'IVA Compras',
-  'ct-libro-ventas': 'IVA Ventas', 'ct-ingresos-egresos': 'Ingresos y Egresos', 'ct-caja': 'Caja', 'ct-bancos': 'Bancos', 'ct-ctacte-clientes': 'Ctas ctes clientes',
-  'ct-ctacte-proveedores': 'Ctas ctes proveedores', 'ct-iva': 'Liquidación IVA'
+  'ct-libro-ventas': 'IVA Ventas', 'ct-ingresos-egresos': 'Ingresos y Egresos', 'ct-iva': 'Liquidación IVA'
 }
 
 /** descarga un libro suelto o el paquete completo del ejercicio en un solo Excel */
@@ -128,121 +106,6 @@ export const descargarLibros = (L, ids) => {
   const hojas = ids.filter((id) => HOJAS[id]).map((id) => ({ hoja: NOMBRE_HOJA[id], filas: [...encabezado(NOMBRE_HOJA[id], L), ...HOJAS[id](L)] }))
   const nombre = ids.length === 1 ? `${NOMBRE_HOJA[ids[0]]} ${L.contribuyente.ruc} ${L.ejercicio}` : `Libros ${L.contribuyente.ruc} ${L.ejercicio}`
   exportarHojas(nombre, hojas)
-}
-
-/* ── centro de libros ───────────────────────────────────────── */
-
-export function CentroLibros() {
-  const L = useLibros()
-  const { comprobantes, ejercicio, ir, activos } = L
-  const delEj = comprobantes.items.filter((d) => String(d.fecha || '').startsWith(String(ejercicio)))
-  const cuentaFiscal = (lado) => delEj.filter((d) => TIPOS_FISCALES.includes(d.tipo) && TIPOS[d.tipo].lado === lado).length
-  const cuentaTipo = (tipo) => {
-    const n = delEj.filter((d) => d.tipo === tipo).length
-    return n === 1 ? '1 registro' : `${n} registros`
-  }
-  const sd = L.diario.reduce((t, a) => { a.lineas.forEach((l) => { t.d += l.debe; t.h += l.haber }); return t }, { d: 0, h: 0 })
-  const cajas = [...L.mayor.keys()].filter(esCaja)
-  const bancos = [...L.mayor.keys()].filter(esBanco)
-
-  // estado de cada libro: cuánto tiene y si hay algo que mirar
-  const estado = {
-    'ct-diario': { dato: `${L.diario.length} asientos`, ok: sd.d === sd.h, aviso: sd.d === sd.h ? 'cuadra' : 'no cuadra' },
-    'ct-mayor': { dato: `${L.mayor.size} cuentas`, ok: true },
-    'ct-inventario': { dato: L.existencias ? 'recuento cargado' : 'sin recuento físico', ok: !!L.existencias || !L.tot.get('1.1.05') },
-    'ct-libro-compras': { dato: `${cuentaFiscal('compra')} comprobantes`, ok: true },
-    'ct-libro-ventas': { dato: `${cuentaFiscal('venta')} comprobantes`, ok: true },
-    'ct-caja': { dato: cajas.length ? `saldo ${gs(cajas.reduce((s, c) => s + L.mayor.get(c).saldo, 0))}` : 'sin movimientos', ok: cajas.every((c) => L.mayor.get(c).saldo >= 0), aviso: 'saldo negativo' },
-    'ct-bancos': { dato: bancos.length ? `${bancos.length} cuenta${bancos.length > 1 ? 's' : ''}` : 'sin movimientos', ok: true },
-    'ct-ctacte-clientes': { dato: `por cobrar ${gs(cuentasCorrientes(comprobantes.items, 'venta').reduce((s, c) => s + c.saldo, 0))}`, ok: true },
-    'ct-ctacte-proveedores': { dato: `por pagar ${gs(cuentasCorrientes(comprobantes.items, 'compra').reduce((s, c) => s + c.saldo, 0))}`, ok: true },
-    'ct-revaluo': { dato: `${activos.items.length} bienes`, ok: true },
-    'ct-ingresos-egresos': { dato: `${cuentaFiscal('venta') + cuentaFiscal('compra')} comprobantes`, ok: true },
-    'ct-nc-venta': { dato: cuentaTipo('nc-venta'), ok: true },
-    'ct-nc-compra': { dato: cuentaTipo('nc-compra'), ok: true },
-    'ct-recibo-pago': { dato: cuentaTipo('recibo-pago'), ok: true },
-    'ct-ret-emitida': { dato: cuentaTipo('ret-emitida'), ok: true },
-    'ct-ret-recibida': { dato: cuentaTipo('ret-recibida'), ok: true },
-    'ct-asientos': { dato: cuentaTipo('asiento'), ok: true }
-  }
-  // obligatorios según el impuesto elegido al ingresar; los auxiliares de siempre quedan como apoyo
-  const idsObl = librosObligatorios(L.contribuyente)
-  const obligatorios = idsObl.map((id) => LIBROS.find((l) => l.id === id))
-  const auxiliares = LIBROS.filter((l) => l.clase === 'auxiliar')
-  const visibles = [...obligatorios, ...auxiliares]
-  const atencion = visibles.filter((l) => estado[l.id] && !estado[l.id].ok)
-  const imps = impuestosActivos(L.contribuyente)
-  const conIva = !imps.length || imps.includes('iva')
-  const paquete = [...visibles.map((l) => l.id), ...(conIva ? ['ct-iva'] : [])].filter((id) => HOJAS[id])
-  const regimen = L.contribuyente.actividad && L.contribuyente.actividad !== 'todos'
-    ? L.contribuyente.actividadLabel
-    : (L.contribuyente.impuestosLabel || L.contribuyente.actividadLabel)
-  const rubricados = idsObl.includes('ct-diario') || idsObl.includes('ct-inventario')
-
-  const Tarjeta = ({ libro }) => {
-    const e = estado[libro.id] || {}
-    const clase = idsObl.includes(libro.id) ? 'obligatorio' : 'auxiliar'
-    return (
-      <article className={`inf-libro is-${clase}`}>
-        <header className="inf-libro__head">
-          <span className={`inf-badge is-${clase}`}>{clase === 'obligatorio' ? 'Obligatorio' : 'Auxiliar'}</span>
-          <small className="inf-libro__base">{libro.base}</small>
-        </header>
-        <button type="button" className="inf-libro__titulo" onClick={() => ir(libro.id)}>
-          {libro.nombre}
-          <ArrowUpRight size={15} strokeWidth={1.8} aria-hidden="true" />
-        </button>
-        <p className="inf-libro__que">{libro.que}</p>
-        <footer className="inf-libro__pie">
-          <span className={`inf-libro__dato ${e.ok === false ? 'is-warn' : ''}`}>{e.dato}{e.ok === false && e.aviso ? ` · ${e.aviso}` : ''}</span>
-          {HOJAS[libro.id] && (
-            <button type="button" className="ct-icon" title={`Descargar ${libro.nombre} en Excel`} aria-label={`Descargar ${libro.nombre} en Excel`} onClick={() => descargarLibros(L, [libro.id])}>
-              <Download size={15} strokeWidth={1.8} />
-            </button>
-          )}
-        </footer>
-      </article>
-    )
-  }
-
-  return (
-    <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead
-        title="Libros contables"
-        lede="Los libros que pide la ley y los auxiliares que te ahorran trabajo, todos armados solos a partir de lo que cargás en Movimientos. Abrí uno o bajá el paquete completo para imprimir y rubricar."
-        equation={[{ v: 'Comprobantes' }, { op: '→' }, { v: 'Libros' }]}
-        caption="se cargan una vez, se ven en todos"
-        status={comprobantes.status} />
-      <div className="ct-toolbar"><div className="ct-toolbar__end">
-        <button type="button" className="q-btn q-btn--primary" onClick={() => descargarLibros(L, paquete)}>
-          <Download size={16} strokeWidth={1.8} /> Todos los libros en un Excel
-        </button>
-      </div></div>
-
-      <Figures items={[
-        { label: 'Asientos del ejercicio', value: L.diario.length },
-        { label: 'Comprobantes', value: delEj.length },
-        { label: 'Diario', value: sd.d === sd.h ? 'Cuadra' : `Dif. ${gs(sd.d - sd.h)}`, tone: sd.d === sd.h ? 'ok' : 'err' },
-        { label: 'Para revisar', value: atencion.length, tone: atencion.length ? 'err' : 'ok' }
-      ]} />
-
-      <section className="inf-seccion" aria-labelledby="inf-obl">
-        <h2 id="inf-obl" className="inf-seccion__titulo"><BookCheck size={17} strokeWidth={1.7} aria-hidden="true" /> Obligatorios</h2>
-        <p className="inf-seccion__nota">
-          {regimen ? <>Los que corresponden a <strong>{regimen}</strong>, según los impuestos del cliente en Gestión de Clientes. </> : null}
-          {rubricados ? 'Diario e Inventario se rubrican en el Registro Público de Comercio antes de usarse (Ley 1034/83) y se conservan 5 años. ' : ''}
-          Los comprobantes se informan en Marangatu.
-        </p>
-        <div className="inf-grid">{obligatorios.map((l) => <Tarjeta key={l.id} libro={l} />)}</div>
-      </section>
-
-      <section className="inf-seccion" aria-labelledby="inf-aux">
-        <h2 id="inf-aux" className="inf-seccion__titulo"><BookOpen size={17} strokeWidth={1.7} aria-hidden="true" /> Auxiliares</h2>
-        <p className="inf-seccion__nota">Tu régimen no los exige ni se rubrican, pero sostienen los saldos del Mayor y del Inventario. Acá no tenés que cargar nada extra.</p>
-        <div className="inf-grid">{auxiliares.map((l) => <Tarjeta key={l.id} libro={l} />)}</div>
-      </section>
-    </div>
-  )
 }
 
 /* ── libro de ingresos y egresos ─────────────────────────────── */
@@ -563,219 +426,6 @@ export function LibroInventario() {
           <Balance L={L} />
           <h2 className="inf-seccion__titulo">Estado de Resultados</h2>
           <Resultados L={L} />
-        </>
-      )}
-    </div>
-  )
-}
-
-/* ── libros caja y bancos ───────────────────────────────────── */
-
-export function LibroDisponibilidades({ tipo }) {
-  const L = useLibros()
-  const caja = tipo === 'caja'
-  const filtro = caja ? esCaja : esBanco
-  const opciones = useMemo(() => {
-    const s = new Set([...L.mayor.keys()].filter(filtro))
-    L.imputables.filter((c) => filtro(c.codigo)).forEach((c) => s.add(c.codigo))
-    return [...s].sort(compararCodigos)
-  }, [L.mayor, L.imputables, filtro])
-  const [cuenta, setCuenta] = useState('')
-  const [mes, setMes] = useState('')
-  const [busca, setBusca] = useState('')
-  const sel = cuenta ? [cuenta] : opciones
-  const todos = useMemo(() => libroDisponibilidad(L.diario, sel, L.nombreCuenta), [L.diario, sel.join(), L.nombreCuenta]) // eslint-disable-line react-hooks/exhaustive-deps
-  const prefijo = mes ? `${L.ejercicio}-${mes}` : String(L.ejercicio)
-  const previos = todos.filter((m) => m.fecha < prefijo)
-  const inicial = previos.length ? previos[previos.length - 1].saldo : 0
-  const q = busca.trim().toLowerCase()
-  const filas = todos.filter((m) => String(m.fecha).startsWith(prefijo)).filter((m) => !q || `${m.concepto} ${m.contra}`.toLowerCase().includes(q))
-  const ing = filas.reduce((s, m) => s + m.ingreso, 0)
-  const egr = filas.reduce((s, m) => s + m.egreso, 0)
-  const titulo = caja ? 'Libro Caja' : 'Libro Bancos'
-
-  const exportar = () => exportarHojas(`${titulo} ${L.contribuyente.ruc} ${L.ejercicio}${mes ? `-${mes}` : ''}`, [{
-    hoja: titulo,
-    filas: [...encabezado(titulo, L), ['Asiento', 'Fecha', 'Cuenta', 'Concepto', 'Contrapartida', 'Ingreso', 'Egreso', 'Saldo'], ['', '', '', 'Saldo inicial', '', '', '', inicial],
-      ...filas.map((m) => [m.numero, fechaCorta(m.fecha), m.cuenta, m.concepto, m.contra, m.ingreso || '', m.egreso || '', m.saldo]), ['', '', '', 'Totales', '', ing, egr, inicial + ing - egr]]
-  }])
-
-  return (
-    <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead
-        title={titulo}
-        lede={caja
-          ? 'Cada entrada y salida de efectivo, tomada de los asientos que tocan Caja y Fondo fijo. Se llena solo con las ventas y compras al contado y los recibos.'
-          : 'Depósitos, pagos y transferencias de cada cuenta bancaria, con saldo corrido. Listo para comparar con el extracto.'}
-        equation={[{ v: 'S', sub: 'f' }, { op: '=' }, { v: 'S', sub: '0' }, { op: '+' }, { v: 'Ingresos' }, { op: '−' }, { v: 'Egresos' }]}
-        caption="saldo corrido"
-        status={L.comprobantes.status} />
-      <Figures items={[
-        { label: 'Saldo inicial', value: gs(inicial) },
-        { label: 'Ingresos', value: gs(ing) },
-        { label: 'Egresos', value: gs(egr) },
-        { label: 'Saldo final', value: gs(inicial + ing - egr), tone: inicial + ing - egr < 0 ? 'err' : 'ok' }
-      ]} />
-      <div className="ct-toolbar">
-        <label className="ct-periodo">
-          <span className="q-label">Cuenta</span>
-          <select className="q-input ct-select" value={cuenta} onChange={(e) => setCuenta(e.target.value)}>
-            <option value="">{caja ? 'Todas las cajas' : 'Todas las cuentas bancarias'}</option>
-            {opciones.map((c) => <option key={c} value={c}>{c} · {L.nombreCuenta(c)}</option>)}
-          </select>
-        </label>
-        <PeriodoSelect value={mes} onChange={setMes} ejercicio={L.ejercicio} />
-        <label className="ct-buscar">
-          <span className="q-label">Buscar</span>
-          <input className="q-input" type="search" value={busca} placeholder="Concepto o contrapartida" onChange={(e) => setBusca(e.target.value)} />
-        </label>
-        <div className="ct-toolbar__end">
-          {!caja && <button type="button" className="q-btn q-btn--line" onClick={() => L.ir('bancaria')}><Landmark size={16} strokeWidth={1.8} /> Conciliar con extracto</button>}
-          {filas.length > 0 && <button type="button" className="q-btn q-btn--line" onClick={exportar}><Download size={16} strokeWidth={1.8} /> Excel</button>}
-        </div>
-      </div>
-      {!filas.length ? (
-        <Vacio titulo="Sin movimientos en esta vista">
-          {caja ? 'Las compras y ventas al contado y los recibos pagados en efectivo aparecen acá.' : 'Elegí una cuenta bancaria como medio de pago en compras, ventas o recibos y sus movimientos aparecen acá.'}
-        </Vacio>
-      ) : (
-        <div className="q-card ct-card">
-          <div className="ct-tabla-wrap">
-            <table className="q-table ct-tabla">
-              <thead><tr><th>Nº</th><th>Fecha</th><th>Concepto</th><th>Contrapartida</th><th className="ct-der">Ingreso</th><th className="ct-der">Egreso</th><th className="ct-der">Saldo</th></tr></thead>
-              <tbody>
-                <tr className="inf-n3"><td /><td /><td colSpan={4}>Saldo inicial</td><td className="ct-num">{gs(inicial)}</td></tr>
-                {filas.map((m, i) => (
-                  <tr key={`${m.docId}-${i}`}>
-                    <td className="ct-mono">{m.numero}</td>
-                    <td className="ct-mono">{fechaCorta(m.fecha)}</td>
-                    <td className="ct-nombre">{m.concepto}{!cuenta && opciones.length > 1 && <small className="ct-glosa"> · {L.nombreCuenta(m.cuenta)}</small>}</td>
-                    <td className="ct-glosa">{m.contra}</td>
-                    <td className="ct-num">{m.ingreso ? gs(m.ingreso) : ''}</td>
-                    <td className="ct-num">{m.egreso ? gs(m.egreso) : ''}</td>
-                    <td className={`ct-num ct-strong ${m.saldo < 0 ? 'is-neg' : ''}`}>{gs(m.saldo)}</td>
-                  </tr>
-                ))}
-              </tbody>
-              <tfoot><tr className="ct-total"><td colSpan={4}>Totales</td><td className="ct-num">{gs(ing)}</td><td className="ct-num">{gs(egr)}</td><td className="ct-num">{gs(inicial + ing - egr)}</td></tr></tfoot>
-            </table>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-/* ── cuentas corrientes ─────────────────────────────────────── */
-
-export function CuentasCorrientes({ lado }) {
-  const L = useLibros()
-  const clientes = lado === 'venta'
-  const lista = useMemo(() => cuentasCorrientes(L.comprobantes.items, lado), [L.comprobantes.items, lado])
-  const [ruc, setRuc] = useState('')
-  const [busca, setBusca] = useState('')
-  const [soloDeuda, setSoloDeuda] = useState(true)
-  const sel = lista.find((c) => c.ruc === ruc)
-  const extracto = useMemo(() => (ruc ? extractoPersona(L.comprobantes.items, ruc, lado) : []), [L.comprobantes.items, ruc, lado])
-  const q = busca.trim().toLowerCase()
-  const visibles = lista.filter((c) => (!soloDeuda || c.saldo)).filter((c) => !q || `${c.ruc} ${c.nombre}`.toLowerCase().includes(q))
-  const total = lista.reduce((s, c) => s + c.saldo, 0)
-  const vencido = lista.reduce((s, c) => s + c.tramos.d30 + c.tramos.d60 + c.tramos.d90, 0)
-  const titulo = clientes ? 'Cuentas corrientes de clientes' : 'Cuentas corrientes de proveedores'
-  const reciboVista = clientes ? 'ct-recibo-cobro' : 'ct-recibo-pago'
-
-  return (
-    <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead
-        title={sel ? sel.nombre : titulo}
-        lede={sel
-          ? `RUC ${sel.ruc}. Facturas a crédito, notas de crédito, ${clientes ? 'cobros' : 'pagos'} y retenciones, con saldo corrido.`
-          : `${clientes ? 'Lo que te debe cada cliente' : 'Lo que le debés a cada proveedor'} por facturas a crédito, con la antigüedad de cada saldo. Tocá un nombre para ver su extracto.`}
-        equation={[{ v: 'Saldo' }, { op: '=' }, { v: 'Facturas' }, { op: '−' }, { v: 'NC' }, { op: '−' }, { v: clientes ? 'Cobros' : 'Pagos' }]}
-        caption="cuenta corriente"
-        status={L.comprobantes.status} />
-
-      {sel ? (
-        <>
-          <div className="ct-toolbar">
-            <button type="button" className="q-btn q-btn--line" onClick={() => setRuc('')}><ArrowLeft size={16} strokeWidth={1.8} /> Todos</button>
-            <div className="ct-toolbar__end"><button type="button" className="q-btn q-btn--line" onClick={() => L.ir(reciboVista)}>{clientes ? 'Registrar cobro' : 'Registrar pago'}</button></div>
-          </div>
-          <Figures items={[
-            { label: 'Saldo', value: gs(sel.saldo), tone: sel.saldo ? 'err' : 'ok' },
-            { label: 'Facturas pendientes', value: sel.pendientes.length },
-            { label: 'Más antigua', value: sel.antigua ? `${sel.dias} días` : '—' },
-            { label: 'Vencido +30 días', value: gs(sel.tramos.d30 + sel.tramos.d60 + sel.tramos.d90) }
-          ]} />
-          <div className="q-card ct-card">
-            <div className="ct-tabla-wrap">
-              <table className="q-table ct-tabla">
-                <thead><tr><th>Fecha</th><th>Comprobante</th><th>Número</th><th className="ct-der">{clientes ? 'Debe' : 'Haber'}</th><th className="ct-der">{clientes ? 'Haber' : 'Debe'}</th><th className="ct-der">Saldo</th></tr></thead>
-                <tbody>
-                  {extracto.map((m) => (
-                    <tr key={m.id}>
-                      <td className="ct-mono">{fechaCorta(m.fecha)}</td>
-                      <td><span className={`ct-chip is-${m.tipo.split('-')[0]}`}>{TIPOS[m.tipo].corto}</span> {m.label}</td>
-                      <td className="ct-mono">{m.numero}</td>
-                      <td className="ct-num">{m.cargo ? gs(m.cargo) : ''}</td>
-                      <td className="ct-num">{m.abono ? gs(m.abono) : ''}</td>
-                      <td className="ct-num ct-strong">{gs(m.saldo)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </>
-      ) : (
-        <>
-          <Figures items={[
-            { label: clientes ? 'Total por cobrar' : 'Total por pagar', value: gs(total) },
-            { label: clientes ? 'Clientes con saldo' : 'Proveedores con saldo', value: lista.filter((c) => c.saldo).length },
-            { label: 'Vencido +30 días', value: gs(vencido), tone: vencido ? 'err' : 'ok' },
-            { label: 'Más de 90 días', value: gs(lista.reduce((s, c) => s + c.tramos.d90, 0)) }
-          ]} />
-          <div className="ct-toolbar">
-            <label className="ct-buscar">
-              <span className="q-label">Buscar</span>
-              <input className="q-input" type="search" value={busca} placeholder="RUC o nombre" onChange={(e) => setBusca(e.target.value)} />
-            </label>
-            <div className="ct-seg ct-seg--sm" role="tablist" aria-label="Mostrar">
-              <button type="button" role="tab" aria-selected={soloDeuda} className={soloDeuda ? 'is-on' : ''} onClick={() => setSoloDeuda(true)}>Con saldo</button>
-              <button type="button" role="tab" aria-selected={!soloDeuda} className={!soloDeuda ? 'is-on' : ''} onClick={() => setSoloDeuda(false)}>Todos</button>
-            </div>
-            <div className="ct-toolbar__end">
-              <button type="button" className="q-btn q-btn--line" onClick={() => L.ir(reciboVista)}>{clientes ? 'Registrar cobro' : 'Registrar pago'}</button>
-              {lista.length > 0 && <button type="button" className="q-btn q-btn--line" onClick={() => descargarLibros(L, [clientes ? 'ct-ctacte-clientes' : 'ct-ctacte-proveedores'])}><Download size={16} strokeWidth={1.8} /> Excel</button>}
-            </div>
-          </div>
-          {!visibles.length ? (
-            <Vacio titulo={lista.length ? 'Nadie con saldo pendiente' : 'Sin cuentas corrientes'}>
-              {lista.length ? 'Todas las facturas a crédito están canceladas.' : `Las facturas ${clientes ? 'de venta' : 'de compra'} a crédito abren una cuenta corriente automáticamente.`}
-            </Vacio>
-          ) : (
-            <div className="q-card ct-card">
-              <div className="ct-tabla-wrap">
-                <table className="q-table ct-tabla">
-                  <thead><tr><th>RUC</th><th>Nombre</th><th className="ct-der">Hasta 30 días</th><th className="ct-der">31 a 60</th><th className="ct-der">61 a 90</th><th className="ct-der">Más de 90</th><th className="ct-der">Saldo</th></tr></thead>
-                  <tbody>
-                    {visibles.map((c) => (
-                      <tr key={c.ruc} className="ct-clic" onClick={() => setRuc(c.ruc)}>
-                        <td className="ct-mono">{c.ruc}</td>
-                        <td><button type="button" className="ct-link" onClick={(e) => { e.stopPropagation(); setRuc(c.ruc) }}>{c.nombre}</button></td>
-                        <td className="ct-num">{c.tramos.corriente ? gs(c.tramos.corriente) : ''}</td>
-                        <td className="ct-num">{c.tramos.d30 ? gs(c.tramos.d30) : ''}</td>
-                        <td className="ct-num">{c.tramos.d60 ? gs(c.tramos.d60) : ''}</td>
-                        <td className={`ct-num ${c.tramos.d90 ? 'is-neg' : ''}`}>{c.tramos.d90 ? gs(c.tramos.d90) : ''}</td>
-                        <td className="ct-num ct-strong">{gs(c.saldo)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                  <tfoot><tr className="ct-total"><td colSpan={6}>Total</td><td className="ct-num">{gs(visibles.reduce((s, c) => s + c.saldo, 0))}</td></tr></tfoot>
-                </table>
-              </div>
-            </div>
-          )}
         </>
       )}
     </div>

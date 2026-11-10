@@ -4,11 +4,11 @@ import { Download, Upload, FileJson, FileSpreadsheet, BookCopy, Users, ListTree,
 import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
 import { exportarExcel, exportarHojas } from './ui'
-import { HOJAS, descargarLibros } from './Informes'
+import { HOJAS, NOMBRE_HOJA, descargarLibros } from './Informes'
 import { leerImportacion } from './AsientosManuales'
 import { leerLibro } from '../../services/importarLibro'
 import { armarDiario, armarMayor, analizarRuc, dvRuc, nivelDe, padreDe, PLAN_BASE } from '../../services/contabilidad'
-import { saldosJerarquicos } from '../../services/informes'
+import { saldosJerarquicos, librosObligatorios, impuestosActivos } from '../../services/informes'
 import '../../styles/Informes.css'
 
 const nh = (v) => String(v || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
@@ -213,6 +213,9 @@ export default function ImportarExportar({ modo }) {
   )
 
   if (!importar) {
+    // los libros del régimen del contribuyente, más la liquidación si tiene IVA
+    const imps = impuestosActivos(contribuyente)
+    const paquete = [...librosObligatorios(contribuyente), ...(!imps.length || imps.includes('iva') ? ['ct-iva'] : [])].filter((id) => HOJAS[id])
     return (
       <div className="q-sheet q-sheet--wide ct-sheet">
         <PageHead
@@ -223,7 +226,7 @@ export default function ImportarExportar({ modo }) {
           status={comprobantes.status}
         />
         <div className="inf-acciones-grid">
-          <Accion principal icono={BookCopy} titulo="Todos los libros del ejercicio" desc={`Diario, Mayor, Inventario y Balances, IVA Compras y Ventas, Caja, Bancos, cuentas corrientes y liquidación de IVA: ${Object.keys(HOJAS).length} hojas en un Excel.`} onClick={() => descargarLibros(libros(), Object.keys(HOJAS))} />
+          <Accion principal icono={BookCopy} titulo="Todos los libros del ejercicio" desc={`Los de su régimen: ${paquete.map((id) => NOMBRE_HOJA[id]).join(', ')}. ${paquete.length} ${paquete.length === 1 ? 'hoja' : 'hojas'} en un Excel.`} onClick={() => descargarLibros(libros(), paquete)} />
           <Accion icono={FileJson} titulo="Respaldo completo" desc="Comprobantes, plan de cuentas propio, activos, timbrados y personas. Se restaura desde Importar." onClick={respaldo} />
           <Accion icono={ListTree} titulo="Plan de cuentas" desc={`${plan.length} cuentas, base RG 49 más las propias.`} onClick={exportarPlan} />
           <Accion icono={Users} titulo="Personas" desc={`${personas.items.length} RUC de clientes y proveedores.`} onClick={exportarPersonas} />

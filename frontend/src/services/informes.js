@@ -18,7 +18,6 @@ import {
  *   Registro Público de Comercio antes de usarse (art. 78); conservación 5 años.
  * - DNIT (Ley 6380/19, Dto. 3182/19, RG 90/21): Libro Mayor para contribuyentes
  *   del IRE General, registro de comprobantes de compras y ventas (IVA).
- * - Libros auxiliares: los elige el contribuyente; no se rubrican.
  */
 export const LIBROS = [
   {
@@ -80,31 +79,6 @@ export const LIBROS = [
     id: 'ct-asientos', nombre: 'Asientos manuales', clase: 'registro',
     base: 'Respaldo del Diario',
     que: 'Apertura, ajustes, provisiones y cierres que no salen de un comprobante.'
-  },
-  {
-    id: 'ct-caja', nombre: 'Libro Caja', clase: 'auxiliar',
-    base: 'Auxiliar · opcional',
-    que: 'Entradas y salidas de efectivo con saldo corrido.'
-  },
-  {
-    id: 'ct-bancos', nombre: 'Libro Bancos', clase: 'auxiliar',
-    base: 'Auxiliar · opcional',
-    que: 'Depósitos y pagos por cuenta bancaria, listo para conciliar con el extracto.'
-  },
-  {
-    id: 'ct-ctacte-clientes', nombre: 'Cuentas corrientes de clientes', clase: 'auxiliar',
-    base: 'Auxiliar · opcional',
-    que: 'Lo que te debe cada cliente, factura por factura.'
-  },
-  {
-    id: 'ct-ctacte-proveedores', nombre: 'Cuentas corrientes de proveedores', clase: 'auxiliar',
-    base: 'Auxiliar · opcional',
-    que: 'Lo que le debés a cada proveedor, factura por factura.'
-  },
-  {
-    id: 'ct-revaluo', nombre: 'Cuadro de revalúo y depreciación', clase: 'auxiliar',
-    base: 'DNIT · RG 49/14 (anexo de estados)',
-    que: 'Valor revaluado, depreciación y valor neto de cada bien del activo fijo.'
   }
 ]
 

@@ -59,20 +59,10 @@ const MENUS = [
     label: 'Informes',
     icon: BarChart3,
     items: [
-      { id: 'ct-libros', label: 'Todos los libros', hint: 'estado y descarga en un clic' },
       {
         label: 'Libros obligatorios',
         // se completa con los libros del régimen del contribuyente (menusPara)
         items: []
-      },
-      {
-        label: 'Libros auxiliares',
-        items: [
-          { id: 'ct-caja', label: 'Libro Caja' },
-          { id: 'ct-bancos', label: 'Libro Bancos' },
-          { id: 'ct-ctacte-clientes', label: 'Cuentas corrientes de clientes' },
-          { id: 'ct-ctacte-proveedores', label: 'Cuentas corrientes de proveedores' }
-        ]
       },
       {
         label: 'Estados contables',
@@ -98,6 +88,8 @@ const MENUS = [
 
 // vistas que dependen del régimen: cada una se muestra solo si el impuesto la pide
 const REGISTROS = ['ct-libro-compras', 'ct-libro-ventas', 'ct-ingresos-egresos', 'ct-asientos', 'ct-nc-compra', 'ct-nc-venta', 'ct-recibo-pago', 'ct-ret-emitida', 'ct-ret-recibida']
+// en Informes, Compras y Ventas abren el generador de informes, no la carga
+const INFORME_DE = { 'ct-libro-compras': 'ct-inf-compras', 'ct-libro-ventas': 'ct-inf-ventas' }
 const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map((l) => l.id))
 
 /**
@@ -121,7 +113,7 @@ export const menusPara = (contribuyente) => {
     .map((it) => {
       if (it.label === 'Libros obligatorios') {
         const ids = (regla ? [...obl] : librosObligatorios(null)).filter((id) => LIBRO_CONTABLE.has(id))
-        return { ...it, items: ids.map((id) => ({ id, label: LIBROS.find((l) => l.id === id).nombre })) }
+        return { ...it, items: ids.map((id) => ({ id: INFORME_DE[id] || id, label: LIBROS.find((l) => l.id === id).nombre, hint: INFORME_DE[id] ? 'filtros, rubricada y Excel' : undefined })) }
       }
       if (it.label === 'Balance de sumas y saldos' || it.id === 'ct-mayor') return conBalance || obl.has('ct-mayor') ? it : null
       return it.items ? { ...it, items: filtrar(it.items) } : (ver(it.id) ? it : null)
