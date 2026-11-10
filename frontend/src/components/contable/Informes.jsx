@@ -7,7 +7,7 @@ import {
   armarDiario, armarMayor, gs, fechaCorta, n0, TIPOS, TIPOS_FISCALES, totalesDe, compararCodigos
 } from '../../services/contabilidad'
 import {
-  LIBROS, saldosJerarquicos, resultadoDe, filasEstado, esCaja, esBanco, libroDisponibilidad,
+  LIBROS, librosObligatorios, impuestosActivos, ingresosEgresos, saldosJerarquicos, resultadoDe, filasEstado, esCaja, esBanco, libroDisponibilidad,
   cuentasCorrientes, extractoPersona, liquidacionIVA, detallesInventario
 } from '../../services/informes'
 import '../../styles/Informes.css'
@@ -82,6 +82,17 @@ export const HOJAS = {
   'ct-libro-ventas': (L) => filasIVA(L.comprobantes.items.filter((d) => String(d.fecha || '').startsWith(String(L.ejercicio))), 'venta'),
   'ct-caja': (L) => filasDisponibilidad(L, esCaja),
   'ct-bancos': (L) => filasDisponibilidad(L, esBanco),
+  'ct-ingresos-egresos': (L) => {
+    const filas = ingresosEgresos(L.comprobantes.items, L.ejercicio)
+    const ing = filas.reduce((s, m) => s + m.ingreso, 0)
+    const egr = filas.reduce((s, m) => s + m.egreso, 0)
+    return [
+      ['Fecha', 'Comprobante', 'Número', 'RUC', 'Razón social', 'Ingreso', 'Egreso'],
+      ...filas.map((m) => [fechaCorta(m.fecha), m.label, m.numero, m.ruc, m.nombre, m.ingreso || '', m.egreso || '']),
+      ['', '', '', '', 'TOTALES', ing, egr],
+      ['', '', '', '', 'DIFERENCIA', ing - egr, '']
+    ]
+  },
   'ct-ctacte-clientes': (L) => filasCtaCte(L, 'venta'),
   'ct-ctacte-proveedores': (L) => filasCtaCte(L, 'compra'),
   'ct-iva': (L) => [
@@ -108,7 +119,7 @@ function filasCtaCte(L, lado) {
 
 const NOMBRE_HOJA = {
   'ct-diario': 'Diario', 'ct-mayor': 'Mayor', 'ct-inventario': 'Inventario y Balances', 'ct-libro-compras': 'IVA Compras',
-  'ct-libro-ventas': 'IVA Ventas', 'ct-caja': 'Caja', 'ct-bancos': 'Bancos', 'ct-ctacte-clientes': 'Ctas ctes clientes',
+  'ct-libro-ventas': 'IVA Ventas', 'ct-ingresos-egresos': 'Ingresos y Egresos', 'ct-caja': 'Caja', 'ct-bancos': 'Bancos', 'ct-ctacte-clientes': 'Ctas ctes clientes',
   'ct-ctacte-proveedores': 'Ctas ctes proveedores', 'ct-iva': 'Liquidación IVA'
 }
 
@@ -126,6 +137,10 @@ export function CentroLibros() {
   const { comprobantes, ejercicio, ir, activos } = L
   const delEj = comprobantes.items.filter((d) => String(d.fecha || '').startsWith(String(ejercicio)))
   const cuentaFiscal = (lado) => delEj.filter((d) => TIPOS_FISCALES.includes(d.tipo) && TIPOS[d.tipo].lado === lado).length
+  const cuentaTipo = (tipo) => {
+    const n = delEj.filter((d) => d.tipo === tipo).length
+    return n === 1 ? '1 registro' : `${n} registros`
+  }
   const sd = L.diario.reduce((t, a) => { a.lineas.forEach((l) => { t.d += l.debe; t.h += l.haber }); return t }, { d: 0, h: 0 })
   const cajas = [...L.mayor.keys()].filter(esCaja)
   const bancos = [...L.mayor.keys()].filter(esBanco)
@@ -141,18 +156,36 @@ export function CentroLibros() {
     'ct-bancos': { dato: bancos.length ? `${bancos.length} cuenta${bancos.length > 1 ? 's' : ''}` : 'sin movimientos', ok: true },
     'ct-ctacte-clientes': { dato: `por cobrar ${gs(cuentasCorrientes(comprobantes.items, 'venta').reduce((s, c) => s + c.saldo, 0))}`, ok: true },
     'ct-ctacte-proveedores': { dato: `por pagar ${gs(cuentasCorrientes(comprobantes.items, 'compra').reduce((s, c) => s + c.saldo, 0))}`, ok: true },
-    'ct-revaluo': { dato: `${activos.items.length} bienes`, ok: true }
+    'ct-revaluo': { dato: `${activos.items.length} bienes`, ok: true },
+    'ct-ingresos-egresos': { dato: `${cuentaFiscal('venta') + cuentaFiscal('compra')} comprobantes`, ok: true },
+    'ct-nc-venta': { dato: cuentaTipo('nc-venta'), ok: true },
+    'ct-nc-compra': { dato: cuentaTipo('nc-compra'), ok: true },
+    'ct-recibo-pago': { dato: cuentaTipo('recibo-pago'), ok: true },
+    'ct-ret-emitida': { dato: cuentaTipo('ret-emitida'), ok: true },
+    'ct-ret-recibida': { dato: cuentaTipo('ret-recibida'), ok: true },
+    'ct-asientos': { dato: cuentaTipo('asiento'), ok: true }
   }
-  const obligatorios = LIBROS.filter((l) => l.clase === 'obligatorio')
+  // obligatorios según el impuesto elegido al ingresar; los auxiliares de siempre quedan como apoyo
+  const idsObl = librosObligatorios(L.contribuyente)
+  const obligatorios = idsObl.map((id) => LIBROS.find((l) => l.id === id))
   const auxiliares = LIBROS.filter((l) => l.clase === 'auxiliar')
-  const atencion = LIBROS.filter((l) => estado[l.id] && !estado[l.id].ok)
+  const visibles = [...obligatorios, ...auxiliares]
+  const atencion = visibles.filter((l) => estado[l.id] && !estado[l.id].ok)
+  const imps = impuestosActivos(L.contribuyente)
+  const conIva = !imps.length || imps.includes('iva')
+  const paquete = [...visibles.map((l) => l.id), ...(conIva ? ['ct-iva'] : [])].filter((id) => HOJAS[id])
+  const regimen = L.contribuyente.actividad && L.contribuyente.actividad !== 'todos'
+    ? L.contribuyente.actividadLabel
+    : (L.contribuyente.impuestosLabel || L.contribuyente.actividadLabel)
+  const rubricados = idsObl.includes('ct-diario') || idsObl.includes('ct-inventario')
 
   const Tarjeta = ({ libro }) => {
     const e = estado[libro.id] || {}
+    const clase = idsObl.includes(libro.id) ? 'obligatorio' : 'auxiliar'
     return (
-      <article className={`inf-libro is-${libro.clase}`}>
+      <article className={`inf-libro is-${clase}`}>
         <header className="inf-libro__head">
-          <span className={`inf-badge is-${libro.clase}`}>{libro.clase === 'obligatorio' ? 'Obligatorio' : 'Auxiliar'}</span>
+          <span className={`inf-badge is-${clase}`}>{clase === 'obligatorio' ? 'Obligatorio' : 'Auxiliar'}</span>
           <small className="inf-libro__base">{libro.base}</small>
         </header>
         <button type="button" className="inf-libro__titulo" onClick={() => ir(libro.id)}>
@@ -181,7 +214,7 @@ export function CentroLibros() {
         caption="se cargan una vez, se ven en todos"
         status={comprobantes.status} />
       <div className="ct-toolbar"><div className="ct-toolbar__end">
-        <button type="button" className="q-btn q-btn--primary" onClick={() => descargarLibros(L, Object.keys(HOJAS))}>
+        <button type="button" className="q-btn q-btn--primary" onClick={() => descargarLibros(L, paquete)}>
           <Download size={16} strokeWidth={1.8} /> Todos los libros en un Excel
         </button>
       </div></div>
@@ -195,15 +228,87 @@ export function CentroLibros() {
 
       <section className="inf-seccion" aria-labelledby="inf-obl">
         <h2 id="inf-obl" className="inf-seccion__titulo"><BookCheck size={17} strokeWidth={1.7} aria-hidden="true" /> Obligatorios</h2>
-        <p className="inf-seccion__nota">Diario e Inventario se rubrican en el Registro Público de Comercio antes de usarse (Ley 1034/83) y se conservan 5 años. Compras y Ventas se informan en Marangatu.</p>
+        <p className="inf-seccion__nota">
+          {regimen ? <>Los que corresponden a <strong>{regimen}</strong>, según los impuestos del cliente en Gestión de Clientes. </> : null}
+          {rubricados ? 'Diario e Inventario se rubrican en el Registro Público de Comercio antes de usarse (Ley 1034/83) y se conservan 5 años. ' : ''}
+          Los comprobantes se informan en Marangatu.
+        </p>
         <div className="inf-grid">{obligatorios.map((l) => <Tarjeta key={l.id} libro={l} />)}</div>
       </section>
 
       <section className="inf-seccion" aria-labelledby="inf-aux">
         <h2 id="inf-aux" className="inf-seccion__titulo"><BookOpen size={17} strokeWidth={1.7} aria-hidden="true" /> Auxiliares</h2>
-        <p className="inf-seccion__nota">No los exige la ley ni se rubrican, pero sostienen los saldos del Mayor y del Inventario. Acá no tenés que cargar nada extra.</p>
+        <p className="inf-seccion__nota">Tu régimen no los exige ni se rubrican, pero sostienen los saldos del Mayor y del Inventario. Acá no tenés que cargar nada extra.</p>
         <div className="inf-grid">{auxiliares.map((l) => <Tarjeta key={l.id} libro={l} />)}</div>
       </section>
+    </div>
+  )
+}
+
+/* ── libro de ingresos y egresos ─────────────────────────────── */
+
+export function LibroIngresosEgresos() {
+  const L = useLibros()
+  const [mes, setMes] = useState('')
+  const [busca, setBusca] = useState('')
+  const todos = useMemo(() => ingresosEgresos(L.comprobantes.items, L.ejercicio), [L.comprobantes.items, L.ejercicio])
+  const prefijo = mes ? `${L.ejercicio}-${mes}` : String(L.ejercicio)
+  const q = busca.trim().toLowerCase()
+  const filas = todos.filter((m) => String(m.fecha).startsWith(prefijo)).filter((m) => !q || `${m.ruc} ${m.nombre} ${m.numero}`.toLowerCase().includes(q))
+  const ing = filas.reduce((s, m) => s + m.ingreso, 0)
+  const egr = filas.reduce((s, m) => s + m.egreso, 0)
+
+  return (
+    <div className="q-sheet q-sheet--wide ct-sheet">
+      <PageHead
+        title="Libro de Ingresos y Egresos"
+        lede="Lo que cobraste y lo que gastaste en el año, comprobante por comprobante. Es el libro del IRP por servicios personales y del RESIMPLE: se llena solo con lo que cargás como ingreso (ventas) y egreso (compras)."
+        equation={[{ v: 'Renta' }, { op: '=' }, { v: 'Ingresos' }, { op: '−' }, { v: 'Egresos' }]}
+        caption="ingresos y egresos del ejercicio"
+        status={L.comprobantes.status} />
+      <Figures items={[
+        { label: 'Ingresos', value: gs(ing) },
+        { label: 'Egresos', value: gs(egr) },
+        { label: 'Diferencia', value: gs(ing - egr), tone: ing - egr < 0 ? 'err' : 'ok' },
+        { label: 'Comprobantes', value: filas.length }
+      ]} />
+      <div className="ct-toolbar">
+        <PeriodoSelect value={mes} onChange={setMes} ejercicio={L.ejercicio} />
+        <label className="ct-buscar">
+          <span className="q-label">Buscar</span>
+          <input className="q-input" type="search" value={busca} placeholder="RUC, nombre o número" onChange={(e) => setBusca(e.target.value)} />
+        </label>
+        <div className="ct-toolbar__end">
+          <button type="button" className="q-btn q-btn--line" onClick={() => L.ir('ct-libro-ventas')}><Plus size={16} strokeWidth={1.8} /> Ingreso</button>
+          <button type="button" className="q-btn q-btn--line" onClick={() => L.ir('ct-libro-compras')}><Plus size={16} strokeWidth={1.8} /> Egreso</button>
+          {todos.length > 0 && <button type="button" className="q-btn q-btn--line" onClick={() => descargarLibros(L, ['ct-ingresos-egresos'])}><Download size={16} strokeWidth={1.8} /> Excel</button>}
+        </div>
+      </div>
+      {!filas.length ? (
+        <Vacio titulo="Sin ingresos ni egresos en esta vista">Cargá tus facturas emitidas como Ingreso y las de tus proveedores como Egreso; aparecen acá en orden de fecha.</Vacio>
+      ) : (
+        <div className="q-card ct-card">
+          <div className="ct-tabla-wrap">
+            <table className="q-table ct-tabla">
+              <thead><tr><th>Fecha</th><th>Comprobante</th><th>Número</th><th>RUC</th><th>Razón social</th><th className="ct-der">Ingreso</th><th className="ct-der">Egreso</th></tr></thead>
+              <tbody>
+                {filas.map((m) => (
+                  <tr key={m.id}>
+                    <td className="ct-mono">{fechaCorta(m.fecha)}</td>
+                    <td><span className={`ct-chip is-${m.tipo.split('-')[0]}`}>{TIPOS[m.tipo].corto}</span> {m.label}</td>
+                    <td className="ct-mono">{m.numero}</td>
+                    <td className="ct-mono">{m.ruc}</td>
+                    <td className="ct-nombre">{m.nombre}</td>
+                    <td className={`ct-num ${m.ingreso < 0 ? 'is-neg' : ''}`}>{m.ingreso ? gs(m.ingreso) : ''}</td>
+                    <td className={`ct-num ${m.egreso < 0 ? 'is-neg' : ''}`}>{m.egreso ? gs(m.egreso) : ''}</td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot><tr className="ct-total"><td colSpan={5}>Totales</td><td className="ct-num">{gs(ing)}</td><td className="ct-num">{gs(egr)}</td></tr></tfoot>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

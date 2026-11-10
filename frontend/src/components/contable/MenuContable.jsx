@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import '../../styles/Contabilidad.css'
 import { FolderOpen, ArrowLeftRight, BarChart3, ArrowDownUp, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
+import { LIBROS, librosObligatorios, tieneRegla, impuestosActivos } from '../../services/informes'
 
 const MENUS = [
   {
@@ -28,6 +29,7 @@ const MENUS = [
     items: [
       { id: 'ct-libro-compras', label: 'Compras', hint: 'facturas, ND y NC recibidas' },
       { id: 'ct-libro-ventas', label: 'Ventas', hint: 'facturas, ND y NC emitidas' },
+      { id: 'ct-ingresos-egresos', label: 'Ingresos y Egresos', hint: 'IRP-RSP y RESIMPLE' },
       { id: 'ct-asientos', label: 'Asientos Manuales' },
       {
         label: 'Notas de Crédito',
@@ -60,13 +62,8 @@ const MENUS = [
       { id: 'ct-libros', label: 'Todos los libros', hint: 'estado y descarga en un clic' },
       {
         label: 'Libros obligatorios',
-        items: [
-          { id: 'ct-diario', label: 'Libro Diario' },
-          { id: 'ct-mayor', label: 'Libro Mayor' },
-          { id: 'ct-inventario', label: 'Libro Inventario y Balances' },
-          { id: 'ct-libro-compras', label: 'Libro IVA Compras' },
-          { id: 'ct-libro-ventas', label: 'Libro IVA Ventas' }
-        ]
+        // se completa con los libros del régimen del contribuyente (menusPara)
+        items: []
       },
       {
         label: 'Libros auxiliares',
@@ -98,6 +95,40 @@ const MENUS = [
     ]
   }
 ]
+
+// vistas que dependen del régimen: cada una se muestra solo si el impuesto la pide
+const REGISTROS = ['ct-libro-compras', 'ct-libro-ventas', 'ct-ingresos-egresos', 'ct-asientos', 'ct-nc-compra', 'ct-nc-venta', 'ct-recibo-pago', 'ct-ret-emitida', 'ct-ret-recibida']
+const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map((l) => l.id))
+
+/**
+ * Menús según el impuesto elegido al ingresar: Movimientos e Informes muestran
+ * solo lo que pide el régimen. Sin regla para el impuesto, se ve todo.
+ */
+export const menusPara = (contribuyente) => {
+  const regla = tieneRegla(contribuyente)
+  const obl = new Set(librosObligatorios(contribuyente))
+  // los recibos de cobro acompañan a los de pago
+  if (obl.has('ct-recibo-pago')) obl.add('ct-recibo-cobro')
+  const conIva = !regla || impuestosActivos(contribuyente).includes('iva')
+  const conBalance = !regla || obl.has('ct-inventario')
+  const ver = (id) => {
+    if (id === 'ct-iva') return conIva
+    if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
+    if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'
+    return true
+  }
+  const filtrar = (items) => items
+    .map((it) => {
+      if (it.label === 'Libros obligatorios') {
+        const ids = (regla ? [...obl] : librosObligatorios(null)).filter((id) => LIBRO_CONTABLE.has(id))
+        return { ...it, items: ids.map((id) => ({ id, label: LIBROS.find((l) => l.id === id).nombre })) }
+      }
+      if (it.label === 'Balance de sumas y saldos' || it.id === 'ct-mayor') return conBalance || obl.has('ct-mayor') ? it : null
+      return it.items ? { ...it, items: filtrar(it.items) } : (ver(it.id) ? it : null)
+    })
+    .filter((it) => it && (!it.items || it.items.length))
+  return MENUS.map((m) => (m.id === 'movimientos' || m.id === 'informes' ? { ...m, items: filtrar(m.items) } : m))
+}
 
 const contiene = (item, vista) => item.id === vista || (item.items || []).some((x) => contiene(x, vista))
 
@@ -178,8 +209,9 @@ export function MarangatuLink() {
 }
 
 /** Menús del sistema contable (Catastros / Movimientos / Informes / Importar-Exportar) */
-export default function MenuContable({ vista, onNavigate, habilitado }) {
+export default function MenuContable({ vista, onNavigate, habilitado, contribuyente }) {
   const [abierto, setAbierto] = useState(null)
+  const menus = useMemo(() => menusPara(contribuyente), [contribuyente])
   const ref = useRef(null)
 
   useEffect(() => {
@@ -202,7 +234,7 @@ export default function MenuContable({ vista, onNavigate, habilitado }) {
   return (
     <nav className="q-menubar" ref={ref} aria-label="Sistema contable" title={habilitado ? undefined : 'Elegí un contribuyente para usar el sistema contable'}>
       <ul className="q-menubar__menus">
-        {MENUS.map((m) => {
+        {menus.map((m) => {
           const Icon = m.icon
           const activo = m.items.some((x) => contiene(x, vista))
           return (

@@ -22,29 +22,64 @@ import {
  */
 export const LIBROS = [
   {
-    id: 'ct-diario', nombre: 'Libro Diario', clase: 'obligatorio',
+    id: 'ct-diario', nombre: 'Libro Diario', clase: 'contable',
     base: 'Ley 1034/83 · rubricado',
     que: 'Todas las operaciones en orden cronológico, asiento por asiento.'
   },
   {
-    id: 'ct-inventario', nombre: 'Libro Inventario y Balances', clase: 'obligatorio',
+    id: 'ct-inventario', nombre: 'Libro Inventario y Balances', clase: 'contable',
     base: 'Ley 1034/83 · rubricado',
     que: 'Al cierre: detalle de bienes, créditos y deudas, Balance General y Estado de Resultados.'
   },
   {
-    id: 'ct-mayor', nombre: 'Libro Mayor', clase: 'obligatorio',
+    id: 'ct-mayor', nombre: 'Libro Mayor', clase: 'contable',
     base: 'DNIT · numerado y rubricado',
     que: 'Movimiento y saldo de cada cuenta, tomado del Diario.'
   },
   {
-    id: 'ct-libro-compras', nombre: 'Libro IVA Compras', clase: 'obligatorio',
+    id: 'ct-libro-compras', nombre: 'Libro Compras', clase: 'contable',
     base: 'DNIT · RG 90/21 (Marangatu)',
     que: 'Comprobantes de proveedores con el crédito fiscal del mes.'
   },
   {
-    id: 'ct-libro-ventas', nombre: 'Libro IVA Ventas', clase: 'obligatorio',
+    id: 'ct-libro-ventas', nombre: 'Libro Ventas', clase: 'contable',
     base: 'DNIT · RG 90/21 (Marangatu)',
     que: 'Comprobantes emitidos con el débito fiscal del mes.'
+  },
+  {
+    id: 'ct-ingresos-egresos', nombre: 'Libro de Ingresos y Egresos', clase: 'contable',
+    base: 'DNIT · IRP-RSP y RESIMPLE',
+    que: 'Lo que entró y salió en el año, comprobante por comprobante, sin asientos.'
+  },
+  {
+    id: 'ct-nc-venta', nombre: 'Notas de crédito emitidas', clase: 'registro',
+    base: 'DNIT · RG 90/21 (Marangatu)',
+    que: 'Devoluciones y descuentos que otorgaste, ligados a su factura.'
+  },
+  {
+    id: 'ct-nc-compra', nombre: 'Notas de crédito recibidas', clase: 'registro',
+    base: 'DNIT · RG 90/21 (Marangatu)',
+    que: 'Devoluciones y descuentos de tus proveedores, ligados a su factura.'
+  },
+  {
+    id: 'ct-recibo-pago', nombre: 'Recibos de pago', clase: 'registro',
+    base: 'DNIT · respaldo de pagos',
+    que: 'Lo que pagaste a cada proveedor y qué facturas cancela.'
+  },
+  {
+    id: 'ct-ret-emitida', nombre: 'Retenciones emitidas', clase: 'registro',
+    base: 'DNIT · Tesakã',
+    que: 'IVA que retuviste a tus proveedores como agente de retención.'
+  },
+  {
+    id: 'ct-ret-recibida', nombre: 'Retenciones recibidas', clase: 'registro',
+    base: 'DNIT · Tesakã',
+    que: 'IVA que te retuvieron tus clientes; se descuenta en el Formulario 120.'
+  },
+  {
+    id: 'ct-asientos', nombre: 'Asientos manuales', clase: 'registro',
+    base: 'Respaldo del Diario',
+    que: 'Apertura, ajustes, provisiones y cierres que no salen de un comprobante.'
   },
   {
     id: 'ct-caja', nombre: 'Libro Caja', clase: 'auxiliar',
@@ -72,6 +107,58 @@ export const LIBROS = [
     que: 'Valor revaluado, depreciación y valor neto de cada bien del activo fijo.'
   }
 ]
+
+/**
+ * Libros obligatorios por impuesto. Un contribuyente con varios impuestos
+ * lleva la unión (IVA + IRP-RGC = libros del IVA + Inventario).
+ */
+export const LIBROS_POR_IMPUESTO = {
+  iva: ['ct-libro-compras', 'ct-libro-ventas', 'ct-ret-emitida', 'ct-ret-recibida', 'ct-nc-venta', 'ct-nc-compra', 'ct-recibo-pago'],
+  irp_rsp: ['ct-ingresos-egresos'],
+  irp_rgc: ['ct-libro-compras', 'ct-libro-ventas', 'ct-inventario'],
+  ire_resimple: ['ct-ingresos-egresos'],
+  ire_general: ['ct-inventario', 'ct-diario', 'ct-mayor', 'ct-libro-compras', 'ct-libro-ventas', 'ct-nc-venta', 'ct-nc-compra', 'ct-recibo-pago', 'ct-asientos', 'ct-ret-emitida', 'ct-ret-recibida']
+}
+// IRE Simple e IRP sin especificar llevan los mismos libros que el IRE General
+LIBROS_POR_IMPUESTO.ire_simple = LIBROS_POR_IMPUESTO.ire_general
+LIBROS_POR_IMPUESTO.irp = LIBROS_POR_IMPUESTO.ire_general
+
+// sin un impuesto con regla (cliente viejo, IRE Simple…), los libros de la Ley 1034/83 y del IVA
+const LIBROS_POR_DEFECTO = ['ct-diario', 'ct-inventario', 'ct-mayor', 'ct-libro-compras', 'ct-libro-ventas']
+
+/**
+ * Impuestos que mandan en el contribuyente activo: la actividad elegida al
+ * ingresar o, si eligió todas («IRP + IVA») o no hay actividad, todos los del cliente.
+ */
+export const impuestosActivos = (contribuyente) => {
+  const todos = Array.isArray(contribuyente?.impuestos) ? contribuyente.impuestos : []
+  const act = contribuyente?.actividad
+  return act && act !== 'todos' ? [act] : todos
+}
+
+/** true si alguno de los impuestos activos tiene su lista de libros definida */
+export const tieneRegla = (contribuyente) => impuestosActivos(contribuyente).some((id) => LIBROS_POR_IMPUESTO[id])
+
+/** ids de los libros obligatorios del contribuyente, en el orden de LIBROS */
+export const librosObligatorios = (contribuyente) => {
+  const reglas = impuestosActivos(contribuyente).filter((id) => LIBROS_POR_IMPUESTO[id])
+  const ids = new Set(reglas.length ? reglas.flatMap((id) => LIBROS_POR_IMPUESTO[id]) : LIBROS_POR_DEFECTO)
+  return LIBROS.map((l) => l.id).filter((id) => ids.has(id))
+}
+
+/** Libro de Ingresos y Egresos: comprobantes fiscales del ejercicio, NC con signo negativo */
+export const ingresosEgresos = (docs, ejercicio) => docs
+  .filter((d) => TIPOS_FISCALES.includes(d.tipo) && String(d.fecha || '').startsWith(String(ejercicio)))
+  .sort((a, b) => (a.fecha || '').localeCompare(b.fecha || '') || (a.numero || '').localeCompare(b.numero || ''))
+  .map((d) => {
+    const t = TIPOS[d.tipo]
+    const monto = t.signo * totalesDe(d).total
+    return {
+      id: d.id, fecha: d.fecha, tipo: d.tipo, label: t.label, numero: d.numero, ruc: d.personaRuc, nombre: d.personaNombre,
+      ingreso: t.lado === 'venta' ? monto : 0,
+      egreso: t.lado === 'compra' ? monto : 0
+    }
+  })
 
 /* ── saldos ─────────────────────────────────────────────────── */
 

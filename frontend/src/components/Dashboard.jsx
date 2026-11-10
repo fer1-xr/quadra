@@ -377,7 +377,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             <Menu size={18} strokeWidth={1.6} />
           </button>
           {/* El menú contable sólo aplica dentro de un cliente; en el dashboard propio del usuario no se muestra. */}
-          {contribuyente && <MenuContable vista={view} onNavigate={handleNavigate} habilitado />}
+          {contribuyente && <MenuContable vista={view} onNavigate={handleNavigate} habilitado contribuyente={contribuyente} />}
           <span className="q-topbar__spacer" />
           {contribuyente && (
             <button

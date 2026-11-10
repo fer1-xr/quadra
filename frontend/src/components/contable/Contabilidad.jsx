@@ -8,7 +8,7 @@ import Recibos from './Recibos'
 import { LibroDiario, LibroMayor } from './Libros'
 import { Personas, PlanCuentas, Timbrados } from './Catastros'
 import { ActivosFijos, RevaluoDepreciacion } from './ActivosFijos'
-import { CentroLibros, LibroInventario, EstadosContables, LibroDisponibilidades, CuentasCorrientes, LiquidacionIVA } from './Informes'
+import { CentroLibros, LibroInventario, EstadosContables, LibroDisponibilidades, CuentasCorrientes, LiquidacionIVA, LibroIngresosEgresos } from './Informes'
 import ImportarExportar from './ImportarExportar'
 import '../../styles/Contabilidad.css'
 
@@ -17,6 +17,7 @@ export const VISTAS_CONTABLES = {
   'ct-libro-compras': { titulo: 'Libro Compras', grupo: 'Movimientos' },
   'ct-libro-ventas': { titulo: 'Libro Ventas', grupo: 'Movimientos' },
   'ct-asientos': { titulo: 'Asientos Manuales', grupo: 'Movimientos' },
+  'ct-ingresos-egresos': { titulo: 'Libro de Ingresos y Egresos', grupo: 'Movimientos' },
   'ct-nc-compra': { titulo: 'Notas de crédito por compra', grupo: 'Movimientos' },
   'ct-nc-venta': { titulo: 'Notas de crédito por venta', grupo: 'Movimientos' },
   'ct-recibo-cobro': { titulo: 'Recibos de cobro', grupo: 'Movimientos' },
@@ -60,6 +61,7 @@ function Vista({ vista }) {
     case 'ct-ret-recibida':
       return <Retenciones key={vista} tipo={vista.slice(3)} />
     case 'ct-asientos': return <AsientosManuales />
+    case 'ct-ingresos-egresos': return <LibroIngresosEgresos />
     case 'ct-diario': return <LibroDiario />
     case 'ct-mayor': return <LibroMayor />
     case 'ct-activos': return <ActivosFijos />
