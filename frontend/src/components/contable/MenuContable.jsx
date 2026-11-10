@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react'
 import '../../styles/Contabilidad.css'
 import { FolderOpen, ArrowLeftRight, BarChart3, ArrowDownUp, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react'
 import { LIBROS, librosObligatorios, tieneRegla, impuestosActivos } from '../../services/informes'
+import { tieneReportes } from '../../services/reportes'
 
 const MENUS = [
   {
@@ -65,6 +66,19 @@ const MENUS = [
         items: []
       },
       {
+        label: 'Documentos',
+        items: [
+          { id: 'ct-pend-pago', label: 'Facturas pendientes de pago', hint: 'a proveedores' },
+          { id: 'ct-pend-cobro', label: 'Facturas pendientes de cobro', hint: 'de clientes' }
+        ]
+      },
+      {
+        label: 'Informes auxiliares',
+        items: [
+          { id: 'ct-resumen-iva', label: 'Resumen general de IVA', hint: 'PDF con gráficos' }
+        ]
+      },
+      {
         label: 'Estados contables',
         items: [
           { id: 'ct-balance', label: 'Balance General' },
@@ -90,6 +104,8 @@ const MENUS = [
 const REGISTROS = ['ct-libro-compras', 'ct-libro-ventas', 'ct-ingresos-egresos', 'ct-asientos', 'ct-nc-compra', 'ct-nc-venta', 'ct-recibo-pago', 'ct-ret-emitida', 'ct-ret-recibida']
 // en Informes, Compras y Ventas abren el generador de informes, no la carga
 const INFORME_DE = { 'ct-libro-compras': 'ct-inf-compras', 'ct-libro-ventas': 'ct-inf-ventas' }
+// Documentos e Informes auxiliares: clientes con IVA y/o IRP (cualquier modalidad)
+const REPORTES = ['ct-pend-pago', 'ct-pend-cobro', 'ct-resumen-iva']
 const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map((l) => l.id))
 
 /**
@@ -103,7 +119,9 @@ export const menusPara = (contribuyente) => {
   if (obl.has('ct-recibo-pago')) obl.add('ct-recibo-cobro')
   const conIva = !regla || impuestosActivos(contribuyente).includes('iva')
   const conBalance = !regla || obl.has('ct-inventario')
+  const conReportes = !(contribuyente?.impuestos || []).length || tieneReportes(contribuyente)
   const ver = (id) => {
+    if (REPORTES.includes(id)) return conReportes
     if (id === 'ct-iva') return conIva
     if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
     if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'

@@ -10,6 +10,8 @@ import { Personas, PlanCuentas, Timbrados } from './Catastros'
 import { ActivosFijos, RevaluoDepreciacion } from './ActivosFijos'
 import { LibroInventario, EstadosContables, LiquidacionIVA, LibroIngresosEgresos } from './Informes'
 import InformeLibro from './InformeLibro'
+import FacturasPendientes from './FacturasPendientes'
+import ResumenIVA from './ResumenIVA'
 import ImportarExportar from './ImportarExportar'
 import '../../styles/Contabilidad.css'
 
@@ -21,6 +23,9 @@ export const VISTAS_CONTABLES = {
   'ct-ingresos-egresos': { titulo: 'Libro de Ingresos y Egresos', grupo: 'Movimientos' },
   'ct-inf-compras': { titulo: 'Informe Libro Compras', grupo: 'Informes · Libros' },
   'ct-inf-ventas': { titulo: 'Informe Libro Ventas', grupo: 'Informes · Libros' },
+  'ct-pend-pago': { titulo: 'Facturas pendientes de pago', grupo: 'Informes · Documentos' },
+  'ct-pend-cobro': { titulo: 'Facturas pendientes de cobro', grupo: 'Informes · Documentos' },
+  'ct-resumen-iva': { titulo: 'Resumen general de IVA', grupo: 'Informes · Auxiliares' },
   'ct-nc-compra': { titulo: 'Notas de crédito por compra', grupo: 'Movimientos' },
   'ct-nc-venta': { titulo: 'Notas de crédito por venta', grupo: 'Movimientos' },
   'ct-recibo-cobro': { titulo: 'Recibos de cobro', grupo: 'Movimientos' },
@@ -62,6 +67,9 @@ function Vista({ vista }) {
     case 'ct-ingresos-egresos': return <LibroIngresosEgresos />
     case 'ct-inf-compras': return <InformeLibro key={vista} lado="compra" />
     case 'ct-inf-ventas': return <InformeLibro key={vista} lado="venta" />
+    case 'ct-pend-pago': return <FacturasPendientes key={vista} lado="compra" />
+    case 'ct-pend-cobro': return <FacturasPendientes key={vista} lado="venta" />
+    case 'ct-resumen-iva': return <ResumenIVA />
     case 'ct-diario': return <LibroDiario />
     case 'ct-mayor': return <LibroMayor />
     case 'ct-activos': return <ActivosFijos />
