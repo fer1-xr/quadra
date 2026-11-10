@@ -60,11 +60,7 @@ const MENUS = [
     label: 'Informes',
     icon: BarChart3,
     items: [
-      {
-        label: 'Libros obligatorios',
-        // se completa con los libros del régimen del contribuyente (menusPara)
-        items: []
-      },
+      { id: 'ct-inf-contribuyentes', label: 'Contribuyentes', hint: 'cartera de clientes' },
       {
         label: 'Documentos',
         items: [
@@ -73,20 +69,46 @@ const MENUS = [
         ]
       },
       {
-        label: 'Informes auxiliares',
+        label: 'Libros',
+        // se completa con los libros del régimen del contribuyente (menusPara)
+        items: []
+      },
+      { id: 'ct-inf-retenciones', label: 'Retenciones', hint: 'emitidas y recibidas' },
+      { id: 'ct-inf-ing-egr', label: 'Resumen Ingresos y Egresos', hint: 'por cuenta' },
+      { id: 'ct-inf-activos', label: 'Bienes del Activo Fijo' },
+      {
+        label: 'Recibos',
         items: [
-          { id: 'ct-resumen-iva', label: 'Resumen general de IVA', hint: 'PDF con gráficos' }
+          { id: 'ct-inf-recibo-cobro', label: 'De cobro (emitidos)' },
+          { id: 'ct-inf-recibo-pago', label: 'De pago (recibidos)' }
         ]
       },
       {
-        label: 'Estados contables',
+        label: 'Timbrados',
         items: [
+          { id: 'ct-inf-timbrados', label: 'Vigencia y uso', hint: 'por vencer y disponibles' },
+          { id: 'ct-inf-numeracion', label: 'Control de numeración', hint: 'faltantes y repetidos' }
+        ]
+      },
+      { id: 'ct-inf-usuarios', label: 'Movimientos por Usuarios' },
+      { id: 'ct-inf-auditoria', label: 'Auditoría de movimientos' },
+      {
+        label: 'Informe RG 55/2020',
+        items: [
+          { id: 'ct-rg55-venta', label: 'Ventas e ingresos' },
+          { id: 'ct-rg55-compra', label: 'Compras y egresos' }
+        ]
+      },
+      {
+        label: 'Informes Auxiliares',
+        items: [
+          { id: 'ct-resumen-iva', label: 'Resumen general de IVA', hint: 'PDF con gráficos' },
+          { id: 'ct-iva', label: 'Liquidación de IVA', hint: 'Formulario 120, mes a mes' },
           { id: 'ct-balance', label: 'Balance General' },
           { id: 'ct-resultados', label: 'Estado de Resultados' },
           { id: 'ct-mayor', label: 'Balance de sumas y saldos' }
         ]
-      },
-      { id: 'ct-iva', label: 'Liquidación de IVA', hint: 'Formulario 120, mes a mes' }
+      }
     ]
   },
   {
@@ -120,8 +142,13 @@ export const menusPara = (contribuyente) => {
   const conIva = !regla || impuestosActivos(contribuyente).includes('iva')
   const conBalance = !regla || obl.has('ct-inventario')
   const conReportes = !(contribuyente?.impuestos || []).length || tieneReportes(contribuyente)
+  const imps = contribuyente?.impuestos || []
+  const conRenta = !imps.length || imps.some((id) => /^(irp|ire)/.test(id))
   const ver = (id) => {
     if (REPORTES.includes(id)) return conReportes
+    if (id === 'ct-inf-retenciones') return !regla || obl.has('ct-ret-emitida') || obl.has('ct-ret-recibida')
+    if (id === 'ct-inf-recibo-cobro' || id === 'ct-inf-recibo-pago') return !regla || obl.has('ct-recibo-pago')
+    if (id === 'ct-rg55-venta' || id === 'ct-rg55-compra') return conRenta
     if (id === 'ct-iva') return conIva
     if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
     if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'
@@ -129,11 +156,11 @@ export const menusPara = (contribuyente) => {
   }
   const filtrar = (items) => items
     .map((it) => {
-      if (it.label === 'Libros obligatorios') {
+      if (it.label === 'Libros') {
         const ids = (regla ? [...obl] : librosObligatorios(null)).filter((id) => LIBRO_CONTABLE.has(id))
         return { ...it, items: ids.map((id) => ({ id: INFORME_DE[id] || id, label: LIBROS.find((l) => l.id === id).nombre, hint: INFORME_DE[id] ? 'filtros, rubricada y Excel' : undefined })) }
       }
-      if (it.label === 'Balance de sumas y saldos' || it.id === 'ct-mayor') return conBalance || obl.has('ct-mayor') ? it : null
+      if (it.id === 'ct-mayor') return conBalance || obl.has('ct-mayor') ? it : null
       return it.items ? { ...it, items: filtrar(it.items) } : (ver(it.id) ? it : null)
     })
     .filter((it) => it && (!it.items || it.items.length))

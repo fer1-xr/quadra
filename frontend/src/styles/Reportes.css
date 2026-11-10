@@ -105,6 +105,9 @@
 .rp-tip b { margin-left: auto; padding-left: 10px; font-weight: 600; color: var(--q-ink); font-variant-numeric: tabular-nums; }
 
 .rp-signo { white-space: nowrap; }
+.rp-tabla td { white-space: nowrap; }
+.rp-tabla td.rp-ancho { white-space: normal; min-width: 200px; }
+.rp-sub td { font-weight: 600; color: var(--q-ink); border-bottom: 1px solid var(--q-line-2, var(--q-line)); }
 .rp-anio { white-space: nowrap; }
 .rp-anio .rp-leyenda__marca { display: inline-block; margin-right: 8px; vertical-align: middle; }
 .rp-signo.is-pos { color: var(--q-ok); }

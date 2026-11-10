@@ -12,6 +12,9 @@ import { LibroInventario, EstadosContables, LiquidacionIVA, LibroIngresosEgresos
 import InformeLibro from './InformeLibro'
 import FacturasPendientes from './FacturasPendientes'
 import ResumenIVA from './ResumenIVA'
+import {
+  InfContribuyentes, InfRetenciones, InfIngresosEgresos, InfActivos, InfRecibos, InfTimbrados, InfNumeracion, InfUsuarios, InfAuditoria, InfRG55
+} from './InformesVarios'
 import ImportarExportar from './ImportarExportar'
 import '../../styles/Contabilidad.css'
 
@@ -26,6 +29,18 @@ export const VISTAS_CONTABLES = {
   'ct-pend-pago': { titulo: 'Facturas pendientes de pago', grupo: 'Informes · Documentos' },
   'ct-pend-cobro': { titulo: 'Facturas pendientes de cobro', grupo: 'Informes · Documentos' },
   'ct-resumen-iva': { titulo: 'Resumen general de IVA', grupo: 'Informes · Auxiliares' },
+  'ct-inf-contribuyentes': { titulo: 'Contribuyentes', grupo: 'Informes' },
+  'ct-inf-retenciones': { titulo: 'Retenciones de IVA', grupo: 'Informes' },
+  'ct-inf-ing-egr': { titulo: 'Resumen de ingresos y egresos', grupo: 'Informes' },
+  'ct-inf-activos': { titulo: 'Bienes del activo fijo', grupo: 'Informes' },
+  'ct-inf-recibo-cobro': { titulo: 'Recibos de cobro', grupo: 'Informes · Recibos' },
+  'ct-inf-recibo-pago': { titulo: 'Recibos de pago', grupo: 'Informes · Recibos' },
+  'ct-inf-timbrados': { titulo: 'Timbrados · vigencia y uso', grupo: 'Informes · Timbrados' },
+  'ct-inf-numeracion': { titulo: 'Control de numeración', grupo: 'Informes · Timbrados' },
+  'ct-inf-usuarios': { titulo: 'Movimientos por usuarios', grupo: 'Informes' },
+  'ct-inf-auditoria': { titulo: 'Auditoría de movimientos', grupo: 'Informes' },
+  'ct-rg55-venta': { titulo: 'RG 55/2020 · Ventas e ingresos', grupo: 'Informes · RG 55/2020' },
+  'ct-rg55-compra': { titulo: 'RG 55/2020 · Compras y egresos', grupo: 'Informes · RG 55/2020' },
   'ct-nc-compra': { titulo: 'Notas de crédito por compra', grupo: 'Movimientos' },
   'ct-nc-venta': { titulo: 'Notas de crédito por venta', grupo: 'Movimientos' },
   'ct-recibo-cobro': { titulo: 'Recibos de cobro', grupo: 'Movimientos' },
@@ -40,8 +55,8 @@ export const VISTAS_CONTABLES = {
   'ct-diario': { titulo: 'Libro Diario', grupo: 'Informes · Libros' },
   'ct-mayor': { titulo: 'Libro Mayor', grupo: 'Informes · Libros' },
   'ct-inventario': { titulo: 'Libro Inventario y Balances', grupo: 'Informes · Libros' },
-  'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Estados contables' },
-  'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Estados contables' },
+  'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Auxiliares' },
+  'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Auxiliares' },
   'ct-iva': { titulo: 'Liquidación de IVA', grupo: 'Informes' },
   'ct-importar': { titulo: 'Importar', grupo: 'Importar-Exportar' },
   'ct-exportar': { titulo: 'Exportar', grupo: 'Importar-Exportar' }
@@ -70,6 +85,18 @@ function Vista({ vista }) {
     case 'ct-pend-pago': return <FacturasPendientes key={vista} lado="compra" />
     case 'ct-pend-cobro': return <FacturasPendientes key={vista} lado="venta" />
     case 'ct-resumen-iva': return <ResumenIVA />
+    case 'ct-inf-contribuyentes': return <InfContribuyentes />
+    case 'ct-inf-retenciones': return <InfRetenciones />
+    case 'ct-inf-ing-egr': return <InfIngresosEgresos />
+    case 'ct-inf-activos': return <InfActivos />
+    case 'ct-inf-recibo-cobro': return <InfRecibos key={vista} tipo="recibo-cobro" />
+    case 'ct-inf-recibo-pago': return <InfRecibos key={vista} tipo="recibo-pago" />
+    case 'ct-inf-timbrados': return <InfTimbrados />
+    case 'ct-inf-numeracion': return <InfNumeracion />
+    case 'ct-inf-usuarios': return <InfUsuarios />
+    case 'ct-inf-auditoria': return <InfAuditoria />
+    case 'ct-rg55-venta': return <InfRG55 key={vista} lado="venta" />
+    case 'ct-rg55-compra': return <InfRG55 key={vista} lado="compra" />
     case 'ct-diario': return <LibroDiario />
     case 'ct-mayor': return <LibroMayor />
     case 'ct-activos': return <ActivosFijos />
