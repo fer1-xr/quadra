@@ -1,16 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react'
 import { LogIn, ChevronDown, Users, Plus } from 'lucide-react'
 import { useCloudCollection } from '../services/useCloudCollection'
-import { impuestoLabel, impuestosDe, sucursalesDe } from './GestionClientes'
+import { TIPOS_IMPUESTO, impuestoLabel, impuestosDe, sucursalesDe } from './GestionClientes'
 import '../styles/SeleccionarContribuyente.css'
 
-export const ACTIVIDADES = [
-  { id: 'principal', label: 'Actividad principal' },
-  { id: 'comercial', label: 'Comercial' },
-  { id: 'servicios', label: 'Servicios' },
-  { id: 'industrial', label: 'Industrial' },
-  { id: 'agropecuaria', label: 'Agropecuaria' }
-]
+// Actividad = impuestos con los que se configuró al cliente en Gestión de Clientes.
+// Con más de uno, la primera opción los agrupa a todos (ej. "IRP + IVA"):
+// primero el impuesto a la renta y el IVA al final.
+const ordenImpuesto = (id) => {
+  if (id === 'iva') return TIPOS_IMPUESTO.length
+  const i = TIPOS_IMPUESTO.findIndex((t) => t.id === id)
+  return i === -1 ? TIPOS_IMPUESTO.length + 1 : i
+}
+export const opcionesActividad = (cliente) => {
+  const ids = [...impuestosDe(cliente)].sort((a, b) => ordenImpuesto(a) - ordenImpuesto(b))
+  const individuales = ids.map((id) => ({ id, label: impuestoLabel(id) }))
+  if (individuales.length < 2) return individuales
+  return [{ id: 'todos', label: individuales.map((o) => o.label).join(' + ') }, ...individuales]
+}
 
 // Sucursales que el usuario cargó al registrar al cliente en Gestión de Clientes
 const opcionesSucursal = (cliente) => sucursalesDe(cliente).map((s) => ({
@@ -51,12 +58,19 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
   const [ejercicio, setEjercicio] = useState(previo?.ejercicio ? String(previo.ejercicio) : String(thisYear))
   const [apertura, setApertura] = useState(previo?.apertura || rangoEjercicio(thisYear).apertura)
   const [cierre, setCierre] = useState(previo?.cierre || rangoEjercicio(thisYear).cierre)
-  const [actividad, setActividad] = useState(previo?.actividad || 'principal')
+  const [actividad, setActividad] = useState(previo?.actividad || '')
   const [sucursal, setSucursal] = useState(previo?.sucursal || '001')
 
   const clienteSel = useMemo(() => clientes.find((c) => String(c.id) === clienteId) || null, [clientes, clienteId])
   const sucursales = useMemo(() => opcionesSucursal(clienteSel), [clienteSel])
   const impuestos = impuestosDe(clienteSel).map(impuestoLabel)
+  const actividades = useMemo(() => opcionesActividad(clienteSel), [clienteSel])
+
+  // la actividad elegida tiene que ser uno de los impuestos del cliente
+  useEffect(() => {
+    if (status === 'loading') return
+    if (!actividades.some((a) => a.id === actividad)) setActividad(actividades[0]?.id || '')
+  }, [actividades, actividad, status])
 
   // la sucursal elegida tiene que pertenecer al cliente seleccionado
   useEffect(() => {
@@ -100,7 +114,7 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
       apertura,
       cierre,
       actividad,
-      actividadLabel: ACTIVIDADES.find((a) => a.id === actividad)?.label,
+      actividadLabel: actividades.find((a) => a.id === actividad)?.label,
       sucursal,
       sucursalLabel: sucursales.find((s) => s.id === sucursal)?.label,
       impuestos: impuestosDe(c),
@@ -141,7 +155,7 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
                   <SelectBox
                     ariaLabel="Contribuyente"
                     value={clienteId}
-                    onChange={setClienteId}
+                    onChange={(id) => { setClienteId(id); setActividad('') }}
                     placeholder={status === 'loading' ? 'Cargando clientes…' : 'Contribuyente'}
                     options={opcionesClientes}
                     disabled={status === 'loading'}
@@ -172,7 +186,7 @@ function SeleccionarContribuyente({ previo, onIngresar, onGestionarClientes }) {
 
               <div className="q-pick__row q-pick__row--2">
                 <Field label="Actividad" disabled={sinCliente} floating>
-                  <SelectBox ariaLabel="Actividad" value={actividad} onChange={setActividad} disabled={sinCliente} options={ACTIVIDADES} />
+                  <SelectBox ariaLabel="Actividad" value={actividad} onChange={setActividad} disabled={sinCliente} options={actividades} />
                 </Field>
                 <Field label="Sucursal" disabled={sinCliente} floating>
                   <SelectBox ariaLabel="Sucursal" value={sucursal} onChange={setSucursal} disabled={sinCliente} options={sucursales} />
