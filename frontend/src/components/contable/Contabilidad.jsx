@@ -16,6 +16,8 @@ import {
   InfContribuyentes, InfRetenciones, InfIngresosEgresos, InfActivos, InfRecibos, InfTimbrados, InfNumeracion, InfUsuarios, InfAuditoria, InfRG55
 } from './InformesVarios'
 import ImportarExportar from './ImportarExportar'
+import Formulario from './Formularios'
+import { FORMULARIOS } from '../../services/formularios'
 import '../../styles/Contabilidad.css'
 
 /** vistas del sistema contable: id → { título, grupo } */
@@ -58,6 +60,7 @@ export const VISTAS_CONTABLES = {
   'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Auxiliares' },
   'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Auxiliares' },
   'ct-iva': { titulo: 'Liquidación de IVA', grupo: 'Informes' },
+  ...Object.fromEntries(FORMULARIOS.map((f) => [f.id, { titulo: `Formulario ${f.numero} · ${f.nombre}`, grupo: 'Formularios' }])),
   'ct-importar': { titulo: 'Importar', grupo: 'Importar-Exportar' },
   'ct-exportar': { titulo: 'Exportar', grupo: 'Importar-Exportar' }
 }
@@ -111,6 +114,12 @@ function Vista({ vista }) {
     case 'ct-importar':
     case 'ct-exportar':
       return <ImportarExportar key={vista} modo={vista.slice(3)} />
+    case 'ct-form-120':
+    case 'ct-form-515':
+    case 'ct-form-516':
+    case 'ct-form-500':
+    case 'ct-form-501':
+      return <Formulario key={vista} id={vista} />
     default: return null
   }
 }
