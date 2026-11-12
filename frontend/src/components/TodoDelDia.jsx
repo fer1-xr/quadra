@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import PageHead from './PageHead'
 import { useCloudCollection } from '../services/useCloudCollection'
-import { Plus, X, Check, Briefcase } from 'lucide-react'
+import { Plus, X, Check, Briefcase, Pencil, Bell } from 'lucide-react'
 import '../styles/TodoDelDia.css'
 import '../styles/ClienteAgenda.css'
 
@@ -33,6 +33,7 @@ const TAREA_VACIA = {
   titulo: '',
   categoria: 'tributacion',
   hora: '17:00',
+  horaFin: '18:00',
   dia: 'lunes',
   prioridad: 'media',
   pasos: [],
@@ -59,6 +60,23 @@ function semanaISO(fecha) {
 }
 
 const dd = (n) => String(n).padStart(2, '0')
+
+const aMinutos = (hora) => {
+  const [h, m] = (hora || '00:00').split(':').map(Number)
+  return h * 60 + m
+}
+
+/** Suma minutos a una hora 'HH:MM' (sin pasar de 23:59). */
+function sumarMinutos(hora, min) {
+  const total = Math.min(aMinutos(hora) + min, 23 * 60 + 59)
+  return `${dd(Math.floor(total / 60))}:${dd(total % 60)}`
+}
+
+/** Texto del horario de una tarea: '09:00–10:30', o solo la hora si no tiene fin. */
+function horarioDeTarea(t) {
+  if (!t.hora) return '—'
+  return t.horaFin && t.horaFin !== t.hora ? `${t.hora}–${t.horaFin}` : t.hora
+}
 
 function Prioridad({ nivel }) {
   const label = PRIORIDADES[nivel - 1]?.label
@@ -95,6 +113,8 @@ function TodoDelDia({ cliente = null }) {
   const [mostrarCompletadas, setMostrarCompletadas] = useState(false)
   const [nuevaTarea, setNuevaTarea] = useState(TAREA_VACIA)
   const [errorTitulo, setErrorTitulo] = useState(false)
+  const [errorHorario, setErrorHorario] = useState(false)
+  const [editandoId, setEditandoId] = useState(null)
 
   const semana = useMemo(() => {
     const lunes = lunesDeLaSemana()
@@ -117,27 +137,61 @@ function TodoDelDia({ cliente = null }) {
     const hoy = semana.dias.find((d) => d.esHoy)
     setNuevaTarea({ ...TAREA_VACIA, dia: diaId || hoy?.id || 'lunes', clienteId: clienteActivoId || '' })
     setErrorTitulo(false)
+    setErrorHorario(false)
+    setEditandoId(null)
     setMostrarFormulario(true)
+  }
+
+  const editarTarea = (tarea) => {
+    setNuevaTarea({
+      ...TAREA_VACIA,
+      ...tarea,
+      horaFin: tarea.horaFin || sumarMinutos(tarea.hora || TAREA_VACIA.hora, 60),
+      clienteId: tarea.clienteId ? String(tarea.clienteId) : ''
+    })
+    setErrorTitulo(false)
+    setErrorHorario(false)
+    setEditandoId(tarea.id)
+    setMostrarFormulario(true)
+  }
+
+  const cerrarFormulario = () => {
+    setMostrarFormulario(false)
+    setEditandoId(null)
+  }
+
+  // al mover el inicio, si el fin queda antes se corre manteniendo la duración
+  const cambiarInicio = (hora) => {
+    const duracion = nuevaTarea.hora && nuevaTarea.horaFin ? aMinutos(nuevaTarea.horaFin) - aMinutos(nuevaTarea.hora) : 60
+    const horaFin = hora && (!nuevaTarea.horaFin || nuevaTarea.horaFin <= hora)
+      ? sumarMinutos(hora, duracion > 0 ? duracion : 60)
+      : nuevaTarea.horaFin
+    setNuevaTarea({ ...nuevaTarea, hora, horaFin })
+    setErrorHorario(false)
   }
 
   const agregarTarea = (e) => {
     e?.preventDefault()
-    if (!nuevaTarea.titulo.trim()) {
-      setErrorTitulo(true)
-      return
-    }
+    const sinTitulo = !nuevaTarea.titulo.trim()
+    const horarioInvalido = !nuevaTarea.hora || !nuevaTarea.horaFin || nuevaTarea.horaFin <= nuevaTarea.hora
+    setErrorTitulo(sinTitulo)
+    setErrorHorario(horarioInvalido)
+    if (sinTitulo || horarioInvalido) return
     const clienteId = clienteActivoId || nuevaTarea.clienteId || ''
     const clienteNombre = cliente?.razonSocial || nombreCliente(clienteId)
-    setTodas([...todas, {
-      id: Date.now(),
+    const datos = {
       ...nuevaTarea,
       titulo: nuevaTarea.titulo.trim(),
-      pasos: [],
       clienteId: clienteId || null,
       clienteNombre: clienteId ? clienteNombre : null
-    }])
+    }
+    if (editandoId != null) {
+      setTodas(todas.map((t) => (t.id === editandoId ? { ...t, ...datos, id: t.id } : t)))
+    } else {
+      setTodas([...todas, { ...datos, id: Date.now(), pasos: [], completada: false }])
+    }
     setNuevaTarea({ ...TAREA_VACIA, dia: nuevaTarea.dia, clienteId: nuevaTarea.clienteId })
-    setMostrarFormulario(false)
+    cerrarFormulario()
   }
 
   const completarTarea = (tareaId) => {
@@ -226,14 +280,37 @@ function TodoDelDia({ cliente = null }) {
             </fieldset>
 
             <fieldset className="wk-param">
-              <legend>Hora</legend>
-              <input
-                className="wk-time"
-                type="time"
-                value={nuevaTarea.hora}
-                onChange={(e) => setNuevaTarea({ ...nuevaTarea, hora: e.target.value })}
-                aria-label="Hora"
-              />
+              <legend>Horario</legend>
+              <div className="wk-horario">
+                <label className="wk-horario__campo">
+                  <span>Inicio</span>
+                  <input
+                    className={`wk-time ${errorHorario ? 'is-invalid' : ''}`}
+                    type="time"
+                    value={nuevaTarea.hora}
+                    onChange={(e) => cambiarInicio(e.target.value)}
+                    aria-invalid={errorHorario}
+                    aria-describedby="wk-horario-ayuda"
+                  />
+                </label>
+                <span className="wk-horario__sep" aria-hidden="true">–</span>
+                <label className="wk-horario__campo">
+                  <span>Fin</span>
+                  <input
+                    className={`wk-time ${errorHorario ? 'is-invalid' : ''}`}
+                    type="time"
+                    value={nuevaTarea.horaFin}
+                    onChange={(e) => { setNuevaTarea({ ...nuevaTarea, horaFin: e.target.value }); setErrorHorario(false) }}
+                    aria-invalid={errorHorario}
+                    aria-describedby="wk-horario-ayuda"
+                  />
+                </label>
+              </div>
+              <p id="wk-horario-ayuda" className={errorHorario ? 'wk-composer__err' : 'wk-horario__ayuda'}>
+                {errorHorario
+                  ? 'La hora de fin tiene que ser posterior a la de inicio.'
+                  : <><Bell size={11} strokeWidth={2} aria-hidden="true" /> Aviso 5 min antes de empezar y 5 min después de terminar.</>}
+              </p>
             </fieldset>
 
             <fieldset className="wk-param">
@@ -280,8 +357,8 @@ function TodoDelDia({ cliente = null }) {
           </div>
 
           <div className="wk-composer__actions">
-            <button type="submit" className="btn btn-primary">Agregar tarea</button>
-            <button type="button" className="btn btn-secondary" onClick={() => setMostrarFormulario(false)}>Cancelar</button>
+            <button type="submit" className="btn btn-primary">{editandoId != null ? 'Guardar cambios' : 'Agregar tarea'}</button>
+            <button type="button" className="btn btn-secondary" onClick={cerrarFormulario}>Cancelar</button>
           </div>
         </form>
       )}
@@ -327,7 +404,10 @@ function TodoDelDia({ cliente = null }) {
                   const cat = CATEGORIAS.find((c) => c.id === tarea.categoria)
                   return (
                     <li key={tarea.id} className={`wk-task cat-${tarea.categoria} ${tarea.completada ? 'is-done' : ''}`}>
-                      <span className="wk-task__time">{tarea.hora || '—'}</span>
+                      <span className="wk-task__time" aria-label={`Horario ${horarioDeTarea(tarea)}`}>
+                        {tarea.hora || '—'}
+                        {tarea.horaFin && tarea.horaFin !== tarea.hora && <span className="wk-task__end">{tarea.horaFin}</span>}
+                      </span>
                       <label className="wk-check">
                         <input type="checkbox" checked={tarea.completada} onChange={() => completarTarea(tarea.id)} aria-label={`Marcar «${tarea.titulo}» como ${tarea.completada ? 'pendiente' : 'completada'}`} />
                         <span aria-hidden="true"><Check size={11} strokeWidth={2.6} /></span>
@@ -345,9 +425,14 @@ function TodoDelDia({ cliente = null }) {
                           <Prioridad nivel={NIVEL[tarea.prioridad] || 2} />
                         </span>
                       </div>
+                      <span className="wk-task__acts">
+                      <button type="button" className="wk-task__del wk-task__edit" onClick={() => editarTarea(tarea)} aria-label={`Editar «${tarea.titulo}» (${horarioDeTarea(tarea)})`} title="Editar tarea y horario">
+                        <Pencil size={12} strokeWidth={1.8} />
+                      </button>
                       <button type="button" className="wk-task__del" onClick={() => eliminarTarea(tarea.id)} aria-label={`Eliminar «${tarea.titulo}»`} title="Eliminar">
                         <X size={13} strokeWidth={1.8} />
                       </button>
+                      </span>
                     </li>
                   )
                 })}

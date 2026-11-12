@@ -20,6 +20,7 @@ import MiCuenta from './MiCuenta'
 import GuardarEnNube from './GuardarEnNube'
 import AyudaMemoria from './AyudaMemoria'
 import NotasReuniones from './NotasReuniones'
+import NotificacionesCampana from './NotificacionesCampana'
 import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
 import MenuContable, { MarangatuLink } from './contable/MenuContable'
 import { ContribuyenteContext } from '../services/historialService'
@@ -395,6 +396,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
           <span className="q-quota" title="Conciliaciones usadas este mes">
             <span className="q-quota__value">8/10</span>
           </span>
+          <NotificacionesCampana onAbrirTareas={() => handleNavigate('todo')} />
           <button type="button" className="q-ghost-icon" onClick={salir} aria-label="Cerrar sesión" title="Cerrar sesión">
             <LogOut size={17} strokeWidth={1.6} />
           </button>
