@@ -12,6 +12,7 @@
     "@heroui/theme": "^2.1.12",
     "@supabase/supabase-js": "^2.118.0",
     "axios": "^1.6.0",
+    "exceljs": "^4.4.0",
     "framer-motion": "^10.16.4",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",

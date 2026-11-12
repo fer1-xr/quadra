@@ -30,6 +30,9 @@
   align-items: center;
   gap: 7px;
   max-width: 280px;
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
   height: 32px;
   padding: 0 12px;
   border-radius: 9px;
@@ -68,6 +71,7 @@
 
 .q-menubar {
   display: flex;
+  flex: none;
   align-items: center;
   min-width: 0;
 }
@@ -84,6 +88,7 @@
   padding: 0 12px;
   border: 1px solid transparent;
   border-radius: 9px;
+  white-space: nowrap;
   font-family: var(--q-sans);
   font-size: 13.5px;
   font-weight: 550;
@@ -178,6 +183,12 @@
 @media (max-width: 960px) {
   .q-app .q-topwrap .q-topbar.q-topbar--compacta, .q-ctxbar { padding-left: 14px; padding-right: 14px; }
   .q-taxpayer--linea, .q-ctxbar__fecha, .q-topbar--compacta .q-quota { display: none !important; }
+}
+
+/* con cinco menús, en pantallas medianas se quitan los íconos para que entren */
+@media (max-width: 1560px) {
+  .q-mb__top { gap: 5px; padding: 0 10px; }
+  .q-mb__top > svg:first-child { display: none; }
 }
 
 @media (max-width: 640px) {

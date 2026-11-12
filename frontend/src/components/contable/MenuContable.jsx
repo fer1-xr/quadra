@@ -4,6 +4,8 @@ import { FolderOpen, ArrowLeftRight, BarChart3, ArrowDownUp, FileText, ChevronDo
 import { LIBROS, librosObligatorios, tieneRegla, impuestosActivos } from '../../services/informes'
 import { tieneReportes } from '../../services/reportes'
 import { formulariosPara } from '../../services/formularios'
+import { ContableProvider } from './ContableContext'
+import DescargaFormulario from './Formularios'
 
 const MENUS = [
   {
@@ -172,7 +174,7 @@ export const menusPara = (contribuyente) => {
       return it.items ? { ...it, items: filtrar(it.items) } : (ver(it.id) ? it : null)
     })
     .filter((it) => it && (!it.items || it.items.length))
-  const formularios = formulariosPara(contribuyente).map((f) => ({ id: f.id, label: `Formulario ${f.numero} · ${f.nombre}`, hint: f.periodo }))
+  const formularios = formulariosPara(contribuyente).map((f) => ({ id: f.id, label: `Formulario ${f.numero} · ${f.nombre}` }))
   return MENUS
     .map((m) => {
       if (m.id === 'formularios') return { ...m, items: formularios }
@@ -262,6 +264,8 @@ export function MarangatuLink() {
 /** Menús del sistema contable (Catastros / Movimientos / Informes / Formularios / Importar-Exportar) */
 export default function MenuContable({ vista, onNavigate, habilitado, contribuyente }) {
   const [abierto, setAbierto] = useState(null)
+  // los formularios se descargan desde una ventana, sin cambiar de hoja
+  const [formulario, setFormulario] = useState(null)
   const menus = useMemo(() => menusPara(contribuyente), [contribuyente])
   const ref = useRef(null)
 
@@ -279,7 +283,8 @@ export default function MenuContable({ vista, onNavigate, habilitado, contribuye
 
   const elegir = (id) => {
     setAbierto(null)
-    onNavigate(id)
+    if (id.startsWith('ct-form-')) setFormulario(id)
+    else onNavigate(id)
   }
 
   return (
@@ -302,6 +307,11 @@ export default function MenuContable({ vista, onNavigate, habilitado, contribuye
           )
         })}
       </ul>
+      {formulario && contribuyente && (
+        <ContableProvider contribuyente={contribuyente} onNavigate={onNavigate}>
+          <DescargaFormulario id={formulario} onCerrar={() => setFormulario(null)} />
+        </ContableProvider>
+      )}
     </nav>
   )
 }

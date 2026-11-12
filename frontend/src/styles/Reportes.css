@@ -116,3 +116,11 @@
 @media (max-width: 900px) {
   .rp-dos { grid-template-columns: 1fr; }
 }
+
+/* descarga de formularios de la DNIT */
+.am-modal.fm-modal { width: min(440px, 100%); }
+.fm-modal__body { display: flex; flex-wrap: wrap; gap: 14px; padding: 8px 24px 4px; }
+.fm-modal__body .rp-campo { flex: 1 1 140px; }
+.fm-modal__body .q-input { width: 100%; min-width: 0; }
+.fm-modal__error { padding: 8px 24px 0; }
+.fm-modal__foot { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 22px; }
