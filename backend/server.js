@@ -347,80 +347,103 @@ const buildRow = (lib, rg) => {
   };
 };
 
+// Acepta un archivo (string) o varios (array de strings); descarta huecos vacíos.
+const fileList = (data) => (Array.isArray(data) ? data : [data])
+  .filter((d) => typeof d === 'string' && d.trim());
+
 const reconcile = (rg90Data, libroData) => {
   normNameCache.clear();
-  const rg90Sheets = loadSheets(rg90Data);
-  const libroSheets = loadSheets(libroData);
+  const rg90Files = fileList(rg90Data);
+  const libroFiles = fileList(libroData);
+  if (!rg90Files.length) throw fail('Falta el archivo RG90 o está vacío.');
+  if (!libroFiles.length) throw fail('Falta el Libro de Compras o está vacío.');
 
-  const rgPick = pickSheet(rg90Sheets, isRg90Header);
-  const lbPick = pickSheet(libroSheets, isLibroHeader);
+  const nro = (i, n) => (n > 1 ? ` (archivo ${i + 1})` : '');
 
-  if (!rgPick) {
-    if (pickSheet(rg90Sheets, isLibroHeader)) {
-      throw fail('El archivo cargado como RG90 parece ser el Libro de Compras. Revisá que no estén invertidos.');
+  // Cada archivo RG90 se lee con sus propios encabezados (pueden ser meses distintos)
+  const rgParts = rg90Files.map((data, i) => {
+    const sheets = loadSheets(data);
+    const pick = pickSheet(sheets, isRg90Header);
+    if (!pick) {
+      if (pickSheet(sheets, isLibroHeader)) {
+        throw fail(`El archivo cargado como RG90${nro(i, rg90Files.length)} parece ser el Libro de Compras. Revisá que no estén invertidos.`);
+      }
+      throw fail(`No se reconoció el RG90${nro(i, rg90Files.length)}: no se encontró la fila de encabezados (RUC / Nº de Identificación del Informado, Número de Comprobante).` + describeFile(sheets));
     }
-    throw fail('No se reconoció el RG90: no se encontró la fila de encabezados (RUC / Nº de Identificación del Informado, Número de Comprobante).' + describeFile(rg90Sheets));
-  }
-  if (!lbPick) {
-    if (pickSheet(libroSheets, isRg90Header)) {
-      throw fail('El archivo cargado como Libro de Compras parece ser el RG90. Revisá que no estén invertidos.');
+    return pick;
+  });
+  const lbParts = libroFiles.map((data, i) => {
+    const sheets = loadSheets(data);
+    const pick = pickSheet(sheets, isLibroHeader);
+    if (!pick) {
+      if (pickSheet(sheets, isRg90Header)) {
+        throw fail(`El archivo cargado como Libro de Compras${nro(i, libroFiles.length)} parece ser el RG90. Revisá que no estén invertidos.`);
+      }
+      throw fail(`No se reconoció el Libro de Compras${nro(i, libroFiles.length)}: no se encontró la fila de encabezados (RUC, Documento).` + describeFile(sheets));
     }
-    throw fail('No se reconoció el Libro de Compras: no se encontró la fila de encabezados (RUC, Documento).' + describeFile(libroSheets));
-  }
-  const rg90Rows = rgPick.rows;
-  const libroRows = lbPick.rows;
-  const rgHead = rgPick.head;
-  const lbHead = lbPick.head;
+    return pick;
+  });
 
-  const rc = rg90Cols(rgHead.headers);
-  const lc = libroCols(lbHead.headers);
   const avisos = [];
 
   const rg90Map = new Map();
   let informanteRG90 = '';
-  for (let i = rgHead.index + 1; i < rg90Rows.length; i++) {
-    const row = rg90Rows[i];
-    if (!row) continue;
-    const { ruc, dv } = splitRuc(row[rc.ruc]);
-    const compKey = compDigits(row[rc.comp]);
-    if (!ruc || !compKey) continue;
-    if (!informanteRG90) informanteRG90 = splitRuc(row[rc.informante]).ruc;
-    const entry = {
-      ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[rc.razon]), comp: fmtComp(row[rc.comp]),
-      tipo: clean(row[rc.tipo]), total: toNum(row[rc.total]), iva10: toNum(row[rc.iva10]),
-      iva5: toNum(row[rc.iva5]), exenta: toNum(row[rc.exenta]), processed: false
-    };
-    const key = ruc + '_' + compKey;
-    if (!rg90Map.has(key)) rg90Map.set(key, []);
-    rg90Map.get(key).push(entry);
+  for (const { rows, head } of rgParts) {
+    const rc = rg90Cols(head.headers);
+    for (let i = head.index + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row) continue;
+      const { ruc, dv } = splitRuc(row[rc.ruc]);
+      const compKey = compDigits(row[rc.comp]);
+      if (!ruc || !compKey) continue;
+      if (!informanteRG90) informanteRG90 = splitRuc(row[rc.informante]).ruc;
+      const entry = {
+        ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[rc.razon]), comp: fmtComp(row[rc.comp]),
+        tipo: clean(row[rc.tipo]), total: toNum(row[rc.total]), iva10: toNum(row[rc.iva10]),
+        iva5: toNum(row[rc.iva5]), exenta: toNum(row[rc.exenta]), processed: false
+      };
+      const key = ruc + '_' + compKey;
+      if (!rg90Map.has(key)) rg90Map.set(key, []);
+      rg90Map.get(key).push(entry);
+    }
   }
 
   const discrepancies = [];
   let omitidasSinRuc = 0;
-  for (let i = lbHead.index + 1; i < libroRows.length; i++) {
-    const row = libroRows[i];
-    if (!row) continue;
-    const { ruc, dv } = splitRuc(row[lc.ruc], row[lc.dv]);
-    const compDig = compDigits(row[lc.comp]);
-    if (!ruc || !compDig) {
-      if (compDig.length >= 9) omitidasSinRuc++;
-      continue;
+  for (const { rows, head } of lbParts) {
+    const lc = libroCols(head.headers);
+    for (let i = head.index + 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row) continue;
+      const { ruc, dv } = splitRuc(row[lc.ruc], row[lc.dv]);
+      const compDig = compDigits(row[lc.comp]);
+      if (!ruc || !compDig) {
+        if (compDig.length >= 9) omitidasSinRuc++;
+        continue;
+      }
+      const lib = {
+        ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[lc.razon]), comp: fmtComp(row[lc.comp]),
+        total: toNum(row[lc.total]), iva10: toNum(row[lc.iva10]), iva5: toNum(row[lc.iva5]), exenta: toNum(row[lc.exenta])
+      };
+      const list = rg90Map.get(ruc + '_' + compDig);
+      const rg = list ? (list.find((e) => !e.processed) || list[0]) : null;
+      if (rg) rg.processed = true;
+      discrepancies.push(buildRow(lib, rg));
     }
-    const lib = {
-      ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[lc.razon]), comp: fmtComp(row[lc.comp]),
-      total: toNum(row[lc.total]), iva10: toNum(row[lc.iva10]), iva5: toNum(row[lc.iva5]), exenta: toNum(row[lc.exenta])
-    };
-    const list = rg90Map.get(ruc + '_' + compDig);
-    const rg = list ? (list.find((e) => !e.processed) || list[0]) : null;
-    if (rg) rg.processed = true;
-    discrepancies.push(buildRow(lib, rg));
   }
 
   for (const list of rg90Map.values()) {
     for (const e of list) if (!e.processed) discrepancies.push(buildRow(null, e));
   }
 
-  const { contribuyente: contribLibro, periodo } = extractMeta(libroRows, lbHead.index);
+  // Contribuyente y período: del primer Libro que los tenga
+  let contribLibro = '';
+  let periodo = '';
+  for (const { rows, head } of lbParts) {
+    const meta = extractMeta(rows, head.index);
+    if (!contribLibro) contribLibro = meta.contribuyente;
+    if (!periodo) periodo = meta.periodo;
+  }
   const contribuyente = contribLibro || (informanteRG90 ? `RUC ${informanteRG90}` : '');
   const rucContribLibro = (contribLibro.match(/(\d[\d.]*)\s*-\s*\d/) || [])[1]?.replace(/\D/g, '');
   if (rucContribLibro && informanteRG90 && rucContribLibro !== informanteRG90) {

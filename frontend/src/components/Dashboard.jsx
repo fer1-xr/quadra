@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import axios from 'axios'
-import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, ArrowLeftRight, KeyRound, BarChart3, Briefcase, ListChecks, NotebookPen } from 'lucide-react'
+import { CheckSquare, Target, CreditCard, FileText, Truck, TrendingUp, DollarSign, Users, Scale, Calculator, BookOpen, Wallet, Building2, LineChart, LogOut, Menu, ArrowRight, ArrowUpRight, Play, Download, RotateCcw, Plus, Check, X, Landmark, ArrowLeftRight, KeyRound, BarChart3, Briefcase, NotebookPen } from 'lucide-react'
 import { Button, Card, CardBody, CardHeader, Input, Spinner, Chip, Table, TableHeader, TableColumn, TableBody, TableRow, TableCell, Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@heroui/react'
 import HeroCharts from './HeroCharts'
 import ChangePassword from './ChangePassword'
@@ -18,7 +18,6 @@ import SeleccionarContribuyente from './SeleccionarContribuyente'
 import Historial from './Historial'
 import MiCuenta from './MiCuenta'
 import GuardarEnNube from './GuardarEnNube'
-import AyudaMemoria from './AyudaMemoria'
 import NotasReuniones from './NotasReuniones'
 import NotificacionesCampana from './NotificacionesCampana'
 import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
@@ -42,7 +41,7 @@ const leerJSON = (key) => {
 // Vistas que solo existen dentro del espacio de trabajo de un contribuyente
 const VISTAS_CONTRIBUYENTE = new Set([
   'rg90', 'rg90-results', 'bancaria', 'importar-documentos', 'control-pagos',
-  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial', 'memoria', 'notas',
+  'liquidacion', 'activofijo', 'flujo', 'cotizacion', 'historial', 'notas',
   ...Object.keys(VISTAS_CONTABLES)
 ])
 
@@ -125,12 +124,12 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     setError('')
     try {
       const monthlyData = []
-      for (const file of rg90Files) {
+      for (const file of rg90Files.filter(Boolean)) {
         const fileData = await readFile(file)
         monthlyData.push(fileData)
       }
       const marangatuData = []
-      for (const file of libroFiles) {
+      for (const file of libroFiles.filter(Boolean)) {
         const fileData = await readFile(file)
         marangatuData.push(fileData)
       }
@@ -265,7 +264,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     leccion: 'Lección del Día',
     todo: contribuyente ? 'Tareas de la semana' : 'Tareas del Día',
     metas: 'Metas y Objetivos',
-    memoria: 'Ayuda memoria',
     notas: 'Notas y Reuniones',
     rg90: 'Conciliación RG90',
     'rg90-results': 'Resultados de Conciliación',
@@ -285,7 +283,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     leccion: 'Agenda',
     todo: contribuyente ? 'Agenda del cliente' : 'Agenda',
     metas: contribuyente ? 'Agenda del cliente' : 'Agenda',
-    memoria: 'Agenda del cliente', notas: 'Agenda del cliente',
+    notas: 'Agenda del cliente',
     rg90: 'Conciliación', 'rg90-results': 'Conciliación', bancaria: 'Conciliación',
     'importar-documentos': 'Conciliación', 'control-pagos': 'Conciliación',
     liquidacion: 'Cálculo', activofijo: 'Cálculo', flujo: 'Cálculo', cotizacion: 'Cálculo',
@@ -342,7 +340,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       group: 'Agenda del cliente',
       items: [
         { id: 'todo', title: 'Tareas de la semana', desc: 'Lo que agendaste para este cliente en tu semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
-        { id: 'memoria', title: 'Ayuda memoria', desc: 'Todo lo que hay que hacer durante el ejercicio', icon: ListChecks, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'ejercicio' }] },
         { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos propios de este cliente', icon: Target, eq: [{ v: 'Avance en %' }] },
         { id: 'notas', title: 'Notas y Reuniones', desc: 'Conversaciones, minutas y acuerdos', icon: NotebookPen, eq: [{ v: 'Acuerdos' }] }
       ]
@@ -844,10 +841,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
 
             {view === 'metas' && (
               <MetasAnuales key={contribuyente?.clienteId ?? 'personal'} cliente={contribuyente} />
-            )}
-
-            {view === 'memoria' && contribuyente && (
-              <AyudaMemoria key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} cliente={contribuyente} />
             )}
 
             {view === 'notas' && contribuyente && (

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X, NotebookPen, ListChecks } from 'lucide-react'
+import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X, NotebookPen } from 'lucide-react'
 import '../styles/Sidebar.css'
 
 const MODOS = [
@@ -95,7 +95,6 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
           label: 'Agenda del cliente',
           items: [
             { id: 'todo', label: 'Tareas de la semana', icon: CheckSquare },
-            { id: 'memoria', label: 'Ayuda memoria', icon: ListChecks },
             { id: 'metas', label: 'Metas y Objetivos', icon: Target },
             { id: 'notas', label: 'Notas y Reuniones', icon: NotebookPen }
           ]
