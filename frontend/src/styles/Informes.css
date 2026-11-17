@@ -260,3 +260,14 @@
 
 /* acciones justo debajo del encabezado oculto: dejan lugar al estado de sincronización */
 .q-app .q-content .ct-sheet > .q-head + .ct-toolbar { margin-top: 12px; }
+
+/* vista previa de comprobantes a importar (RG 90 / planilla) */
+.inf-previa__libro { display: grid; gap: 8px; }
+.inf-previa__libro-t { margin: 0; font-size: 14px; color: var(--q-ink-2); }
+.inf-previa__libro-t strong { color: var(--q-ink); }
+.inf-previa__tabla { max-height: 420px; overflow: auto; border: 1px solid var(--q-line); border-radius: 10px; }
+.inf-previa__tabla thead th { background: var(--q-surface-2); z-index: 1; }
+.inf-previa__tabla tfoot td { position: sticky; bottom: 0; }
+.inf-previa__tabla input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+.inf-previa__tabla tr.inf-previa__fuera td { opacity: 0.45; }
+.inf-previa__tabla tr.inf-previa__fuera td:first-child { opacity: 1; }

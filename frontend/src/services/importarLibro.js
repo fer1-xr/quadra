@@ -54,7 +54,15 @@ const columnas = (hs) => {
     cdc: busca((h) => h === 'cdc' || h.includes('cdc')),
     cuenta: busca((h) => h === 'cuenta' || h.includes('cuenta contable')),
     moneda: busca((h) => h === 'moneda'),
-    cambio: busca((h) => h.includes('cambio') || h === 'tc')
+    cambio: busca((h) => h.includes('cambio') || h === 'tc'),
+    // columnas propias del registro RG 90 de Marangatu
+    registro: busca((h) => h === 'tipo de registro'),
+    informante: busca((h) => h === 'ruc del informante'),
+    asociado: busca((h) => h === 'numero de comprobante asociado'),
+    imputaIva: busca((h) => h === 'imputa iva'),
+    imputaIre: busca((h) => h === 'imputa ire'),
+    imputaIrp: busca((h) => h === 'imputa irp'),
+    noImputar: busca((h) => h === 'no imputar')
   }
 }
 
@@ -64,6 +72,20 @@ const gravadoConIva = (grav, iva, divisor) => {
   return grav || (iva ? iva * divisor : 0)
 }
 
+/** «COMPRAS» / «VENTAS» de la columna Tipo de Registro; ingresos y egresos (IRP) no van a los libros IVA */
+const ladoRegistro = (txt) => {
+  const t = nh(txt)
+  if (t.startsWith('compra')) return 'compra'
+  if (t.startsWith('venta')) return 'venta'
+  return t ? null : undefined
+}
+
+/**
+ * Lee un registro de comprobantes (Marangatu RG 90 o planilla propia).
+ * Si el archivo trae la columna «Tipo de Registro» (RG 90) cada fila va a su
+ * libro: COMPRAS al Libro Compras y VENTAS al Libro Ventas; `lado` queda como
+ * libro por defecto para las filas sin registro.
+ */
 export const leerLibro = async (file, { lado, tipos, ejercicio, existentes, recordarCuenta }) => {
   const wb = XLSX.read(await file.arrayBuffer(), { cellDates: true })
   let hoja = null
@@ -81,15 +103,22 @@ export const leerLibro = async (file, { lado, tipos, ejercicio, existentes, reco
   const docs = []
   const errores = []
   let duplicados = 0
+  let informante = ''
+  const omitidos = {}
+  const omitir = (motivo) => { omitidos[motivo] = (omitidos[motivo] || 0) + 1 }
   const vistos = new Set(existentes.map((d) => `${d.tipo}|${d.numero}|${d.personaRuc}`))
   hoja.filas.slice(hoja.i + 1).forEach((f, k) => {
     const fila = hoja.i + k + 2
     const val = (i) => (i >= 0 ? f[i] : '')
     if (!String(val(c.ruc)).trim() && !String(val(c.numero)).trim()) return
+    if (!informante && c.informante >= 0) informante = String(val(c.informante)).replace(/\D/g, '')
+    const reg = c.registro >= 0 ? ladoRegistro(val(c.registro)) : undefined
+    if (reg === null) { omitir(`registro ${String(val(c.registro)).trim().toLowerCase()}`); return }
+    const ladoFila = reg || lado
     const tipoTxt = nh(val(c.tipo))
-    if (tipoTxt && /(retencion|recibo|remision|autofactura|boleta)/.test(tipoTxt)) return
-    const tipo = tipoTxt.includes('credito') ? `nc-${lado}` : tipoTxt.includes('debito') ? `nd-${lado}` : lado
-    if (!tipos.includes(tipo)) return
+    if (tipoTxt && /(retencion|recibo|remision|autofactura|boleta)/.test(tipoTxt)) { omitir(String(val(c.tipo)).trim().toLowerCase()); return }
+    const tipo = tipoTxt.includes('credito') ? `nc-${ladoFila}` : tipoTxt.includes('debito') ? `nd-${ladoFila}` : ladoFila
+    if (!tipos.includes(tipo)) { omitir(TIPOS[tipo]?.label.toLowerCase() || tipo); return }
 
     let ruc = String(val(c.ruc)).trim().replace(/\s/g, '')
     const dvCelda = String(val(c.dv)).replace(/\D/g, '')
@@ -117,6 +146,9 @@ export const leerLibro = async (file, { lado, tipos, ejercicio, existentes, reco
     const timbrado = String(val(c.timbrado)).replace(/\D/g, '')
     const cdc = String(val(c.cdc)).replace(/\D/g, '')
     const cuentaArchivo = String(val(c.cuenta)).trim()
+    const si = (i) => (i >= 0 ? nh(val(i)) === 'si' : undefined)
+    const asociado = String(val(c.asociado)).trim()
+    const imputa = c.imputaIva >= 0 ? { iva: si(c.imputaIva), ire: si(c.imputaIre), irp: si(c.imputaIrp), ninguno: si(c.noImputar) } : null
     docs.push({
       tipo,
       fecha,
@@ -135,9 +167,11 @@ export const leerLibro = async (file, { lado, tipos, ejercicio, existentes, reco
       cambio: 1,
       cuenta: cuentaArchivo || recordarCuenta(ruc, tipo) || TIPOS[tipo].cuenta,
       concepto: '',
+      ...(TIPOS[tipo].asociado && asociado ? { asociado: formatearNumero(asociado) } : {}),
+      ...(imputa ? { imputa } : {}),
       importado: file.name
     })
   })
-  return { docs, errores, duplicados }
+  return { docs, errores, duplicados, omitidos, rg90: c.registro >= 0, informante }
 }
 

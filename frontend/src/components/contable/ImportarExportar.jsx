@@ -7,7 +7,7 @@ import { exportarExcel, exportarHojas } from './ui'
 import { HOJAS, NOMBRE_HOJA, descargarLibros } from './Informes'
 import { leerImportacion } from './AsientosManuales'
 import { leerLibro } from '../../services/importarLibro'
-import { armarDiario, armarMayor, analizarRuc, dvRuc, nivelDe, padreDe, PLAN_BASE } from '../../services/contabilidad'
+import { armarDiario, armarMayor, analizarRuc, dvRuc, nivelDe, padreDe, PLAN_BASE, TIPOS, TIPOS_FISCALES, totalesDe, gs, fechaCorta } from '../../services/contabilidad'
 import { saldosJerarquicos, librosObligatorios, impuestosActivos } from '../../services/informes'
 import '../../styles/Informes.css'
 
@@ -43,6 +43,8 @@ const detectar = async (file) => {
     const esRuc = tiene((h) => h === 'ruc' || h.includes('identificacion del informado'))
     const esComp = tiene((h) => h.includes('comprobante') || h === 'factura' || h === 'documento' || h === 'numero')
     if (esRuc && esComp) {
+      // el registro RG 90 de Marangatu trae «Tipo de Registro» (COMPRAS / VENTAS) en cada fila
+      if (tiene((h) => h === 'tipo de registro')) return { tipo: 'comprobantes', lado: 'compra', rg90: true }
       const txt = filas.slice(0, i + 1).flat().map(nh).join(' ')
       const lado = /venta|emitid|ingreso/.test(`${txt} ${nh(file.name)}`) ? 'venta' : 'compra'
       return { tipo: 'comprobantes', lado }
@@ -56,9 +58,99 @@ const detectar = async (file) => {
 const ETIQUETA = {
   respaldo: 'Respaldo de Quadra',
   comprobantes: 'Comprobantes (Marangatu o planilla propia)',
+  rg90: 'Registro de comprobantes RG 90 (Marangatu)',
   asientos: 'Asientos contables',
   personas: 'Catastro de personas',
   plan: 'Plan de cuentas'
+}
+
+const claveDoc = (d) => `${d.tipo}|${d.numero}|${d.personaRuc}`
+
+/** lo que va a entrar a cada libro, con casillas para dejar afuera algún comprobante */
+function PreviaComprobantes({ items, excluidos, setExcluidos }) {
+  const libros = ['compra', 'venta']
+    .map((lado) => ({ lado, docs: items.filter((d) => TIPOS[d.tipo].lado === lado) }))
+    .filter((l) => l.docs.length)
+  const alternar = (claves, on) => setExcluidos((prev) => {
+    const s = new Set(prev)
+    claves.forEach((k) => (on ? s.delete(k) : s.add(k)))
+    return s
+  })
+  return libros.map(({ lado, docs }) => {
+    const claves = docs.map(claveDoc)
+    const marcados = docs.filter((d) => !excluidos.has(claveDoc(d)))
+    const tot = marcados.reduce((a, d) => {
+      const t = totalesDe(d)
+      const sg = TIPOS[d.tipo].signo
+      return { g10: a.g10 + sg * t.g10, iva10: a.iva10 + sg * t.iva10, g5: a.g5 + sg * t.g5, iva5: a.iva5 + sg * t.iva5, ex: a.ex + sg * t.ex, total: a.total + sg * t.total }
+    }, { g10: 0, iva10: 0, g5: 0, iva5: 0, ex: 0, total: 0 })
+    const todos = marcados.length === docs.length
+    const titulo = lado === 'compra' ? 'Libro Compras' : 'Libro Ventas'
+    return (
+      <div key={lado} className="inf-previa__libro">
+        <p className="inf-previa__libro-t"><strong>{titulo}</strong> · {marcados.length} de {docs.length} comprobantes</p>
+        <div className="ct-tabla-wrap inf-previa__tabla">
+          <table className="ct-tabla ct-tabla--mini">
+            <thead>
+              <tr>
+                <th><input type="checkbox" checked={todos} ref={(el) => { if (el) el.indeterminate = !todos && marcados.length > 0 }} onChange={(e) => alternar(claves, e.target.checked)} aria-label={`Importar todos los comprobantes del ${titulo}`} /></th>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th>Número</th>
+                <th>Timbrado</th>
+                <th>RUC</th>
+                <th>Razón social</th>
+                <th>Cond.</th>
+                <th className="ct-der">Grav. 10%</th>
+                <th className="ct-der">IVA 10%</th>
+                <th className="ct-der">Grav. 5%</th>
+                <th className="ct-der">IVA 5%</th>
+                <th className="ct-der">Exenta</th>
+                <th className="ct-der">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {docs.map((d) => {
+                const k = claveDoc(d)
+                const on = !excluidos.has(k)
+                const t = totalesDe(d)
+                const neg = TIPOS[d.tipo].signo < 0
+                return (
+                  <tr key={k} className={`${neg ? 'ct-neg' : ''} ${on ? '' : 'inf-previa__fuera'}`}>
+                    <td><input type="checkbox" checked={on} onChange={(e) => alternar([k], e.target.checked)} aria-label={`Importar ${d.numero} de ${d.personaNombre}`} /></td>
+                    <td className="ct-mono">{fechaCorta(d.fecha)}</td>
+                    <td>{TIPOS[d.tipo].corto}</td>
+                    <td className="ct-mono">{d.numero}</td>
+                    <td className="ct-mono">{d.timbrado}</td>
+                    <td className="ct-mono">{d.personaRuc}</td>
+                    <td className="ct-nombre">{d.personaNombre}</td>
+                    <td>{d.condicion === 'credito' ? 'Crédito' : 'Contado'}</td>
+                    <td className="ct-num">{gs(t.g10)}</td>
+                    <td className="ct-num">{gs(t.iva10)}</td>
+                    <td className="ct-num">{gs(t.g5)}</td>
+                    <td className="ct-num">{gs(t.iva5)}</td>
+                    <td className="ct-num">{gs(t.ex)}</td>
+                    <td className="ct-num ct-strong">{gs(t.total)}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colSpan={8}>Total a importar</td>
+                <td className="ct-num">{gs(tot.g10)}</td>
+                <td className="ct-num">{gs(tot.iva10)}</td>
+                <td className="ct-num">{gs(tot.g5)}</td>
+                <td className="ct-num">{gs(tot.iva5)}</td>
+                <td className="ct-num">{gs(tot.ex)}</td>
+                <td className="ct-num">{gs(tot.total)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    )
+  })
 }
 
 export default function ImportarExportar({ modo }) {
@@ -67,6 +159,7 @@ export default function ImportarExportar({ modo }) {
   const archivo = useRef(null)
   const [arrastrando, setArrastrando] = useState(false)
   const [previa, setPrevia] = useState(null)
+  const [excluidos, setExcluidos] = useState(() => new Set())
   const [aviso, setAviso] = useState(null)
   const importar = modo === 'importar'
 
@@ -109,6 +202,7 @@ export default function ImportarExportar({ modo }) {
   const leer = async (file, ladoForzado) => {
     if (!file) return
     setAviso(null)
+    setExcluidos(new Set())
     try {
       const det = await detectar(file)
       if (det.tipo === 'respaldo') {
@@ -116,6 +210,18 @@ export default function ImportarExportar({ modo }) {
         const ids = new Set(comprobantes.items.map((x) => x.id))
         const nuevos = (d.comprobantes || []).filter((x) => !ids.has(x.id))
         setPrevia({ file, tipo: 'respaldo', items: d, resumen: `${nuevos.length} comprobantes nuevos de ${(d.comprobantes || []).length} · ${(d.cuentas || []).length} cuentas · ${(d.activos || []).length} bienes · ${(d.timbrados || []).length} timbrados · ${(d.personas || []).length} personas`, errores: d.contribuyente?.ruc && d.contribuyente.ruc !== contribuyente.ruc ? [`El respaldo es de ${d.contribuyente.razonSocial} (RUC ${d.contribuyente.ruc}); se va a cargar en ${contribuyente.razonSocial}`] : [] })
+      } else if (det.tipo === 'comprobantes' && det.rg90 && !ladoForzado) {
+        // cada fila va a su libro según «Tipo de Registro»
+        const r = await leerLibro(file, { lado: 'compra', tipos: TIPOS_FISCALES, ejercicio, existentes: comprobantes.items, recordarCuenta })
+        const nC = r.docs.filter((d) => TIPOS[d.tipo].lado === 'compra').length
+        const nV = r.docs.length - nC
+        const omit = Object.entries(r.omitidos).map(([m, k]) => `${k} ${m}`)
+        const errores = [...r.errores]
+        const base = String(contribuyente.ruc || '').split('-')[0].replace(/\D/g, '')
+        if (r.informante && base && r.informante !== base) errores.unshift(`El registro es del RUC ${r.informante} y estás en ${contribuyente.razonSocial} (RUC ${contribuyente.ruc}). Revisá que sea el contribuyente correcto.`)
+        if (omit.length) errores.push(`No van a los libros de IVA y se omiten: ${omit.join(', ')}.`)
+        const resumen = [nC && `${nC} al Libro Compras`, nV && `${nV} al Libro Ventas`, r.duplicados && `${r.duplicados} ya cargados (se omiten)`].filter(Boolean).join(' · ')
+        setPrevia({ file, tipo: 'rg90', items: r.docs, resumen: resumen || 'Ningún comprobante nuevo para cargar.', errores })
       } else if (det.tipo === 'comprobantes') {
         const lado = ladoForzado || det.lado
         const tipos = [lado, `nd-${lado}`, `nc-${lado}`]
@@ -185,8 +291,12 @@ export default function ImportarExportar({ modo }) {
       const it = ids2(timbrados)
       ;(p.items.timbrados || []).filter((x) => !it.has(x.id)).forEach((x) => timbrados.guardar(x))
       ;(p.items.personas || []).forEach((x) => personas.asegurar(x.ruc, x.nombre, x.tipo))
-    } else if (p.tipo === 'comprobantes') {
-      p.items.forEach((d) => { personas.asegurar(d.personaRuc, d.personaNombre, p.lado === 'compra' ? 'proveedor' : 'cliente'); comprobantes.guardar(d); n++ })
+    } else if (p.tipo === 'comprobantes' || p.tipo === 'rg90') {
+      p.items.filter((d) => !excluidos.has(claveDoc(d))).forEach((d) => {
+        personas.asegurar(d.personaRuc, d.personaNombre, TIPOS[d.tipo].lado === 'compra' ? 'proveedor' : 'cliente')
+        comprobantes.guardar(d)
+        n++
+      })
     } else if (p.tipo === 'asientos') {
       p.items.forEach((g) => { comprobantes.guardar({ tipo: 'asiento', clase: 'manual', fecha: g.fecha, concepto: g.concepto, personaRuc: '', personaNombre: '', lineas: g.lineas, importado: p.file.name }); n++ })
     } else if (p.tipo === 'personas') {
@@ -195,8 +305,17 @@ export default function ImportarExportar({ modo }) {
       p.items.forEach((c) => { cuentas.guardar(c); n++ })
     }
     setPrevia(null)
-    setAviso({ tono: 'ok', texto: p.tipo === 'respaldo' ? `Respaldo restaurado: ${n} comprobantes agregados.` : `${n} ${p.tipo === 'plan' ? 'cuentas' : p.tipo} importados.` })
+    setExcluidos(new Set())
+    const texto = p.tipo === 'respaldo' ? `Respaldo restaurado: ${n} comprobantes agregados.`
+      : p.tipo === 'rg90' || p.tipo === 'comprobantes' ? `${n} comprobantes importados al libro ${p.tipo === 'rg90' ? 'Compras/Ventas' : p.lado === 'venta' ? 'Ventas' : 'Compras'}.`
+        : `${n} ${p.tipo === 'plan' ? 'cuentas' : p.tipo} importados.`
+    setAviso({ tono: 'ok', texto })
   }
+
+  const esComp = previa?.tipo === 'comprobantes' || previa?.tipo === 'rg90'
+  const aImportar = previa && previa.tipo !== 'respaldo'
+    ? (esComp ? previa.items.filter((d) => !excluidos.has(claveDoc(d))).length : previa.items.length)
+    : 0
 
   const soltar = (e) => {
     e.preventDefault()
@@ -283,6 +402,9 @@ export default function ImportarExportar({ modo }) {
               </div>
             )}
           </header>
+          {esComp && previa.items.length > 0 && (
+            <PreviaComprobantes items={previa.items} excluidos={excluidos} setExcluidos={setExcluidos} />
+          )}
           {previa.errores.length > 0 && (
             <div className="q-alert ct-errores" role="alert">
               <ul>
@@ -293,8 +415,8 @@ export default function ImportarExportar({ modo }) {
           )}
           <div className="ct-form__actions">
             <button type="button" className="q-btn q-btn--ghost" onClick={() => setPrevia(null)}>Cancelar</button>
-            <button type="button" className="q-btn q-btn--primary" disabled={previa.tipo !== 'respaldo' && !previa.items.length} onClick={confirmar}>
-              {previa.tipo === 'respaldo' ? 'Restaurar respaldo' : `Importar ${previa.items.length}`}
+            <button type="button" className="q-btn q-btn--primary" disabled={previa.tipo !== 'respaldo' && !aImportar} onClick={confirmar}>
+              {previa.tipo === 'respaldo' ? 'Restaurar respaldo' : esComp ? `Aceptar e importar ${aImportar}` : `Importar ${aImportar}`}
             </button>
           </div>
         </section>
