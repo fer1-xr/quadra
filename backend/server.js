@@ -224,6 +224,24 @@ const libroCols = (hs) => ({
   total:  colOf(hs, (h) => h === 'total', 17)
 });
 
+// Columnas para el padrón de timbrados (no se usan para cruzar: -1 si no están).
+// En el libro de Marangatu "TIMB." y "CDC DOCUMENTO" están en la fila de arriba del encabezado,
+// así que se mira también esa fila.
+const headersConArriba = (rows, head) => {
+  const arriba = (rows[head.index - 1] || []).map(normHeader);
+  const n = Math.max(head.headers.length, arriba.length);
+  return Array.from({ length: n }, (_, i) => head.headers[i] || arriba[i] || '');
+};
+const esColTimbrado = (h) => h === 'timb' || h === 'timbrado' ||
+  (h.includes('timbrado') && !/tipo|venc|vigencia|fecha|inicio/.test(h));
+const extraCols = (hs) => ({
+  timbrado:   hs.findIndex(esColTimbrado),
+  cdc:        hs.findIndex((h) => h === 'cdc' || h.startsWith('cdc ')),
+  registro:   hs.findIndex((h) => h === 'tipo registro' || h.includes('tipo de registro')),
+  informanteNombre: hs.findIndex((h) => h.includes('informante') && (h.includes('nombre') || h.includes('razon')))
+});
+const celda = (row, i) => (i >= 0 ? clean(row[i]) : '');
+
 // ==================== NORMALIZACIÓN DE RUC / COMPROBANTE / NOMBRE ====================
 // RUC sin guion ni DV (acepta "80132459", "80132459-9" o RUC y DV en celdas separadas)
 const splitRuc = (v, dvCell = '') => {
@@ -347,6 +365,76 @@ const buildRow = (lib, rg) => {
   };
 };
 
+// ==================== PADRÓN DE TIMBRADOS ====================
+// La DNIT no ofrece timbrado → RUC; Quadra lo aprende de cada conciliación.
+// La regla para saber quién emitió el comprobante:
+//  - con CDC (factura electrónica) el RUC del emisor está dentro del CDC: es seguro;
+//  - sin CDC depende del libro y del tipo: en compras la factura la emite el proveedor,
+//    pero la nota de crédito y la autofactura las emite el propio contribuyente;
+//    en ventas es al revés. Si no se sabe si es compra o venta, no se aprende nada.
+
+// CDC de 44 dígitos: tipo(2) + RUC emisor(8) + DV(1) + …
+const emisorDeCDC = (v) => {
+  const d = clean(v).replace(/\D/g, '');
+  if (d.length !== 44) return null;
+  const ruc = d.slice(2, 10).replace(/^0+/, '');
+  const dv = d[10];
+  if (!ruc || String(calcDV(ruc)) !== dv) return null;
+  return { ruc, dv };
+};
+
+const sentidoDe = (texto) => {
+  const t = normHeader(texto);
+  if (/compra|egreso/.test(t)) return 'compra';
+  if (/venta|ingreso/.test(t)) return 'venta';
+  return '';
+};
+
+// Compras o ventas según el título del archivo ("LIBRO COMPRAS LEY 125/91")
+const sentidoDelTitulo = (rows, headIndex) => {
+  for (let i = 0; i < Math.min(headIndex, 10); i++) {
+    for (const c of rows[i] || []) {
+      const t = normHeader(c);
+      if (/^libro (de )?compras?\b|registro de compras/.test(t)) return 'compra';
+      if (/^libro (de )?ventas?\b|registro de ventas/.test(t)) return 'venta';
+    }
+  }
+  return '';
+};
+
+const claseDoc = (tipo) => {
+  const t = normHeader(tipo);
+  if (!t) return 'factura';
+  if (t.includes('nota de credito')) return 'nc';
+  if (t.includes('autofactura')) return 'auto';
+  if (/factura|boleta|ticket|nota de debito/.test(t)) return 'factura';
+  return ''; // despachos, extractos, etc.: no se aprende
+};
+
+const timbradoLimpio = (v) => {
+  const t = clean(v).replace(/\D/g, '');
+  return /^\d{8}$/.test(t) && t !== '00000000' ? t : '';
+};
+
+/**
+ * Pares timbrado → RUC emisor de un comprobante.
+ * doc: { timbrado, cdc, sentido, tipo, ruc, dv, razon }; contrib: { ruc, nombre }
+ */
+const emisorDe = (doc, contrib) => {
+  const timbrado = timbradoLimpio(doc.timbrado);
+  if (!timbrado) return null;
+  const porCDC = emisorDeCDC(doc.cdc);
+  if (porCDC) {
+    const nombre = porCDC.ruc === doc.ruc ? doc.razon : porCDC.ruc === contrib.ruc ? contrib.nombre : '';
+    return { timbrado, ruc: porCDC.ruc, dv: porCDC.dv, nombre };
+  }
+  const clase = claseDoc(doc.tipo);
+  if (!clase || !doc.sentido) return null;
+  const loEmiteElOtro = doc.sentido === 'compra' ? clase === 'factura' : clase === 'nc';
+  if (loEmiteElOtro) return doc.ruc ? { timbrado, ruc: doc.ruc, dv: doc.dv, nombre: doc.razon } : null;
+  return contrib.ruc ? { timbrado, ruc: contrib.ruc, dv: String(calcDV(contrib.ruc)), nombre: contrib.nombre } : null;
+};
+
 // Acepta un archivo (string) o varios (array de strings); descarta huecos vacíos.
 const fileList = (data) => (Array.isArray(data) ? data : [data])
   .filter((d) => typeof d === 'string' && d.trim());
@@ -388,8 +476,11 @@ const reconcile = (rg90Data, libroData) => {
 
   const rg90Map = new Map();
   let informanteRG90 = '';
+  let informanteNombre = '';
   for (const { rows, head } of rgParts) {
     const rc = rg90Cols(head.headers);
+    const xc = extraCols(headersConArriba(rows, head));
+    const sentidoArchivo = sentidoDelTitulo(rows, head.index);
     for (let i = head.index + 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row) continue;
@@ -397,10 +488,13 @@ const reconcile = (rg90Data, libroData) => {
       const compKey = compDigits(row[rc.comp]);
       if (!ruc || !compKey) continue;
       if (!informanteRG90) informanteRG90 = splitRuc(row[rc.informante]).ruc;
+      if (!informanteNombre) informanteNombre = celda(row, xc.informanteNombre);
       const entry = {
         ruc, rucFmt: fmtRuc(ruc, dv), razon: clean(row[rc.razon]), comp: fmtComp(row[rc.comp]),
         tipo: clean(row[rc.tipo]), total: toNum(row[rc.total]), iva10: toNum(row[rc.iva10]),
-        iva5: toNum(row[rc.iva5]), exenta: toNum(row[rc.exenta]), processed: false
+        iva5: toNum(row[rc.iva5]), exenta: toNum(row[rc.exenta]), processed: false,
+        dv: dv || String(calcDV(ruc)), timbrado: celda(row, xc.timbrado), cdc: celda(row, xc.cdc),
+        sentido: sentidoDe(celda(row, xc.registro)) || sentidoArchivo
       };
       const key = ruc + '_' + compKey;
       if (!rg90Map.has(key)) rg90Map.set(key, []);
@@ -410,8 +504,11 @@ const reconcile = (rg90Data, libroData) => {
 
   const discrepancies = [];
   let omitidasSinRuc = 0;
+  const docsLibro = []; // para el padrón de timbrados
   for (const { rows, head } of lbParts) {
     const lc = libroCols(head.headers);
+    const xc = extraCols(headersConArriba(rows, head));
+    const sentidoArchivo = sentidoDelTitulo(rows, head.index);
     for (let i = head.index + 1; i < rows.length; i++) {
       const row = rows[i];
       if (!row) continue;
@@ -429,6 +526,12 @@ const reconcile = (rg90Data, libroData) => {
       const rg = list ? (list.find((e) => !e.processed) || list[0]) : null;
       if (rg) rg.processed = true;
       discrepancies.push(buildRow(lib, rg));
+      docsLibro.push({
+        timbrado: celda(row, xc.timbrado) || rg?.timbrado, cdc: celda(row, xc.cdc) || rg?.cdc,
+        sentido: rg?.sentido || sentidoArchivo, ruc, dv: dv || String(calcDV(ruc)), razon: lib.razon,
+        // sin el RG90 no se sabe si es factura o nota de crédito: solo sirve si trae CDC
+        tipo: rg ? rg.tipo : null
+      });
     }
   }
 
@@ -453,13 +556,37 @@ const reconcile = (rg90Data, libroData) => {
     avisos.push(`${omitidasSinRuc} fila(s) del Libro sin RUC no se incluyeron en la conciliación.`);
   }
 
-  return { discrepancies, contribuyente, periodo, avisos };
+  // Padrón de timbrados: cada par timbrado → RUC emisor de los dos archivos
+  const contrib = {
+    ruc: informanteRG90 || rucContribLibro || '',
+    nombre: informanteNombre || (contribLibro.match(/^\s*[\d.]+\s*-\s*\d\s*-\s*(.+)$/) || [])[1]?.trim() || ''
+  };
+  const timbrados = [];
+  for (const d of docsLibro) {
+    const e = d.tipo === null ? (emisorDeCDC(d.cdc) ? emisorDe({ ...d, tipo: '' }, contrib) : null) : emisorDe(d, contrib);
+    if (e) timbrados.push(e);
+  }
+  for (const list of rg90Map.values()) {
+    for (const r of list) {
+      const e = emisorDe(r, contrib);
+      if (e) timbrados.push(e);
+    }
+  }
+
+  return { discrepancies, contribuyente, periodo, avisos, timbrados };
 };
 
 app.post('/api/reconciliation', verifyToken, async (req, res) => {
   try {
     const { rg90Data, libroData } = req.body;
-    const { discrepancies, contribuyente, periodo, avisos } = reconcile(rg90Data, libroData);
+    const { discrepancies, contribuyente, periodo, avisos, timbrados } = reconcile(rg90Data, libroData);
+
+    // padrón propio de timbrados: si falla, la conciliación sigue igual
+    if (timbrados.length) {
+      req.supabase.rpc('aprender_timbrados', { items: timbrados })
+        .then(({ error }) => { if (error) console.warn('aprender_timbrados:', error.message); })
+        .catch((err) => console.warn('aprender_timbrados:', err.message));
+    }
 
     const totalDiscrepancies = discrepancies.filter((d) => d.status === 'error').length;
     const totalCoincidencias = discrepancies.filter((d) => d.status === 'success').length;

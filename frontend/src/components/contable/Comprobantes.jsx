@@ -10,6 +10,7 @@ import { useContable } from './ContableContext'
 import { MontoInput, AsientoPreview, exportarExcel, MesStepper, SyncEstado, InfoCarga } from './ui'
 import { Buscador } from './AsientosManuales'
 import { rucDnitExacto } from '../../services/rucDnit'
+import { buscarTimbradoConocido } from '../../services/timbradosConocidos'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
   TIPOS, CTA, totalesDe, lineasDe, gs, fechaCorta, hoyISO, formatearNumero, numeroValido, timbradoValido,
@@ -216,10 +217,17 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     setTimeout(() => document.getElementById('lf-nombre')?.focus(), 0)
   }
 
-  /** timbrado de compra completo: trae el proveedor que ya lo usó en otra carga */
-  const aplicarTimbrado = (numero) => {
+  // último timbrado escrito: una respuesta del padrón que llega tarde no pisa uno nuevo
+  const timbradoEscrito = useRef(f.timbrado)
+
+  /**
+   * timbrado de compra completo: trae el proveedor que ya lo usó en otra carga del estudio
+   * o, si no, del padrón de timbrados que Quadra arma con las conciliaciones RG90
+   */
+  const aplicarTimbrado = async (numero) => {
     if (!esCompra || t.emitido || leerCDC(f.cdc)) return
-    const q = quienTimbro(numero)
+    const q = quienTimbro(numero) || await buscarTimbradoConocido(numero)
+    if (timbradoEscrito.current !== numero) return
     const autollenado = porTimbrado && f.personaRuc === porTimbrado.ruc
     if (!q) {
       // el proveedor lo había puesto otro timbrado: no dejarlo colgado
@@ -528,6 +536,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
                         onChange={(e) => {
                           const v = e.target.value.replace(/\D/g, '').slice(0, 8)
                           set({ timbrado: v })
+                          timbradoEscrito.current = v
                           if (v.length === 8) aplicarTimbrado(v)
                         }} {...nav} />
                     )}
@@ -559,7 +568,9 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
                         <Sparkles size={12} strokeWidth={1.8} aria-hidden="true" />
                         {porTimbrado.otros.length
                           ? ` Por el timbrado (también figura con ${porTimbrado.otros.map((o) => o.nombre).join(', ')}).`
-                          : ` Por el timbrado ${f.timbrado}, usado en ${porTimbrado.usos} ${porTimbrado.usos === 1 ? 'carga' : 'cargas'}.`}
+                          : porTimbrado.compartido
+                            ? ` Por el timbrado ${f.timbrado}, visto en ${porTimbrado.usos} ${porTimbrado.usos === 1 ? 'conciliación' : 'conciliaciones'} RG90 de Quadra.`
+                            : ` Por el timbrado ${f.timbrado}, usado en ${porTimbrado.usos} ${porTimbrado.usos === 1 ? 'carga' : 'cargas'}.`}
                         {' '}<a href={DNIT_VALIDEZ} target="_blank" rel="noreferrer" className="ct-link">Verificar en la DNIT</a>
                       </small>
                     )}
