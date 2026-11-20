@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
-import { MontoInput, exportarExcel } from './ui'
+import { MontoInput, exportarExcel, MesStepper, SyncEstado } from './ui'
 import '../../styles/AsientosManuales.css'
 import { armarDiario, armarMayor, gs, fechaCorta, hoyISO, n0, nuevoId, naturaleza, MESES, CTA } from '../../services/contabilidad'
 import { useRucDnit, estadoDnit } from '../../services/rucDnit'
@@ -702,8 +702,9 @@ export default function AsientosManuales() {
 
   return (
     <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead title="Asientos manuales" status={comprobantes.status} />
+      <PageHead title="Asientos manuales" />
 
+      <section className="q-card ct-card ct-panel">
       <div className="am-barra">
         <div className="am-barra__acciones" role="toolbar" aria-label="Acciones sobre asientos">
           <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={16} strokeWidth={2} /> <span><u>N</u>uevo</span></button>
@@ -718,19 +719,14 @@ export default function AsientosManuales() {
           <input ref={archivoRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => importar(e.target.files[0])} />
         </div>
         <div className="am-barra__filtros">
-          <label className="am-periodo">
-            <span>Período</span>
-            <select className="q-input ct-select" value={ejercicio} disabled aria-label="Año del ejercicio"><option>{ejercicio}</option></select>
-            <select className="q-input ct-select" value={mes} onChange={(e) => { setMes(e.target.value); setSelId(null) }} aria-label="Mes">
-              <option value="">Todos</option>
-              {MESES.map((m, i) => <option key={m} value={String(i + 1).padStart(2, '0')}>{String(i + 1).padStart(2, '0')} · {m}</option>)}
-            </select>
-          </label>
+          <MesStepper ejercicio={ejercicio} mes={mes} onChange={(v) => { setMes(v); setSelId(null) }} />
           <label className="am-buscar">
             <Search size={15} strokeWidth={1.8} aria-hidden="true" />
             <span className="sr-only">Buscar</span>
-            <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar  [Ctrl+F]" onChange={(e) => setBusca(e.target.value)} />
+            <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar…" onChange={(e) => setBusca(e.target.value)} />
+            <kbd className="am-buscar__kbd" aria-hidden="true">Ctrl F</kbd>
           </label>
+          <SyncEstado status={comprobantes.status} />
         </div>
       </div>
 
@@ -744,8 +740,7 @@ export default function AsientosManuales() {
         </div>
       )}
 
-      <div className="q-card ct-card">
-        <div className="ct-tabla-wrap">
+        <div className="ct-tabla-wrap ct-scroll">
           <table className="q-table ct-tabla am-lista">
             <thead>
               <tr>
@@ -782,7 +777,7 @@ export default function AsientosManuales() {
             )}
           </table>
         </div>
-      </div>
+      </section>
 
       {sel && (
         <section className="q-card ct-form am-detalle-sel" aria-label="Detalle del asiento seleccionado">

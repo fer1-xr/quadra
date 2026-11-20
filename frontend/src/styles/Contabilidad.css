@@ -490,3 +490,205 @@ td.ct-acciones .ct-icon + .ct-icon { margin-left: 4px; }
 .q-app .q-content .ct-sheet > .q-head { position: absolute; top: -13px; right: 4px; display: block; min-height: 0; padding: 0; margin: 0; }
 .ct-sheet > .q-head::after, .ct-sheet > .q-head .q-head__title, .ct-sheet > .q-head .q-head__lede, .ct-sheet > .q-head .q-eq { display: none; }
 .ct-sheet > .q-head .q-sync { margin: 0; font-size: 11.5px; }
+
+/* ─────────────────────────────────────────────
+   Densidad compacta para las hojas de registro
+   Un solo panel: barra de acciones · tira de filtros y liquidación · grilla
+   con cabecera y totales fijos. Filas de ~30px, como un libro de trabajo.
+   ───────────────────────────────────────────── */
+
+.q-app .q-content:has(.ct-sheet) { padding: 12px 18px 24px; }
+.q-app .q-content .ct-sheet { gap: 10px; }
+.q-app .q-content .ct-sheet > .q-head { top: -11px; right: 6px; }
+.ct-sheet > .q-head .q-sync { font-size: 11px; }
+
+/* tablas de todas las hojas contables: un punto más densas */
+.q-app .q-content .ct-sheet .ct-tabla th,
+.q-app .q-content .ct-sheet .ct-tabla td { padding: 6px 10px; }
+.q-app .q-content .ct-sheet .ct-tabla td { height: 32px; font-size: 12.5px; }
+.q-app .q-content .ct-sheet .ct-tabla th { height: 32px; font-size: 10px; letter-spacing: 0.07em; }
+.q-app .q-content .ct-sheet .ct-mono { font-size: 12px; }
+.q-app .q-content .ct-sheet .ct-chip { height: 19px; padding: 0 7px; font-size: 10.5px; }
+
+/* ── panel único ───────────────────────────── */
+
+.q-app .q-content .ct-panel {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.q-app .q-content .ct-panel > .am-barra {
+  gap: 6px 12px;
+  padding: 6px 8px;
+  border: 0;
+  border-bottom: 1px solid var(--q-line);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* acciones: la primaria llena, el resto fantasma (se marcan al pasar) */
+.q-app .q-content .ct-panel .am-barra__acciones { gap: 2px; }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn { height: 30px; min-height: 30px; padding: 0 10px; gap: 6px; font-size: 12.5px; font-weight: 550; border-radius: 7px; }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn--primary { margin-right: 4px; padding: 0 12px 0 10px; }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn--line { border-color: transparent; background: transparent; color: var(--q-ink-2); box-shadow: none; }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn--line:hover:not(:disabled) { color: var(--q-ink); border-color: var(--q-line); background: var(--q-surface-2); }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn--line.am-btn-del:hover:not(:disabled) { color: var(--q-err); border-color: var(--q-err-line); background: var(--q-err-bg); }
+.q-app .q-content .ct-panel .am-barra__acciones .q-btn:disabled { opacity: 0.38; }
+.q-app .q-content .ct-panel .am-barra__acciones .ct-icon { width: 30px; height: 30px; border-radius: 7px; }
+.ct-panel .am-barra__sep { height: 18px; margin: 0 6px; }
+
+.ct-panel .am-barra__filtros { gap: 6px; }
+.q-app .q-content .ct-panel .am-buscar .q-input { height: 30px; min-height: 30px; width: 210px; padding: 0 56px 0 30px; font-size: 12.5px; border-radius: 7px; transition: width 180ms var(--q-ease, ease), border-color 150ms ease, box-shadow 150ms ease; }
+.q-app .q-content .ct-panel .am-buscar .q-input:focus,
+.q-app .q-content .ct-panel .am-buscar .q-input:not(:placeholder-shown) { width: 280px; }
+@media (prefers-reduced-motion: reduce) { .q-app .q-content .ct-panel .am-buscar .q-input { transition: none; } }
+.ct-panel .am-buscar svg { left: 10px; }
+.am-buscar__kbd {
+  position: absolute;
+  right: 7px;
+  padding: 1px 5px;
+  border: 1px solid var(--q-line);
+  border-radius: 4px;
+  font-family: var(--q-mono);
+  font-size: 10px;
+  color: var(--q-ink-3);
+  background: var(--q-surface-2);
+  pointer-events: none;
+}
+.am-buscar:focus-within .am-buscar__kbd { opacity: 0; }
+
+.q-app .q-content .ct-sync { margin: 0 2px 0 4px; font-size: 11.5px; white-space: nowrap; }
+.ct-sync.is-quieto { width: 8px; justify-content: center; }
+
+/* período: ‹ 2026 · Noviembre › */
+.ct-mes {
+  display: inline-flex;
+  align-items: center;
+  height: 30px;
+  border: 1px solid var(--q-line);
+  border-radius: 7px;
+  background: var(--q-surface);
+  overflow: hidden;
+}
+.ct-mes__nav {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 100%;
+  border: 0;
+  color: var(--q-ink-3);
+  background: transparent;
+  cursor: pointer;
+}
+.ct-mes__nav:hover:not(:disabled) { color: var(--q-ink); background: var(--q-surface-2); }
+.ct-mes__nav:disabled { opacity: 0.3; cursor: default; }
+.ct-mes__nav:focus-visible, .ct-mes__sel:focus-visible { outline: 2px solid var(--q-accent); outline-offset: -2px; }
+.ct-mes__anio {
+  padding: 0 8px 0 4px;
+  border-right: 1px solid var(--q-line);
+  font-family: var(--q-mono);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 18px;
+  color: var(--q-ink-3);
+}
+.ct-mes__sel {
+  height: 100%;
+  min-width: 108px;
+  padding: 0 4px 0 8px;
+  border: 0;
+  font-family: var(--q-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--q-ink);
+  background: transparent;
+  cursor: pointer;
+}
+.ct-mes__sel option { color: #0b1b33; background: #fff; }
+/* gana a las reglas globales de campos (QuadraLedger/QuadraModules.css, hasta 0,6,1) */
+.q-app .q-content .ct-sheet .ct-mes.ct-mes select.ct-mes__sel[aria-label] { min-height: 0; height: 100%; border: 0; border-radius: 0; font-size: 12.5px; background-color: transparent; box-shadow: none; }
+.q-app .q-content .ct-sheet .ct-panel .am-buscar input.q-input[type="search"] { min-height: 0; height: 30px; font-size: 12.5px; border-radius: 7px; }
+
+/* tira: pestañas por tipo + liquidación del período */
+.lf-tira {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 14px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-bottom: 1px solid var(--q-line);
+  background: color-mix(in srgb, var(--q-surface-2) 55%, transparent);
+}
+.ct-panel .lf-filtros { gap: 0; align-self: stretch; }
+.q-app .q-content .ct-panel .lf-filtros button {
+  position: relative;
+  height: 34px;
+  padding: 0 10px;
+  gap: 6px;
+  border: 0;
+  border-radius: 0;
+  font-size: 12.5px;
+  color: var(--q-ink-3);
+  background: none;
+  box-shadow: none;
+}
+.q-app .q-content .ct-panel .lf-filtros button:hover { color: var(--q-ink); }
+.q-app .q-content .ct-panel .lf-filtros button.is-on { color: var(--q-ink); box-shadow: none; }
+.ct-panel .lf-filtros button.is-on::after { content: ""; position: absolute; left: 8px; right: 8px; bottom: -1px; height: 2px; border-radius: 2px; background: var(--q-accent); }
+.ct-panel .lf-filtros button span { min-width: 18px; padding: 0 5px; border-radius: 999px; font-size: 10.5px; line-height: 16px; text-align: center; background: var(--q-surface-2); }
+.ct-panel .lf-filtros button.is-on span { color: var(--q-accent); background: var(--q-accent-bg); }
+.ct-panel .lf-filtros button:focus-visible { outline: 2px solid var(--q-accent); outline-offset: -3px; border-radius: 6px; }
+.ct-panel .lf-filtros__aviso { margin-left: 0; font-size: 12px; }
+
+.lf-resumen { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 18px; margin: 0 0 0 auto; }
+.lf-resumen > div { display: flex; align-items: baseline; gap: 6px; }
+.lf-resumen dt { font-size: 10.5px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--q-ink-3); }
+.lf-resumen dd { margin: 0; font-family: var(--q-mono); font-size: 12.5px; font-variant-numeric: tabular-nums; color: var(--q-ink-2); }
+.lf-resumen .is-iva dt { color: var(--q-accent); }
+.lf-resumen .is-iva dd { font-weight: 600; color: var(--q-ink); }
+
+.q-app .q-content .ct-panel > .am-alert { margin: 8px 10px 0; padding: 8px 12px; font-size: 13px; border-radius: 8px; }
+
+/* grilla con scroll propio: cabecera y totales siempre a la vista */
+.ct-panel .ct-scroll { flex: 1; max-height: calc(100vh - 205px); overflow: auto; }
+.q-app .q-content .ct-panel .ct-tabla thead th { z-index: 2; height: 30px; padding-top: 0; padding-bottom: 0; border-bottom: 0; background: var(--q-surface-2); box-shadow: inset 0 -1px 0 var(--q-line); }
+.q-app .q-content .ct-sheet .am-lista tbody td { height: 30px; }
+.q-app .q-content .ct-panel .ct-tabla tfoot td { position: sticky; bottom: 0; z-index: 2; border-bottom: 0; box-shadow: inset 0 1px 0 var(--q-line); }
+
+/* filas de lista */
+.q-app .q-content .ct-sheet .am-lista tbody td { padding-top: 5px; padding-bottom: 5px; }
+.q-app .q-content .ct-sheet .am-lista tbody tr:nth-child(even):not(.is-sel):not(:hover) td { background: color-mix(in srgb, var(--q-surface-2) 45%, transparent); }
+.q-app .q-content .ct-sheet .am-lista .am-sort { gap: 3px; }
+.q-app .q-content .ct-sheet .am-vacio { padding: 28px 14px; text-align: center; font-size: 13px; }
+.ct-sheet .lf-lista .ct-nombre { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ct-sheet .lf-cv { min-width: 26px; padding: 0 5px; font-size: 10.5px; line-height: 17px; border-radius: 5px; }
+.ct-sheet .am-fila__meta { font-size: 11.5px; }
+
+/* detalle de la fila elegida, más bajo */
+.q-app .q-content .ct-sheet .am-detalle-sel { gap: 8px; padding: 12px 14px; border-radius: 12px; }
+.ct-sheet .am-detalle-sel__head h3 { font-size: 14px; }
+
+/* panel angosto: los botones secundarios quedan solo con ícono (el texto sigue siendo su nombre accesible) */
+.q-app .q-content .ct-panel { container: ctpanel / inline-size; }
+@container ctpanel (max-width: 1180px) {
+  .q-app .q-content .ct-panel .am-barra__acciones .q-btn--line { gap: 0; width: 30px; padding: 0; font-size: 0; }
+  .q-app .q-content .ct-panel .am-barra__acciones .q-btn--line svg { flex-shrink: 0; }
+  .lf-resumen > div:not(.is-iva) { display: none; }
+}
+
+@media (max-width: 1100px) {
+  .q-app .q-content .ct-panel .am-buscar .q-input { width: 170px; }
+}
+
+@media (max-width: 760px) {
+  .q-app .q-content:has(.ct-sheet) { padding: 10px 10px 24px; }
+  .ct-panel .am-barra__filtros { width: 100%; margin-left: 0; }
+  .ct-panel .am-buscar { flex: 1; }
+  .q-app .q-content .ct-panel .am-buscar .q-input { width: 100%; }
+  .ct-panel .ct-scroll { max-height: none; }
+}

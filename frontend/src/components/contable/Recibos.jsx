@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
-import { MontoInput, CuentaSelect, AsientoPreview, exportarExcel, esDisponibilidad } from './ui'
+import { MontoInput, CuentaSelect, AsientoPreview, exportarExcel, esDisponibilidad, MesStepper, SyncEstado } from './ui'
 import { Buscador } from './AsientosManuales'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import { authService } from '../../services/authService'
@@ -664,8 +664,9 @@ export default function Recibos({ tipo }) {
 
   return (
     <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead title={c.titulo} status={comprobantes.status} />
+      <PageHead title={c.titulo} />
 
+      <section className="q-card ct-card ct-panel">
       <div className="am-barra">
         <div className="am-barra__acciones" role="toolbar" aria-label="Acciones sobre recibos">
           <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={16} strokeWidth={2} /> <span><u>N</u>uevo</span></button>
@@ -676,19 +677,14 @@ export default function Recibos({ tipo }) {
           <button type="button" className="q-btn q-btn--line" onClick={exportar} disabled={!ordenadas.length}><Download size={15} strokeWidth={1.8} /> Excel</button>
         </div>
         <div className="am-barra__filtros">
-          <label className="am-periodo">
-            <span>Periodo:</span>
-            <select className="q-input ct-select" value={ejercicio} disabled aria-label="Año del ejercicio"><option>{ejercicio}</option></select>
-            <select className="q-input ct-select" value={mes} onChange={(e) => { setMes(e.target.value); setSelId(null) }} aria-label="Mes">
-              <option value="">Todos</option>
-              {MESES.map((m, i) => <option key={m} value={String(i + 1).padStart(2, '0')}>{String(i + 1).padStart(2, '0')}</option>)}
-            </select>
-          </label>
+          <MesStepper ejercicio={ejercicio} mes={mes} onChange={(v) => { setMes(v); setSelId(null) }} />
           <label className="am-buscar">
             <Search size={15} strokeWidth={1.8} aria-hidden="true" />
             <span className="sr-only">Buscar</span>
-            <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="BUSCAR [CTRL+F]" onChange={(e) => setBusca(e.target.value)} />
+            <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar…" onChange={(e) => setBusca(e.target.value)} />
+            <kbd className="am-buscar__kbd" aria-hidden="true">Ctrl F</kbd>
           </label>
+          <SyncEstado status={comprobantes.status} />
         </div>
       </div>
 
@@ -699,8 +695,7 @@ export default function Recibos({ tipo }) {
         </div>
       )}
 
-      <div className="q-card ct-card">
-        <div className="ct-tabla-wrap">
+        <div className="ct-tabla-wrap ct-scroll">
           <table className="q-table ct-tabla am-lista rc-lista">
             <thead><tr>{COLUMNAS.map(th)}</tr></thead>
             <tbody>
@@ -733,7 +728,7 @@ export default function Recibos({ tipo }) {
             )}
           </table>
         </div>
-      </div>
+      </section>
 
       {modal && (
         <ModalRecibo key={modal.id || 'nuevo'} inicial={modal} mesRef={mes}

@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import axios from 'axios'
-import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle, QrCode, Info, BadgeCheck, ExternalLink } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle, QrCode, Info, BadgeCheck, ExternalLink, Search } from 'lucide-react'
 import { useContable } from './ContableContext'
-import { MontoInput } from './ui'
+import { MontoInput, MesStepper, SyncEstado } from './ui'
 import { Buscador } from './AsientosManuales'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
   TIPOS, CTA, totalesDe, lineasDe, gs, fechaCorta, hoyISO, formatearNumero, numeroValido, timbradoValido,
-  siguienteNumero, timbradoVigente, analizarRuc, n0, leerCDC, formatearCDC, fechaRapida, dvRuc
+  siguienteNumero, timbradoVigente, analizarRuc, n0, leerCDC, formatearCDC, fechaRapida, dvRuc, MESES
 } from '../../services/contabilidad'
 import '../../styles/AsientosManuales.css'
 import '../../styles/NotasCredito.css'
@@ -41,7 +41,6 @@ const FORM_145 = [
   { id: 'rectificativa', label: 'Rectificativa' }
 ]
 
-const MESES_CORTOS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const nuevaKey = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
 const filaVacia = () => ({ key: nuevaKey(), factura: '', g10: '', g5: '', ex: '' })
@@ -558,7 +557,7 @@ function ModalNotaCredito({ inicial, onCerrar, mesRef }) {
 /* ── grilla ─────────────────────────────────────────────────── */
 
 export default function NotasCredito({ tipo }) {
-  const { comprobantes, ejercicio, contribuyente } = useContable()
+  const { comprobantes, ejercicio } = useContable()
   const esCompra = TIPOS[tipo].lado === 'compra'
   const [mes, setMes] = useState(() => (String(new Date().getFullYear()) === String(ejercicio) ? String(new Date().getMonth() + 1).padStart(2, '0') : '01'))
   const [busca, setBusca] = useState('')
@@ -569,11 +568,11 @@ export default function NotasCredito({ tipo }) {
   const buscaRef = useRef(null)
 
   const COLUMNAS = [
-    { id: 'numero', label: 'Numero', valor: (d) => d.numero },
+    { id: 'numero', label: 'Número', valor: (d) => d.numero },
     { id: 'timbrado', label: 'Timbrado', valor: (d) => d.timbrado },
     { id: 'tt', label: 'Tipo', valor: (d) => TIPOS_TIMB.find((o) => o.id === d.tipoTimbrado)?.corto || '' },
     { id: 'fecha', label: 'Fecha', valor: (d) => d.fecha },
-    { id: 'ruc', label: 'Ruc', valor: (d) => d.personaRuc },
+    { id: 'ruc', label: 'RUC', valor: (d) => d.personaRuc },
     { id: 'nombre', label: esCompra ? 'Proveedor' : 'Cliente', valor: (d) => d.personaNombre, ancho: true },
     { id: 'moneda', label: 'Mon.', valor: (d) => MONEDAS.find((m) => m.id === (d.moneda || 'PYG'))?.corto },
     { id: 'tnc', label: 'Tipo', valor: (d) => TIPOS_NC.find((o) => o.id === d.tipoNC)?.label || 'Devolución' },
@@ -616,7 +615,7 @@ export default function NotasCredito({ tipo }) {
       if (e.altKey && k === 'n') { e.preventDefault(); nuevo() }
       if (e.altKey && k === 'm') { e.preventDefault(); modificar() }
       if (e.altKey && k === 'e') { e.preventDefault(); eliminar() }
-      const enLista = document.activeElement?.closest?.('.nc-lista')
+      const enLista = document.activeElement?.closest?.('.nc-grilla-lista')
       if (sel && k === 'enter' && enLista) { e.preventDefault(); modificar() }
       if (sel && k === 'delete' && enLista) { e.preventDefault(); eliminar() }
       if (['arrowdown', 'arrowup'].includes(k) && enLista) {
@@ -630,67 +629,77 @@ export default function NotasCredito({ tipo }) {
     return () => document.removeEventListener('keydown', onKey)
   })
 
+  const totalPeriodo = ordenadas.reduce((sm, d) => sm + totalesDe(d).total, 0)
+  const periodoTxt = mes ? `de ${MESES[Number(mes) - 1].toLowerCase()}` : 'del ejercicio'
+
   return (
-    <div className="nc-pagina">
-      <div className="nc-barra">
-        <div className="nc-barra__acciones" role="toolbar" aria-label="Acciones">
-          <button type="button" className="nc-btn" onClick={nuevo} title="Alt+N"><Plus size={14} strokeWidth={2.6} className="nc-ico-circ" /> <span><u>N</u>uevo</span></button>
-          <button type="button" className="nc-btn" onClick={() => modificar()} disabled={!sel} title="Alt+M"><Pencil size={13} strokeWidth={2.2} /> <span><u>M</u>odificar</span></button>
-          <button type="button" className="nc-btn" onClick={eliminar} disabled={!sel} title="Alt+E"><Trash2 size={13} strokeWidth={2.2} /> <span><u>E</u>liminar</span></button>
+    <div className="q-sheet q-sheet--wide ct-sheet">
+      <section className="q-card ct-card ct-panel" aria-label={esCompra ? 'Notas de crédito por compras' : 'Notas de crédito por ventas'}>
+        <div className="am-barra">
+          <div className="am-barra__acciones" role="toolbar" aria-label="Acciones">
+            <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={15} strokeWidth={2.2} /> <span><u>N</u>uevo</span></button>
+            <button type="button" className="q-btn q-btn--line" onClick={() => modificar()} disabled={!sel} title="Alt+M · Enter · doble clic"><Pencil size={14} strokeWidth={1.8} /> <span><u>M</u>odificar</span></button>
+            <button type="button" className="q-btn q-btn--line am-btn-del" onClick={eliminar} disabled={!sel} title="Alt+E · Supr"><Trash2 size={14} strokeWidth={1.8} /> <span><u>E</u>liminar</span></button>
+          </div>
+          <div className="am-barra__filtros">
+            <MesStepper ejercicio={ejercicio} mes={mes} onChange={(v) => { setMes(v); setSelId(null) }} />
+            <label className="am-buscar">
+              <Search size={14} strokeWidth={1.8} aria-hidden="true" />
+              <span className="sr-only">Buscar</span>
+              <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar…" onChange={(e) => setBusca(e.target.value)} />
+              <kbd className="am-buscar__kbd" aria-hidden="true">Ctrl F</kbd>
+            </label>
+            <SyncEstado status={comprobantes.status} />
+          </div>
         </div>
-        <div className="nc-barra__filtros">
-          <span className="nc-periodo__label">Periodo:</span>
-          <select className="nc-input nc-select nc-anio" value={ejercicio} disabled aria-label="Año"><option>{ejercicio}</option></select>
-          <select className="nc-input nc-select nc-mes" value={mes} onChange={(e) => { setMes(e.target.value); setSelId(null) }} aria-label="Mes">
-            {MESES_CORTOS.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <input ref={buscaRef} className="nc-input nc-buscar" type="search" value={busca} placeholder="BUSCAR [CTRL+F]" onChange={(e) => setBusca(e.target.value)} aria-label="Buscar" />
-        </div>
-      </div>
 
-      {aviso && <p className="nc-aviso is-ok nc-aviso--barra" role="status"><Check size={13} strokeWidth={2.4} /> {aviso}</p>}
+        {aviso && (
+          <div className="q-alert q-alert--ok am-alert" role="status">
+            <p>{aviso}</p>
+            <button type="button" className="ct-icon" onClick={() => setAviso('')} aria-label="Cerrar aviso"><X size={14} strokeWidth={1.8} /></button>
+          </div>
+        )}
 
-      <div className="nc-grilla">
-        <table className="nc-lista">
-          <thead>
-            <tr>
-              {COLUMNAS.map((c) => (
-                <th key={c.id} className={c.ancho ? 'nc-ancho' : ''} aria-sort={orden.campo === c.id ? (orden.dir > 0 ? 'ascending' : 'descending') : 'none'}>
-                  <button type="button" onClick={() => setOrden({ campo: c.id, dir: orden.campo === c.id ? -orden.dir : 1 })}>
-                    <span>{c.label}</span>
-                    <span className={`nc-sort ${orden.campo === c.id ? 'is-on' : ''}`} aria-hidden="true">
-                      {orden.campo === c.id ? (orden.dir > 0 ? <ChevronUp size={12} strokeWidth={3} /> : <ChevronDown size={12} strokeWidth={3} />) : <><ChevronUp size={10} strokeWidth={3} /><ChevronDown size={10} strokeWidth={3} /></>}
-                    </span>
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ordenadas.length === 0 ? (
-              <tr className="nc-lista__vacio"><td colSpan={COLUMNAS.length}>No se encontraron registros coincidentes</td></tr>
-            ) : ordenadas.map((d) => (
-              <tr key={d.id} id={`nc-row-${d.id}`} className={selId === d.id ? 'is-sel' : ''} aria-selected={selId === d.id} tabIndex={0}
-                onFocus={() => setSelId(d.id)} onClick={() => setSelId(d.id)} onDoubleClick={() => modificar(d)}>
-                <td className="nc-mono">{d.numero}</td>
-                <td className="nc-mono">{d.timbrado}</td>
-                <td>{TIPOS_TIMB.find((o) => o.id === d.tipoTimbrado)?.corto || ''}</td>
-                <td className="nc-mono">{fechaCorta(d.fecha)}</td>
-                <td className="nc-mono">{d.personaRuc}</td>
-                <td>{d.personaNombre}</td>
-                <td>{MONEDAS.find((m) => m.id === (d.moneda || 'PYG'))?.corto}</td>
-                <td>{TIPOS_NC.find((o) => o.id === d.tipoNC)?.label || 'Devolución'}</td>
-                <td className="nc-der nc-mono">{gs(totalesDe(d).total)}</td>
+        <div className="ct-tabla-wrap ct-scroll">
+          <table className="q-table ct-tabla am-lista nc-grilla-lista">
+            <thead>
+              <tr>
+                {COLUMNAS.map((c) => (
+                  <th key={c.id} className={c.num ? 'ct-der' : ''} aria-sort={orden.campo === c.id ? (orden.dir > 0 ? 'ascending' : 'descending') : 'none'}>
+                    <button type="button" className="am-sort" onClick={() => setOrden({ campo: c.id, dir: orden.campo === c.id ? -orden.dir : 1 })}>
+                      {c.label}
+                      {orden.campo === c.id ? (orden.dir > 0 ? <ChevronUp size={13} strokeWidth={2} /> : <ChevronDown size={13} strokeWidth={2} />) : <ChevronDown size={13} strokeWidth={2} className="am-sort__off" />}
+                    </button>
+                  </th>
+                ))}
               </tr>
-            ))}
-          </tbody>
-          {ordenadas.length > 0 && (
-            <tfoot>
-              <tr><td colSpan={8}>{ordenadas.length} {ordenadas.length === 1 ? 'nota' : 'notas'} · {contribuyente.razonSocial}</td><td className="nc-der nc-mono">{gs(ordenadas.reduce((sm, d) => sm + totalesDe(d).total, 0))}</td></tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {ordenadas.length === 0 ? (
+                <tr><td colSpan={COLUMNAS.length} className="am-vacio">{busca ? `Nada coincide con “${busca}”.` : `Sin notas de crédito ${periodoTxt}. Cargá una con Nuevo (Alt+N).`}</td></tr>
+              ) : ordenadas.map((d) => (
+                <tr key={d.id} id={`nc-row-${d.id}`} className={`am-fila ${selId === d.id ? 'is-sel' : ''}`} aria-selected={selId === d.id} tabIndex={0}
+                  onFocus={() => setSelId(d.id)} onClick={() => setSelId(d.id)} onDoubleClick={() => modificar(d)}>
+                  <td className="ct-mono">{d.numero}</td>
+                  <td className="ct-mono">{d.timbrado}</td>
+                  <td>{TIPOS_TIMB.find((o) => o.id === d.tipoTimbrado)?.corto || ''}</td>
+                  <td className="ct-mono">{fechaCorta(d.fecha)}</td>
+                  <td className="ct-mono">{d.personaRuc}</td>
+                  <td className="ct-nombre" title={d.personaNombre}>{d.personaNombre}</td>
+                  <td className="ct-mono">{MONEDAS.find((m) => m.id === (d.moneda || 'PYG'))?.corto}</td>
+                  <td><span className="ct-chip is-nc">{TIPOS_NC.find((o) => o.id === d.tipoNC)?.label || 'Devolución'}</span></td>
+                  <td className="ct-num ct-strong">{gs(totalesDe(d).total)}</td>
+                </tr>
+              ))}
+            </tbody>
+            {ordenadas.length > 0 && (
+              <tfoot>
+                <tr className="ct-total"><td colSpan={8}>{ordenadas.length} {ordenadas.length === 1 ? 'nota' : 'notas'} · total {periodoTxt}</td><td className="ct-num">{gs(totalPeriodo)}</td></tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </section>
 
       {modal && <ModalNotaCredito key={modal.id || 'nuevo'} inicial={modal} mesRef={mes} onCerrar={(ok) => { if (ok) setAviso(modal.id ? 'Nota de crédito modificada.' : 'Nota de crédito registrada.'); setModal(null) }} />}
     </div>

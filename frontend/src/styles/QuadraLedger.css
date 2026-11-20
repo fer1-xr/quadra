@@ -308,7 +308,8 @@
 
 /* ── tablas de libro ────────────────────────── */
 
-.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table, #payment-preview table) th {
+.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table) th,
+.q-app .q-content #payment-preview table th {
   height: 40px;
   font-family: var(--q-sans);
   font-size: 11px;
@@ -321,13 +322,15 @@
   white-space: nowrap;
 }
 
-.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table, #payment-preview table) td {
+.q-app .q-content :is(.q-table, .clientes-table, .historico-table, .preview-table table) td,
+.q-app .q-content #payment-preview table td {
   height: 44px;
   font-size: 13.5px;
   border-bottom: 1px solid var(--q-line-2);
 }
 
-.q-app .q-content :is(.q-table, .clientes-table, #payment-preview table) tbody tr:last-child td { border-bottom: 3px double var(--q-rule); }
+.q-app .q-content :is(.q-table, .clientes-table) tbody tr:last-child td,
+.q-app .q-content #payment-preview table tbody tr:last-child td { border-bottom: 3px double var(--q-rule); }
 
 .q-app .q-content #payment-preview td:nth-child(3),
 .q-app .q-content #payment-preview td:nth-child(n+6) {

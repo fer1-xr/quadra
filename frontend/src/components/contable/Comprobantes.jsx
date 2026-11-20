@@ -3,11 +3,11 @@ import { createPortal } from 'react-dom'
 import axios from 'axios'
 import {
   Plus, Pencil, Trash2, Upload, Download, X, Check, Search, ChevronUp, ChevronDown, AlertTriangle,
-  FileSpreadsheet, Sparkles, ScanLine, Split, Wand2, RefreshCw, Zap, BadgeCheck
+  FileSpreadsheet, FileDown, Sparkles, ScanLine, Split, Wand2, RefreshCw, Zap, BadgeCheck
 } from 'lucide-react'
 import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
-import { MontoInput, AsientoPreview, exportarExcel } from './ui'
+import { MontoInput, AsientoPreview, exportarExcel, MesStepper, SyncEstado } from './ui'
 import { Buscador } from './AsientosManuales'
 import { rucDnitExacto } from '../../services/rucDnit'
 import { API_BASE_URL, authHeaders } from '../../services/api'
@@ -804,74 +804,79 @@ export default function RegistroFiscal({ titulo, lede, tipos, libro = false }) {
 
   return (
     <div className="q-sheet q-sheet--wide ct-sheet">
-      <PageHead title={titulo} status={comprobantes.status} />
+      <PageHead title={titulo} />
 
-      <div className="am-barra">
-        <div className="am-barra__acciones" role="toolbar" aria-label="Acciones del libro">
-          <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={16} strokeWidth={2} /> <span><u>N</u>uevo</span></button>
-          <button type="button" className="q-btn q-btn--line" onClick={() => modificar()} disabled={!sel} title="Enter sobre la fila"><Pencil size={15} strokeWidth={1.8} /> Modificar</button>
-          <button type="button" className="q-btn q-btn--line am-btn-del" onClick={eliminar} disabled={!sel} title="Supr sobre la fila"><Trash2 size={15} strokeWidth={1.8} /> Eliminar</button>
-          {libro && (
-            <>
-              <span className="am-barra__sep" aria-hidden="true" />
-              <button type="button" className="q-btn q-btn--line lf-btn-mrg" onClick={() => abrirImport('Marangatu')} title={`Registro de comprobantes descargado de Marangatu (RG90), .xlsx o .csv`}>
-                <Download size={15} strokeWidth={1.8} /> Importar Marangatu
-              </button>
-              <button type="button" className="q-btn q-btn--line" onClick={() => abrirImport('Excel')} title="Planilla con el modelo de Quadra">
-                <Upload size={15} strokeWidth={1.8} /> Importar
-              </button>
-              <button type="button" className="ct-icon" onClick={descargarModelo} title="Descargar modelo Excel" aria-label="Descargar modelo Excel"><FileSpreadsheet size={15} strokeWidth={1.8} /></button>
-            </>
-          )}
-          <button type="button" className="q-btn q-btn--line" onClick={exportar} disabled={!filas.length}><FileSpreadsheet size={15} strokeWidth={1.8} /> Excel</button>
-          <input ref={archivoRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => importar(e.target.files[0], origenImport)} />
-        </div>
-        <div className="am-barra__filtros">
-          <label className="am-periodo">
-            <span>Período</span>
-            <select className="q-input ct-select" value={ejercicio} disabled aria-label="Año del ejercicio"><option>{ejercicio}</option></select>
-            <select className="q-input ct-select" value={mes} onChange={(e) => { setMes(e.target.value); setSelId(null) }} aria-label="Mes">
-              <option value="">Todos</option>
-              {MESES.map((m, i) => <option key={m} value={String(i + 1).padStart(2, '0')}>{String(i + 1).padStart(2, '0')} · {m}</option>)}
-            </select>
-          </label>
-          <label className="am-buscar">
-            <Search size={15} strokeWidth={1.8} aria-hidden="true" />
-            <span className="sr-only">Buscar</span>
-            <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar  [Ctrl+F]" onChange={(e) => setBusca(e.target.value)} />
-          </label>
-        </div>
-      </div>
-
-      {tipos.length > 1 && (
-        <div className="lf-filtros" role="tablist" aria-label="Filtrar por tipo">
-          {[{ id: 'todos', label: 'Todos' }, { id: lado, label: 'Facturas' }, { id: 'nc', label: 'Notas de crédito' }, { id: 'nd', label: 'Notas de débito' }].map((o) => (
-            <button key={o.id} type="button" role="tab" aria-selected={filtroTipo === o.id} className={filtroTipo === o.id ? 'is-on' : ''} onClick={() => setFiltroTipo(o.id)}>
-              {o.label}
-              <span>{comprobantes.items.filter((d) => tipos.includes(d.tipo) && String(d.fecha || '').startsWith(mes ? `${ejercicio}-${mes}` : String(ejercicio)) && (o.id === 'todos' || d.tipo.split('-')[0] === o.id)).length}</span>
-            </button>
-          ))}
-          {sinTimbrado > 0 && <span className="lf-filtros__aviso"><AlertTriangle size={13} strokeWidth={2} /> {sinTimbrado} sin timbrado</span>}
-        </div>
-      )}
-
-      {aviso && (
-        <div className={`q-alert ${aviso.tono === 'ok' ? 'q-alert--ok' : ''} ${aviso.tono === 'warn' ? 'am-alert--warn' : ''} am-alert`} role="status">
-          <div>
-            <p>{aviso.texto}</p>
-            {aviso.lista?.length > 0 && <ul>{aviso.lista.map((e) => <li key={e}>{e}</li>)}</ul>}
+      <section className="q-card ct-card ct-panel" aria-label={titulo}>
+        <div className="am-barra">
+          <div className="am-barra__acciones" role="toolbar" aria-label="Acciones del libro">
+            <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={15} strokeWidth={2.2} /> <span><u>N</u>uevo</span></button>
+            <button type="button" className="q-btn q-btn--line" onClick={() => modificar()} disabled={!sel} title="Enter o doble clic sobre la fila"><Pencil size={14} strokeWidth={1.8} /> Modificar</button>
+            <button type="button" className="q-btn q-btn--line am-btn-del" onClick={eliminar} disabled={!sel} title="Supr sobre la fila"><Trash2 size={14} strokeWidth={1.8} /> Eliminar</button>
+            <span className="am-barra__sep" aria-hidden="true" />
+            {libro && (
+              <>
+                <button type="button" className="q-btn q-btn--line lf-btn-mrg" onClick={() => abrirImport('Marangatu')} title="Registro de comprobantes descargado de Marangatu (RG90), .xlsx o .csv">
+                  <Download size={14} strokeWidth={1.8} /> Marangatu
+                </button>
+                <button type="button" className="q-btn q-btn--line" onClick={() => abrirImport('Excel')} title="Planilla con el modelo de Quadra">
+                  <Upload size={14} strokeWidth={1.8} /> Importar
+                </button>
+                <button type="button" className="ct-icon" onClick={descargarModelo} title="Descargar modelo Excel" aria-label="Descargar modelo Excel"><FileSpreadsheet size={14} strokeWidth={1.8} /></button>
+              </>
+            )}
+            <button type="button" className="q-btn q-btn--line" onClick={exportar} disabled={!filas.length} title="Exportar lo filtrado a Excel"><FileDown size={14} strokeWidth={1.8} /> Excel</button>
+            <input ref={archivoRef} type="file" accept=".xlsx,.xls,.csv" hidden onChange={(e) => importar(e.target.files[0], origenImport)} />
           </div>
-          <button type="button" className="ct-icon" onClick={() => setAviso(null)} aria-label="Cerrar aviso"><X size={14} strokeWidth={1.8} /></button>
+          <div className="am-barra__filtros">
+            <MesStepper ejercicio={ejercicio} mes={mes} onChange={(v) => { setMes(v); setSelId(null) }} />
+            <label className="am-buscar">
+              <Search size={14} strokeWidth={1.8} aria-hidden="true" />
+              <span className="sr-only">Buscar</span>
+              <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar…" onChange={(e) => setBusca(e.target.value)} />
+              <kbd className="am-buscar__kbd" aria-hidden="true">Ctrl F</kbd>
+            </label>
+            <SyncEstado status={comprobantes.status} />
+          </div>
         </div>
-      )}
 
-      <div className="q-card ct-card">
-        <div className="ct-tabla-wrap">
+        <div className="lf-tira">
+          {tipos.length > 1 && (
+            <div className="lf-filtros" role="tablist" aria-label="Filtrar por tipo">
+              {[{ id: 'todos', label: 'Todos' }, { id: lado, label: 'Facturas' }, { id: 'nc', label: 'Notas de crédito' }, { id: 'nd', label: 'Notas de débito' }].map((o) => (
+                <button key={o.id} type="button" role="tab" aria-selected={filtroTipo === o.id} className={filtroTipo === o.id ? 'is-on' : ''} onClick={() => setFiltroTipo(o.id)}>
+                  {o.label}
+                  <span>{comprobantes.items.filter((d) => tipos.includes(d.tipo) && String(d.fecha || '').startsWith(mes ? `${ejercicio}-${mes}` : String(ejercicio)) && (o.id === 'todos' || d.tipo.split('-')[0] === o.id)).length}</span>
+                </button>
+              ))}
+            </div>
+          )}
+          {sinTimbrado > 0 && <span className="lf-filtros__aviso"><AlertTriangle size={13} strokeWidth={2} /> {sinTimbrado} sin timbrado</span>}
+          {filas.length > 0 && (
+            <dl className="lf-resumen" aria-label={`Liquidación ${mes ? `de ${MESES[Number(mes) - 1].toLowerCase()}` : 'del ejercicio'}`}>
+              <div><dt>Gravado 10%</dt><dd>{gs(tot.base10)}</dd></div>
+              <div><dt>Gravado 5%</dt><dd>{gs(tot.base5)}</dd></div>
+              <div><dt>Exenta</dt><dd>{gs(tot.ex)}</dd></div>
+              <div className="is-iva"><dt>{esCompra ? 'IVA crédito' : 'IVA débito'}</dt><dd>{gs(tot.iva10 + tot.iva5)}</dd></div>
+            </dl>
+          )}
+        </div>
+
+        {aviso && (
+          <div className={`q-alert ${aviso.tono === 'ok' ? 'q-alert--ok' : ''} ${aviso.tono === 'warn' ? 'am-alert--warn' : ''} am-alert`} role="status">
+            <div>
+              <p>{aviso.texto}</p>
+              {aviso.lista?.length > 0 && <ul>{aviso.lista.map((e) => <li key={e}>{e}</li>)}</ul>}
+            </div>
+            <button type="button" className="ct-icon" onClick={() => setAviso(null)} aria-label="Cerrar aviso"><X size={14} strokeWidth={1.8} /></button>
+          </div>
+        )}
+
+        <div className="ct-tabla-wrap ct-scroll">
           <table className="q-table ct-tabla am-lista lf-lista">
             <thead><tr>{COLUMNAS.map(th)}</tr></thead>
             <tbody>
               {ordenadas.length === 0 ? (
-                <tr><td colSpan={COLUMNAS.length} className="am-vacio">No se encontraron registros</td></tr>
+                <tr><td colSpan={COLUMNAS.length} className="am-vacio">{busca ? `Nada coincide con “${busca}”.` : `Sin comprobantes ${mes ? `en ${MESES[Number(mes) - 1].toLowerCase()}` : 'en el ejercicio'}. Cargá uno con Nuevo (Alt+N)${libro ? ' o importalo de Marangatu' : ''}.`}</td></tr>
               ) : ordenadas.map((r) => (
                 <tr key={r.d.id} className={`am-fila ${selId === r.d.id ? 'is-sel' : ''} ${r.s < 0 ? 'ct-neg' : ''}`} aria-selected={selId === r.d.id}
                   tabIndex={0} onFocus={() => setSelId(r.d.id)}
@@ -881,19 +886,19 @@ export default function RegistroFiscal({ titulo, lede, tipos, libro = false }) {
                   <td><span className={`ct-chip is-${r.d.tipo.split('-')[0]}`}>{TIPOS[r.d.tipo].corto}</span></td>
                   <td className="ct-mono">{fechaCorta(r.d.fecha)}</td>
                   <td className="ct-mono">{r.d.personaRuc}</td>
-                  <td className="ct-nombre">{r.d.personaNombre}</td>
-                  <td><span className={`lf-cv ${r.d.condicion === 'credito' ? 'is-cr' : ''}`}>{r.d.condicion === 'credito' ? 'CR' : 'CO'}</span></td>
+                  <td className="ct-nombre" title={r.d.personaNombre}>{r.d.personaNombre}</td>
+                  <td><span className={`lf-cv ${r.d.condicion === 'credito' ? 'is-cr' : ''}`} title={r.d.condicion === 'credito' ? 'Crédito' : 'Contado'}>{r.d.condicion === 'credito' ? 'CR' : 'CO'}</span></td>
                   <td className="ct-mono">{MONEDAS.find((m) => m.id === (r.d.moneda || 'PYG'))?.corto}</td>
                   <td className="ct-num">{gs(r.iva)}</td>
                   <td className="ct-num ct-strong">{gs(r.total)}</td>
-                  <td>{r.d.cdc ? <span className="lf-cdc-si" title={formatearCDC(r.d.cdc)}><BadgeCheck size={15} strokeWidth={1.9} /><span className="sr-only">Con CDC</span></span> : ''}</td>
+                  <td>{r.d.cdc ? <span className="lf-cdc-si" title={formatearCDC(r.d.cdc)}><BadgeCheck size={14} strokeWidth={1.9} /><span className="sr-only">Con CDC</span></span> : ''}</td>
                 </tr>
               ))}
             </tbody>
             {ordenadas.length > 0 && (
               <tfoot>
                 <tr className="ct-total">
-                  <td colSpan={8}>Totales {mes ? `de ${MESES[Number(mes) - 1].toLowerCase()}` : 'del ejercicio'}</td>
+                  <td colSpan={8}>{filas.length} {filas.length === 1 ? 'comprobante' : 'comprobantes'} · totales {mes ? `de ${MESES[Number(mes) - 1].toLowerCase()}` : 'del ejercicio'}</td>
                   <td className="ct-num">{gs(tot.iva10 + tot.iva5)}</td>
                   <td className="ct-num">{gs(tot.total)}</td>
                   <td />
@@ -902,7 +907,7 @@ export default function RegistroFiscal({ titulo, lede, tipos, libro = false }) {
             )}
           </table>
         </div>
-      </div>
+      </section>
 
       {sel && (
         <section className="q-card ct-form am-detalle-sel" aria-label="Detalle del comprobante seleccionado">

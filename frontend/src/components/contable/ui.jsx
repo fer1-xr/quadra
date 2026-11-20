@@ -1,7 +1,9 @@
 import React, { useId } from 'react'
 import * as XLSX from 'xlsx'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { MESES, analizarRuc, gs } from '../../services/contabilidad'
 import { useContable } from './ContableContext'
+import { SYNC_LABELS } from '../../services/useCloudCollection'
 
 /** importe en guaraníes con separador de miles */
 export const MontoInput = React.forwardRef(function MontoInput({ id, value, onChange, placeholder = '0', ...rest }, ref) {
@@ -100,6 +102,44 @@ export function PeriodoSelect({ value, onChange, ejercicio }) {
         {MESES.map((m, i) => <option key={m} value={String(i + 1).padStart(2, '0')}>{m} {ejercicio}</option>)}
       </select>
     </label>
+  )
+}
+
+/**
+ * Período compacto: ‹ año · mes › en un solo control.
+ * '' = todo el ejercicio; las flechas recorren los meses (desde "todo" saltan a enero o diciembre).
+ */
+export function MesStepper({ ejercicio, mes, onChange, todos = 'Todo el año' }) {
+  const i = mes ? Number(mes) : 0
+  const ir = (d) => onChange(String(Math.min(12, Math.max(1, (i || (d > 0 ? 0 : 13)) + d))).padStart(2, '0'))
+  return (
+    <div className="ct-mes" role="group" aria-label="Período">
+      <button type="button" className="ct-mes__nav" onClick={() => ir(-1)} disabled={i === 1} aria-label="Mes anterior" title="Mes anterior">
+        <ChevronLeft size={15} strokeWidth={2} />
+      </button>
+      <span className="ct-mes__anio">{ejercicio}</span>
+      <select className="ct-mes__sel" value={mes} onChange={(e) => onChange(e.target.value)} aria-label={`Mes del ejercicio ${ejercicio}`}>
+        <option value="">{todos}</option>
+        {MESES.map((m, k) => <option key={m} value={String(k + 1).padStart(2, '0')}>{m}</option>)}
+      </select>
+      <button type="button" className="ct-mes__nav" onClick={() => ir(1)} disabled={i === 12} aria-label="Mes siguiente" title="Mes siguiente">
+        <ChevronRight size={15} strokeWidth={2} />
+      </button>
+    </div>
+  )
+}
+
+/** estado de guardado dentro de la barra: solo el punto cuando está todo en la nube */
+const SYNC_CORTO = { loading: 'Cargando…', saving: 'Guardando…', local: 'Solo local', error: 'Sin guardar' }
+
+export function SyncEstado({ status }) {
+  if (!status) return null
+  const texto = SYNC_LABELS[status]
+  const corto = SYNC_CORTO[status]
+  return (
+    <p className={`q-sync is-${status} ct-sync ${corto ? '' : 'is-quieto'}`} role="status" aria-live="polite" title={texto}>
+      {corto ? <><span aria-hidden="true">{corto}</span><span className="sr-only">{texto}</span></> : <span className="sr-only">{texto}</span>}
+    </p>
   )
 }
 

@@ -1,14 +1,14 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import axios from 'axios'
-import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle } from 'lucide-react'
+import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle, Search } from 'lucide-react'
 import { useContable } from './ContableContext'
-import { MontoInput } from './ui'
+import { MontoInput, MesStepper, SyncEstado } from './ui'
 import { Buscador } from './AsientosManuales'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
   TIPOS, CTA, totalesDe, lineasDe, gs, fechaCorta, hoyISO, formatearNumero, numeroValido, timbradoValido,
-  siguienteNumero, timbradoVigente, analizarRuc, n0, fechaRapida, dvRuc
+  siguienteNumero, timbradoVigente, analizarRuc, n0, fechaRapida, dvRuc, MESES
 } from '../../services/contabilidad'
 import '../../styles/AsientosManuales.css'
 import '../../styles/NotasCredito.css'
@@ -29,7 +29,6 @@ const FORM_145 = [
   { id: 'rectificativa', label: 'RECTIFICATIVA' }
 ]
 
-const MESES_CORTOS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
 const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const pct = (v) => Math.min(100, Math.max(0, Number(String(v).replace(',', '.')) || 0))
 
@@ -532,7 +531,7 @@ function ModalRetencion({ inicial, onCerrar, mesRef }) {
 /* ── grilla ─────────────────────────────────────────────────── */
 
 export default function Retenciones({ tipo }) {
-  const { comprobantes, ejercicio, contribuyente } = useContable()
+  const { comprobantes, ejercicio } = useContable()
   const emitida = tipo === 'ret-emitida'
   const [mes, setMes] = useState(() => (String(new Date().getFullYear()) === String(ejercicio) ? String(new Date().getMonth() + 1).padStart(2, '0') : '01'))
   const [busca, setBusca] = useState('')
@@ -586,7 +585,7 @@ export default function Retenciones({ tipo }) {
       if (e.altKey && k === 'n') { e.preventDefault(); nuevo() }
       if (e.altKey && k === 'm') { e.preventDefault(); modificar() }
       if (e.altKey && k === 'e') { e.preventDefault(); eliminar() }
-      const enLista = document.activeElement?.closest?.('.nc-lista')
+      const enLista = document.activeElement?.closest?.('.nc-grilla-lista')
       if (sel && k === 'enter' && enLista) { e.preventDefault(); modificar() }
       if (sel && k === 'delete' && enLista) { e.preventDefault(); eliminar() }
       if (['arrowdown', 'arrowup'].includes(k) && enLista) {
@@ -601,67 +600,75 @@ export default function Retenciones({ tipo }) {
   })
 
   const vigentes = ordenadas.filter((d) => !d.anulado)
+  const periodoTxt = mes ? `de ${MESES[Number(mes) - 1].toLowerCase()}` : 'del ejercicio'
 
   return (
-    <div className="nc-pagina">
-      <div className="nc-barra">
-        <div className="nc-barra__acciones" role="toolbar" aria-label="Acciones">
-          <button type="button" className="nc-btn" onClick={nuevo} title="Alt+N"><Plus size={14} strokeWidth={2.6} className="nc-ico-circ" /> <span><u>N</u>uevo</span></button>
-          <button type="button" className="nc-btn" onClick={() => modificar()} disabled={!sel} title="Alt+M"><Pencil size={13} strokeWidth={2.2} /> <span><u>M</u>odificar</span></button>
-          <button type="button" className="nc-btn" onClick={eliminar} disabled={!sel} title="Alt+E"><Trash2 size={13} strokeWidth={2.2} /> <span><u>E</u>liminar</span></button>
+    <div className="q-sheet q-sheet--wide ct-sheet">
+      <section className="q-card ct-card ct-panel" aria-label={emitida ? 'Retenciones de IVA emitidas' : 'Retenciones de IVA recibidas'}>
+        <div className="am-barra">
+          <div className="am-barra__acciones" role="toolbar" aria-label="Acciones">
+            <button type="button" className="q-btn q-btn--primary" onClick={nuevo} title="Alt+N"><Plus size={15} strokeWidth={2.2} /> <span><u>N</u>uevo</span></button>
+            <button type="button" className="q-btn q-btn--line" onClick={() => modificar()} disabled={!sel} title="Alt+M · Enter · doble clic"><Pencil size={14} strokeWidth={1.8} /> <span><u>M</u>odificar</span></button>
+            <button type="button" className="q-btn q-btn--line am-btn-del" onClick={eliminar} disabled={!sel} title="Alt+E · Supr"><Trash2 size={14} strokeWidth={1.8} /> <span><u>E</u>liminar</span></button>
+          </div>
+          <div className="am-barra__filtros">
+            <MesStepper ejercicio={ejercicio} mes={mes} onChange={(v) => { setMes(v); setSelId(null) }} />
+            <label className="am-buscar">
+              <Search size={14} strokeWidth={1.8} aria-hidden="true" />
+              <span className="sr-only">Buscar</span>
+              <input ref={buscaRef} className="q-input" type="search" value={busca} placeholder="Buscar…" onChange={(e) => setBusca(e.target.value)} />
+              <kbd className="am-buscar__kbd" aria-hidden="true">Ctrl F</kbd>
+            </label>
+            <SyncEstado status={comprobantes.status} />
+          </div>
         </div>
-        <div className="nc-barra__filtros">
-          <span className="nc-periodo__label">Periodo:</span>
-          <select className="nc-input nc-select nc-anio" value={ejercicio} disabled aria-label="Año"><option>{ejercicio}</option></select>
-          <select className="nc-input nc-select nc-mes" value={mes} onChange={(e) => { setMes(e.target.value); setSelId(null) }} aria-label="Mes">
-            {MESES_CORTOS.map((m) => <option key={m} value={m}>{m}</option>)}
-          </select>
-          <input ref={buscaRef} className="nc-input nc-buscar" type="search" value={busca} placeholder="BUSCAR [CTRL+F]" onChange={(e) => setBusca(e.target.value)} aria-label="Buscar" />
-        </div>
-      </div>
 
-      {aviso && <p className="nc-aviso is-ok nc-aviso--barra" role="status"><Check size={13} strokeWidth={2.4} /> {aviso}</p>}
+        {aviso && (
+          <div className="q-alert q-alert--ok am-alert" role="status">
+            <p>{aviso}</p>
+            <button type="button" className="ct-icon" onClick={() => setAviso('')} aria-label="Cerrar aviso"><X size={14} strokeWidth={1.8} /></button>
+          </div>
+        )}
 
-      <div className="nc-grilla">
-        <table className="nc-lista">
-          <thead>
-            <tr>
-              {COLUMNAS.map((x) => (
-                <th key={x.id} className={x.ancho ? 'nc-ancho' : ''} aria-sort={orden.campo === x.id ? (orden.dir > 0 ? 'ascending' : 'descending') : 'none'}>
-                  <button type="button" onClick={() => setOrden({ campo: x.id, dir: orden.campo === x.id ? -orden.dir : 1 })}>
-                    <span>{x.label}</span>
-                    <span className={`nc-sort ${orden.campo === x.id ? 'is-on' : ''}`} aria-hidden="true">
-                      {orden.campo === x.id ? (orden.dir > 0 ? <ChevronUp size={12} strokeWidth={3} /> : <ChevronDown size={12} strokeWidth={3} />) : <><ChevronUp size={10} strokeWidth={3} /><ChevronDown size={10} strokeWidth={3} /></>}
-                    </span>
-                  </button>
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {ordenadas.length === 0 ? (
-              <tr className="nc-lista__vacio"><td colSpan={COLUMNAS.length}>No se encontraron registros coincidentes</td></tr>
-            ) : ordenadas.map((d) => (
-              <tr key={d.id} id={`rt-row-${d.id}`} className={`${selId === d.id ? 'is-sel' : ''} ${d.anulado ? 'rt-anulada-fila' : ''}`} aria-selected={selId === d.id} tabIndex={0}
-                onFocus={() => setSelId(d.id)} onClick={() => setSelId(d.id)} onDoubleClick={() => modificar(d)}>
-                <td className="nc-mono">{d.numero}{d.anulado && <span className="rt-tag">ANULADA</span>}</td>
-                <td className="nc-mono">{fechaCorta(d.fecha)}</td>
-                <td>{d.personaNombre}</td>
-                <td>{MONEDAS.find((m) => m.id === (d.moneda || 'PYG'))?.label}</td>
-                <td className="nc-der nc-mono">{gs(d.monto)}</td>
-              </tr>
-            ))}
-          </tbody>
-          {ordenadas.length > 0 && (
-            <tfoot>
+        <div className="ct-tabla-wrap ct-scroll">
+          <table className="q-table ct-tabla am-lista nc-grilla-lista">
+            <thead>
               <tr>
-                <td colSpan={4}>{ordenadas.length} {ordenadas.length === 1 ? 'retención' : 'retenciones'}{ordenadas.length > vigentes.length ? ` (${ordenadas.length - vigentes.length} anulada${ordenadas.length - vigentes.length === 1 ? '' : 's'})` : ''} · {contribuyente.razonSocial}</td>
-                <td className="nc-der nc-mono">{gs(vigentes.reduce((sm, d) => sm + n0(d.monto), 0))}</td>
+                {COLUMNAS.map((x) => (
+                  <th key={x.id} className={x.num ? 'ct-der' : ''} aria-sort={orden.campo === x.id ? (orden.dir > 0 ? 'ascending' : 'descending') : 'none'}>
+                    <button type="button" className="am-sort" onClick={() => setOrden({ campo: x.id, dir: orden.campo === x.id ? -orden.dir : 1 })}>
+                      {x.label}
+                      {orden.campo === x.id ? (orden.dir > 0 ? <ChevronUp size={13} strokeWidth={2} /> : <ChevronDown size={13} strokeWidth={2} />) : <ChevronDown size={13} strokeWidth={2} className="am-sort__off" />}
+                    </button>
+                  </th>
+                ))}
               </tr>
-            </tfoot>
-          )}
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {ordenadas.length === 0 ? (
+                <tr><td colSpan={COLUMNAS.length} className="am-vacio">{busca ? `Nada coincide con “${busca}”.` : `Sin retenciones ${periodoTxt}. Cargá una con Nuevo (Alt+N).`}</td></tr>
+              ) : ordenadas.map((d) => (
+                <tr key={d.id} id={`rt-row-${d.id}`} className={`am-fila ${selId === d.id ? 'is-sel' : ''} ${d.anulado ? 'rt-anulada-fila' : ''}`} aria-selected={selId === d.id} tabIndex={0}
+                  onFocus={() => setSelId(d.id)} onClick={() => setSelId(d.id)} onDoubleClick={() => modificar(d)}>
+                  <td className="ct-mono">{d.numero}{d.anulado && <span className="rt-tag">ANULADA</span>}</td>
+                  <td className="ct-mono">{fechaCorta(d.fecha)}</td>
+                  <td className="ct-nombre" title={d.personaNombre}>{d.personaNombre}</td>
+                  <td>{MONEDAS.find((m) => m.id === (d.moneda || 'PYG'))?.label}</td>
+                  <td className="ct-num ct-strong">{gs(d.monto)}</td>
+                </tr>
+              ))}
+            </tbody>
+            {ordenadas.length > 0 && (
+              <tfoot>
+                <tr className="ct-total">
+                  <td colSpan={4}>{ordenadas.length} {ordenadas.length === 1 ? 'retención' : 'retenciones'}{ordenadas.length > vigentes.length ? ` (${ordenadas.length - vigentes.length} anulada${ordenadas.length - vigentes.length === 1 ? '' : 's'})` : ''} · total {periodoTxt}</td>
+                  <td className="ct-num">{gs(vigentes.reduce((sm, d) => sm + n0(d.monto), 0))}</td>
+                </tr>
+              </tfoot>
+            )}
+          </table>
+        </div>
+      </section>
 
       {modal && <ModalRetencion key={modal.id || 'nuevo'} inicial={modal} mesRef={mes} onCerrar={(ok) => { if (ok) setAviso(modal.id ? 'Retención modificada.' : 'Retención registrada.'); setModal(null) }} />}
     </div>
