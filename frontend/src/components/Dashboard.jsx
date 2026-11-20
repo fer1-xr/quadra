@@ -120,7 +120,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   })
 
   const handleReconciliation = async () => {
-    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá los archivos mensuales y archivos de Maragnatu'); return }
+    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá los archivos mensuales y archivos de Marangatu'); return }
     setLoading(true)
     setError('')
     try {
@@ -315,7 +315,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     {
       group: 'Conciliación',
       items: [
-        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Maragnatu frente a compras, ventas y notas de crédito', icon: BarChart3, eq: [{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }] },
+        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Marangatu frente a compras, ventas y notas de crédito', icon: BarChart3, eq: [{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }] },
         { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Extracto contra libro, con partidas en tránsito', icon: Wallet, eq: [{ v: 'S', sub: 'banco' }, { op: '±' }, { v: 'P' }, { op: '=' }, { v: 'S', sub: 'libro' }] },
         { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, eq: [{ v: 'Factura' }, { op: '→' }, { v: 'Excel' }] },
         { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, eq: [{ v: 'Saldo', sub: 'n' }, { op: '=' }, { v: 'Saldo', sub: 'n−1' }, { op: '−' }, { v: 'Pago', sub: 'n' }] }
@@ -539,7 +539,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
               <div className="q-sheet">
               <PageHead
                 title="Conciliación RG90"
-                lede="Libro Maragnatu frente a reportes de compras, ventas y notas de crédito."
+                lede="Libro Marangatu frente a reportes de compras, ventas y notas de crédito."
                 equation={[{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }]}
                 caption="tolerancia ± 1,00 por concepto"
               />
@@ -553,15 +553,15 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                   )}
 
                   <div className="q-field-group">
-                    <span className="q-label">Archivos Maragnatu</span>
+                    <span className="q-label">Archivos Marangatu</span>
                     <div className="q-drop-grid">
                       {Array.from({ length: marangatuInputCount }).map((_, index) => (
-                        <label key={index} htmlFor={`maragnatu-${index}`} className={`q-drop ${libroFiles[index] ? 'is-filled' : ''}`}>
+                        <label key={index} htmlFor={`marangatu-${index}`} className={`q-drop ${libroFiles[index] ? 'is-filled' : ''}`}>
                           {libroFiles[index] ? <Check size={20} strokeWidth={1.8} /> : <FileText size={20} strokeWidth={1.6} />}
                           <span>{libroFiles[index] ? libroFiles[index].name : 'Seleccionar archivo'}</span>
                           <small>.csv · .xlsx · .xls</small>
                           <input
-                            id={`maragnatu-${index}`}
+                            id={`marangatu-${index}`}
                             type="file"
                             accept=".csv,.xlsx,.xls"
                             className="hidden"
@@ -571,7 +571,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                       ))}
                     </div>
                     <button type="button" className="q-btn q-btn--line" onClick={addMarangatuInput}>
-                      <Plus size={16} strokeWidth={1.8} /> Agregar archivo Maragnatu
+                      <Plus size={16} strokeWidth={1.8} /> Agregar archivo Marangatu
                     </button>
                   </div>
 
