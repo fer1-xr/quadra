@@ -16,7 +16,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY
 // En producción: FRONTEND_URL = dominio(s) del frontend separados por coma (ej. https://quadra.vercel.app).
 // En desarrollo (sin FRONTEND_URL) se permite cualquier origen.
 const allowedOrigins = (process.env.FRONTEND_URL || '').split(',').map((o) => o.trim().replace(/\/$/, '')).filter(Boolean);
-app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true }));
+app.use(cors({ origin: allowedOrigins.length ? allowedOrigins : true, exposedHeaders: ['X-Ocr-Resumen', 'Content-Disposition'] }));
 app.use(express.json({ limit: '50mb' }));
 
 // ==================== CONFIGURACIÓN DE LA CONCILIACIÓN ====================

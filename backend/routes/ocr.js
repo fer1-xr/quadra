@@ -1,7 +1,7 @@
 import express from 'express';
 import fs from 'fs';
 import { getInvoiceExtractor } from '../services/ocr/invoice-extractor.js';
-import { LibroComprasExporter } from '../services/ocr/libro-compras-exporter.js';
+import { LibroComprasExporter, exportarFacturas } from '../services/ocr/libro-compras-exporter.js';
 import { upload, cleanupTempFiles } from '../middleware/upload-handler.js';
 
 const router = express.Router();
@@ -185,29 +185,35 @@ router.post('/batch', upload.array('files', 20), async (req, res) => {
     // Limpiar archivos
     await cleanupTempFiles(req.files);
 
-    // Extraer solo las facturas exitosas para Excel
-    const successfulInvoices = batchResult.results
-      .filter((r) => r.success)
-      .map((r) => r.extractedData);
+    const leidas = batchResult.results.filter((r) => r.success);
+    const fallidas = batchResult.results.filter((r) => !r.success);
 
-    if (successfulInvoices.length === 0) {
-      return res.status(400).json({
+    if (leidas.length === 0) {
+      const motivo = fallidas[0]?.error || 'sin datos';
+      return res.status(422).json({
         success: false,
-        error: 'No se pudieron extraer facturas',
-        details: batchResult.results,
+        error: `No se pudo leer ninguna factura (${motivo}). Probá con una foto más nítida y derecha.`,
+        details: fallidas.map((r) => ({ archivo: r.filename, motivo: r.error })),
       });
     }
 
-    // Generar Excel
-    const workbook = await LibroComprasExporter.exportToExcel(successfulInvoices);
+    // Generar Excel con todos los datos de cada factura
+    const contribuyente = { ruc: req.body?.contribuyenteRuc || '', nombre: req.body?.contribuyenteNombre || '' };
+    const workbook = await exportarFacturas(leidas, { contribuyente, fallidas });
     const timestamp = new Date().toISOString().split('T')[0];
-    const filename = `LIBRO_COMPRAS_${timestamp}.xlsx`;
+    const filename = `FACTURAS_LEIDAS_${timestamp}.xlsx`;
 
     const buffer = await workbook.xlsx.writeBuffer();
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    // resumen para la pantalla: cuántas se leyeron y cuáles no (encodeURIComponent: los nombres pueden tener acentos)
+    res.setHeader('X-Ocr-Resumen', encodeURIComponent(JSON.stringify({
+      leidas: leidas.length,
+      fallidas: fallidas.map((r) => ({ archivo: r.filename, motivo: r.error })),
+      observadas: leidas.filter((r) => r.factura.observaciones.length).length,
+    })));
 
-    console.log(`[OCR] Excel generado: ${filename} (${successfulInvoices.length} facturas)`);
+    console.log(`[OCR] Excel generado: ${filename} (${leidas.length} leídas, ${fallidas.length} con error)`);
     return res.send(buffer);
   } catch (error) {
     console.error(`[Batch Error] ${error.message}`);

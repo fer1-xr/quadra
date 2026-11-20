@@ -29,10 +29,11 @@ const fileFilter = (req, file, cb) => {
     'image/png',
     'image/gif',
     'image/bmp',
+    'image/webp',
     'application/pdf',
   ];
 
-  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.pdf'];
+  const allowedExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.pdf'];
 
   const ext = path.extname(file.originalname).toLowerCase();
   const mime = file.mimetype;
@@ -41,7 +42,7 @@ const fileFilter = (req, file, cb) => {
     cb(null, true);
   } else {
     cb(
-      new Error(`Tipo de archivo no permitido: ${mime}. Use JPG, PNG, GIF, BMP o PDF.`),
+      new Error(`Tipo de archivo no permitido: ${mime}. Use JPG, PNG, WEBP o PDF.`),
       false
     );
   }

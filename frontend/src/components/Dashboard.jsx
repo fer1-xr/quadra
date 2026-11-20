@@ -765,7 +765,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             )}
 
             {view === 'importar-documentos' && (
-              <ImportarDocumentos />
+              <ImportarDocumentos contribuyente={contribuyente} />
             )}
 
             {view === 'control-pagos' && (
