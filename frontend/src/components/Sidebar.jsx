@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { Home, BookOpen, BarChart3, Wallet, Calculator, Building2, TrendingUp, LineChart, CreditCard, Sun, Moon, LogOut, CheckSquare, Target, FileText, Users, Briefcase, ArrowLeftRight, History, Pin, PanelLeft, PanelLeftClose, X, NotebookPen } from 'lucide-react'
+import { moduloDisponible } from '../services/informes'
 import '../styles/Sidebar.css'
 
 const MODOS = [
@@ -118,7 +119,7 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
           ]
         },
         gestion
-      ]
+      ].map((g) => ({ ...g, items: g.items.filter((it) => moduloDisponible(contribuyente, it.id)) }))
     : [
         {
           label: 'General',

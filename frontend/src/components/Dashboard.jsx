@@ -23,6 +23,7 @@ import NotificacionesCampana from './NotificacionesCampana'
 import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
 import MenuContable, { MarangatuLink } from './contable/MenuContable'
 import { ContribuyenteContext } from '../services/historialService'
+import { moduloDisponible } from '../services/informes'
 import PageHead, { Figures, Eq } from './PageHead'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Dashboard.css'
@@ -174,6 +175,10 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       setView('seleccionar')
       return
     }
+    if (!moduloDisponible(contribuyente, viewId)) {
+      setView('inicio')
+      return
+    }
     setRestaurado(null)
     setView(viewId || 'inicio')
   }
@@ -194,7 +199,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
 
   // Qué módulos se pueden reabrir desde el Historial
   const abrirDesdeHistorial = {
-    canOpen: (item) => ['rg90', 'flujo', 'liquidacion', 'activofijo', 'cotizacion', 'control-pagos'].includes(item.modulo),
+    canOpen: (item) => ['rg90', 'flujo', 'liquidacion', 'activofijo', 'cotizacion', 'control-pagos'].includes(item.modulo) && moduloDisponible(contribuyente, item.modulo),
     open: (item) => {
       const d = item.datos || {}
       if (item.modulo === 'rg90') {
@@ -351,6 +356,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       ]
     }
   ]
+    .map((g) => ({ ...g, items: g.items.filter((it) => moduloDisponible(contribuyente, it.id)) }))
+    .filter((g) => g.items.length)
 
   return (
     <ContribuyenteContext.Provider value={contribuyente}>
