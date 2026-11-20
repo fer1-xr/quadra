@@ -110,10 +110,10 @@ export const impuestosActivos = (contribuyente) => {
   return act && act !== 'todos' ? [act] : todos
 }
 
-// Conciliación Bancaria, Liquidación Salarial y Control de Pagos: solo para clientes
-// de IRE (Simple, Resimple o General); no para IVA, IRP, IRP-RSP, IRP-RGC ni sus combinaciones.
-// Sin impuestos cargados se muestran, como el resto de los menús.
-export const MODULOS_IRE = new Set(['bancaria', 'liquidacion', 'control-pagos'])
+// Liquidación Salarial y Control de Pagos: solo para clientes de IRE (Simple, Resimple
+// o General); no para IVA, IRP, IRP-RSP, IRP-RGC ni sus combinaciones. La Conciliación
+// Bancaria está para todos. Sin impuestos cargados se muestran, como el resto de los menús.
+export const MODULOS_IRE = new Set(['liquidacion', 'control-pagos'])
 const IRE_EMPRESA = ['ire_simple', 'ire_resimple', 'ire_general']
 export const moduloDisponible = (contribuyente, id) => {
   if (!MODULOS_IRE.has(id)) return true
