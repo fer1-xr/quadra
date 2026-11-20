@@ -140,7 +140,7 @@ const REGISTROS = ['ct-libro-compras', 'ct-libro-ventas', 'ct-ingresos-egresos',
 // en Informes, Compras y Ventas abren el generador de informes, no la carga
 const INFORME_DE = { 'ct-libro-compras': 'ct-inf-compras', 'ct-libro-ventas': 'ct-inf-ventas' }
 // Documentos e Informes auxiliares: clientes con IVA y/o IRP (cualquier modalidad)
-const REPORTES = ['ct-pend-pago', 'ct-pend-cobro', 'ct-resumen-iva']
+const REPORTES = ['ct-pend-pago', 'ct-pend-cobro', 'ct-resumen-iva', 'ct-resumen-irp', 'ct-resumen-rgc']
 const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map((l) => l.id))
 // Revalúo & Depreciación (y su informe): no aplica a quien solo tributa IVA, IRP, IRP-RSP o IRP-RGC;
 // a ellos se les muestra el registro simple de bienes (ct-bienes)
@@ -161,8 +161,6 @@ export const menusPara = (contribuyente) => {
   const imps = contribuyente?.impuestos || []
   const conRenta = !imps.length || imps.some((id) => /^(irp|ire)/.test(id))
   const activos = impuestosActivos(contribuyente)
-  // resúmenes de IRP: IRP-RSP o IRP-RGC (o IRP sin modalidad); sin impuestos cargados, se ven los dos
-  const conIrp = (id) => !activos.length || activos.includes(id) || activos.includes('irp')
   const conActivoFijo = !activos.length || activos.some((id) => !SIN_ACTIVO_FIJO.has(id))
   const ver = (id) => {
     if (ACTIVO_FIJO.includes(id)) return conActivoFijo
@@ -171,8 +169,6 @@ export const menusPara = (contribuyente) => {
     if (id === 'ct-inf-retenciones') return !regla || obl.has('ct-ret-emitida') || obl.has('ct-ret-recibida')
     if (id === 'ct-inf-recibo-cobro' || id === 'ct-inf-recibo-pago') return !regla || obl.has('ct-recibo-pago')
     if (id === 'ct-rg55-venta' || id === 'ct-rg55-compra') return conRenta
-    if (id === 'ct-resumen-irp') return conIrp('irp_rsp')
-    if (id === 'ct-resumen-rgc') return conIrp('irp_rgc')
     if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
     if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'
     return true
