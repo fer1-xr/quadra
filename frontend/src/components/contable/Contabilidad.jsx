@@ -51,7 +51,7 @@ export const VISTAS_CONTABLES = {
   'ct-ret-emitida': { titulo: 'Retenciones IVA emitidas', grupo: 'Movimientos' },
   'ct-ret-recibida': { titulo: 'Retenciones IVA recibidas', grupo: 'Movimientos' },
   'ct-activos': { titulo: 'Bienes del activo fijo', grupo: 'Catastros' },
-  'ct-revaluo': { titulo: 'Revalúo y depreciación', grupo: 'Catastros' },
+  'ct-revaluo': { titulo: 'Cuadro de depreciación', grupo: 'Catastros' },
   'ct-bienes': { titulo: 'Bienes de activo fijo', grupo: 'Catastros' },
   'ct-personas': { titulo: 'Personas', grupo: 'Catastros' },
   'ct-plan': { titulo: 'Plan de cuentas', grupo: 'Catastros' },

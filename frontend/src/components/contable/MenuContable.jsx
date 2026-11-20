@@ -18,7 +18,7 @@ const MENUS = [
         label: 'Revalúo & Depreciación',
         items: [
           { id: 'ct-activos', label: 'Bienes del activo fijo' },
-          { id: 'ct-revaluo', label: 'Cuadro de revalúo y depreciación' }
+          { id: 'ct-revaluo', label: 'Cuadro de depreciación' }
         ]
       },
       // reemplaza a Revalúo & Depreciación en IVA, IRP, IRP-RSP e IRP-RGC

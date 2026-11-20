@@ -631,70 +631,235 @@ export const enLetras = (n) => {
   return [pre, miles(v)].filter(Boolean).join(' ')
 }
 
-/* ── activo fijo: revalúo y depreciación ────────────────────── */
+/* ── activo fijo: depreciación (Ley 6380/19, Dto. 3182/19, RG 77/20) ── */
 
+/** grupos del cuadro: cada uno con su cuenta del activo y su clase por defecto */
 export const CATEGORIAS_ACTIVO = [
-  { id: 'terrenos', label: 'Terrenos', cuenta: '1.2.03.01', vida: 0 },
-  { id: 'edificios', label: 'Edificios', cuenta: '1.2.03.02', vida: 40 },
-  { id: 'rodados', label: 'Rodados', cuenta: '1.2.03.03', vida: 5 },
-  { id: 'maquinarias', label: 'Maquinarias y equipos', cuenta: '1.2.03.04', vida: 10 },
-  { id: 'muebles', label: 'Muebles y útiles', cuenta: '1.2.03.05', vida: 10 },
-  { id: 'informatica', label: 'Equipos de informática', cuenta: '1.2.03.06', vida: 4 },
-  { id: 'herramientas', label: 'Herramientas', cuenta: '1.2.03.07', vida: 5 }
+  { id: 'terrenos', label: 'Terrenos', cuenta: '1.2.03.01', vida: 0, prefijo: 'TE', clase: 'terrenos' },
+  { id: 'edificios', label: 'Edificios, construcciones e instalaciones', cuenta: '1.2.03.02', vida: 30, prefijo: 'ED', clase: 'construcciones' },
+  { id: 'rodados', label: 'Rodados y transporte', cuenta: '1.2.03.03', vida: 5, prefijo: 'RO', clase: 'vehiculos' },
+  { id: 'maquinarias', label: 'Maquinarias e implementos', cuenta: '1.2.03.04', vida: 10, prefijo: 'MQ', clase: 'maquinarias' },
+  { id: 'muebles', label: 'Muebles y útiles', cuenta: '1.2.03.05', vida: 5, prefijo: 'MU', clase: 'muebles_general' },
+  { id: 'informatica', label: 'Equipos informáticos', cuenta: '1.2.03.06', vida: 2, prefijo: 'IN', clase: 'informatica' },
+  { id: 'herramientas', label: 'Herramientas y equipos', cuenta: '1.2.03.07', vida: 5, prefijo: 'HE', clase: 'herramientas' }
 ]
 
 /**
- * Cuadro de revalúo y depreciación al cierre de `ejercicio`.
- * Cada año: el valor y la depreciación acumulada al inicio se multiplican por el
- * coeficiente de revalúo de ese ejercicio; la cuota es el valor residual revaluado
- * repartido entre los meses de vida útil que faltan (el primer año, desde el mes de alta).
+ * Clasificación de los bienes del activo fijo · Decreto 3182/2019 Art. 31:
+ * años de vida útil y porcentaje de valor residual de cada clase.
  */
-export const cuadroActivo = (activo, ejercicio) => {
-  const alta = activo.fechaAlta || `${ejercicio}-01-01`
-  const anioAlta = Number(alta.slice(0, 4))
-  const mesAlta = Number(alta.slice(5, 7)) || 1
-  const vidaMeses = Math.round((Number(activo.vidaUtil) || 0) * 12)
+export const CLASES_AVU = [
+  { id: 'terrenos', grupo: 'terrenos', inciso: '—', label: 'Terrenos (no se deprecian)', vida: 0, residual: 0 },
+  { id: 'construcciones', grupo: 'edificios', inciso: '1.g.I', label: 'Construcciones y mejoras de inmuebles urbanos y rurales', vida: 30, residual: 0.2 },
+  { id: 'silos', grupo: 'edificios', inciso: '1.g.II', label: 'Silos, almacenes y galpones', vida: 20, residual: 0.2 },
+  { id: 'tanques', grupo: 'edificios', inciso: '1.g.III', label: 'Tanques de agua, bebederos y similares', vida: 5, residual: 0.1 },
+  { id: 'canales', grupo: 'edificios', inciso: '1.g.IV', label: 'Canales de regadío, tajamares y pozos', vida: 15, residual: 0.2 },
+  { id: 'alambrados', grupo: 'edificios', inciso: '1.g.V', label: 'Alambrados, tranqueras y corrales', vida: 10, residual: 0.2 },
+  { id: 'construcciones_terceros', grupo: 'edificios', inciso: '1.g.VI', label: 'Construcciones en propiedad de terceros', vida: 20, residual: 0 },
+  { id: 'mejoras_terceros', grupo: 'edificios', inciso: '1.g.VII', label: 'Mejoras en propiedad de terceros', vida: 10, residual: 0 },
+  { id: 'electrificacion', grupo: 'edificios', inciso: '1.g.VIII', label: 'Instalaciones de electrificación', vida: 10, residual: 0.1 },
+  { id: 'caminos', grupo: 'edificios', inciso: '1.g.IX', label: 'Caminos internos', vida: 15, residual: 0.2 },
+  { id: 'instalaciones', grupo: 'edificios', inciso: '1.g.X', label: 'Instalaciones eléctricas, contra incendios, mamparas y otras incorporadas a construcciones', vida: 10, residual: 0.2 },
+  { id: 'construcciones_otros', grupo: 'edificios', inciso: '1.g.XI', label: 'Otros bienes de construcción', vida: 5, residual: 0.2 },
+  { id: 'vehiculos', grupo: 'rodados', inciso: '1.c.I', label: 'Vehículos automotores', vida: 5, residual: 0.2 },
+  { id: 'motos', grupo: 'rodados', inciso: '1.c.II', label: 'Motocicletas, motonetas, cuatriciclos, triciclos y bicicletas', vida: 2, residual: 0.1 },
+  { id: 'transporte_publico', grupo: 'rodados', inciso: '1.c.III', label: 'Transporte público de pasajeros y vehículos utilitarios', vida: 10, residual: 0.2 },
+  { id: 'transporte_otros', grupo: 'rodados', inciso: '1.c.IV', label: 'Otros bienes de transporte terrestre', vida: 5, residual: 0.2 },
+  { id: 'aeronaves', grupo: 'rodados', inciso: '1.d.I', label: 'Aviones y demás aeronaves', vida: 20, residual: 0.2 },
+  { id: 'material_vuelo', grupo: 'rodados', inciso: '1.d.II', label: 'Material de vuelo', vida: 2, residual: 0.1 },
+  { id: 'embarcaciones_comerciales', grupo: 'rodados', inciso: '1.e.I', label: 'Embarcaciones motorizadas para explotación comercial y barcazas', vida: 20, residual: 0.2 },
+  { id: 'embarcaciones', grupo: 'rodados', inciso: '1.e.II', label: 'Embarcaciones motorizadas en general (lanchas y similares)', vida: 10, residual: 0.2 },
+  { id: 'canoas', grupo: 'rodados', inciso: '1.e.III', label: 'Canoas, botes y otras embarcaciones', vida: 5, residual: 0.1 },
+  { id: 'ferroviario', grupo: 'rodados', inciso: '1.f.I', label: 'Locomotoras, vagones y material rodante ferroviario', vida: 20, residual: 0.2 },
+  { id: 'vias', grupo: 'rodados', inciso: '1.f.II', label: 'Construcción de vías y demás bienes ferroviarios', vida: 10, residual: 0.2 },
+  { id: 'maquinarias', grupo: 'maquinarias', inciso: '1.b.I', label: 'Maquinarias e implementos', vida: 10, residual: 0.2 },
+  { id: 'muebles_general', grupo: 'muebles', inciso: '1.a.I', label: 'Muebles y equipos en general', vida: 5, residual: 0.1 },
+  { id: 'muebles_vivienda', grupo: 'muebles', inciso: '1.a.II', label: 'Muebles y enseres en viviendas para el personal', vida: 2, residual: 0.1 },
+  { id: 'utiles_rurales', grupo: 'muebles', inciso: '1.a.III', label: 'Útiles de trabajo rural para el personal', vida: 2, residual: 0.1 },
+  { id: 'utiles_enseres', grupo: 'muebles', inciso: '1.a.IV', label: 'Útiles y enseres en general', vida: 2, residual: 0.1 },
+  { id: 'informatica', grupo: 'informatica', inciso: '1.b.III', label: 'Equipos de informática', vida: 2, residual: 0.1 },
+  { id: 'herramientas', grupo: 'herramientas', inciso: '1.b.II', label: 'Herramientas y equipos', vida: 5, residual: 0.1 }
+]
+
+/** primer ejercicio del régimen de la Ley 6380/19 */
+export const ANIO_LEY_6380 = 2020
+
+/** clase del Art. 31 del bien (los cargados antes la toman de su grupo) */
+export const claseDe = (a) =>
+  CLASES_AVU.find((c) => c.id === a?.claseAvu) ||
+  CLASES_AVU.find((c) => c.id === CATEGORIAS_ACTIVO.find((g) => g.id === a?.categoria)?.clase) ||
+  CLASES_AVU.find((c) => c.id === 'maquinarias')
+
+/** porcentaje de valor residual fiscal del bien (0 a 0,2) */
+export const residualPctDe = (a) => {
+  const p = Number(a?.residualPct)
+  return Number.isFinite(p) && a?.residualPct !== '' && a?.residualPct != null ? p : claseDe(a).residual
+}
+
+/** siguiente código libre del grupo: RO-001, RO-002… */
+export const siguienteCodigoActivo = (activos, categoria) => {
+  const pre = CATEGORIAS_ACTIVO.find((c) => c.id === categoria)?.prefijo || 'AF'
+  const usados = activos
+    .map((a) => String(a.codigo || ''))
+    .filter((c) => c.startsWith(`${pre}-`))
+    .map((c) => Number(c.slice(pre.length + 1)))
+    .filter((n) => Number.isInteger(n) && n > 0)
+  return `${pre}-${String((usados.length ? Math.max(...usados) : 0) + 1).padStart(3, '0')}`
+}
+
+/** primer ejercicio en que el bien se deprecia: el de la compra o el siguiente */
+export const inicioDepreciacion = (activo) => {
+  const anio = Number((activo.fechaAlta || '').slice(0, 4)) || 0
+  return activo.computarDesde === 'siguiente' ? anio + 1 : anio
+}
+
+/** bien comprado antes de la Ley 6380/19: arranca en 2020 con el valor fiscal neto al cierre de 2019 */
+export const esAnterior6380 = (activo) => (Number((activo.fechaAlta || '').slice(0, 4)) || 0) < ANIO_LEY_6380
+const tieneVfn2019 = (a) => a.vfn2019 !== '' && a.vfn2019 != null && Number.isFinite(Number(a.vfn2019))
+
+/**
+ * Cuadro de depreciación de un bien, ejercicio por ejercicio, hasta `hasta`,
+ * con las columnas del modelo de la RG 77/20:
+ *   residual (6)   = costo × % residual  (bienes anteriores a 2020: VFN al 31/12/2019 × %)
+ *   base (10)      = (VFN del ejercicio anterior − residual) × coeficiente de revalúo (si lo hay)
+ *   cuota (11)     = base ÷ (años de vida útil restantes al cierre + 1)
+ *   VFN cierre (13) = base + residual − cuota
+ * La cuota se calcula entera desde el ejercicio de compra o el siguiente; en el ejercicio
+ * de venta o baja se prorratea por los meses transcurridos.
+ */
+export const cuadroActivoAnios = (activo, hasta) => {
+  const anioAlta = Number((activo.fechaAlta || '').slice(0, 4)) || hasta
+  const fechaBaja = activo.fechaBaja || ''
+  const anioBaja = fechaBaja ? Number(fechaBaja.slice(0, 4)) : Infinity
+  const mesBaja = fechaBaja ? Number(fechaBaja.slice(5, 7)) || 12 : 12
   const coefs = activo.coeficientes || {}
+  const pct = residualPctDe(activo)
+  const costo = n0(activo.valorOrigen)
+  const vida = Math.max(Math.round(Number(activo.vidaUtil) || 0), 0)
+  const inicio = inicioDepreciacion(activo)
+  const fin = inicio + vida - 1
 
-  let valor = n0(activo.valorOrigen)
-  let depAcum = 0
-  let mesesUsados = 0
-  let fila = null
+  // contable: por defecto igual al fiscal
+  const costoCont = n0(activo.costoContable) || costo
+  const vidaCont = Math.max(Math.round(Number(activo.vidaUtilContable) || vida), 0)
+  const finCont = inicio + vidaCont - 1
 
-  if (ejercicio < anioAlta) return null
-  if (activo.fechaBaja && Number(activo.fechaBaja.slice(0, 4)) < ejercicio) return null
+  // bienes anteriores a la Ley 6380/19: el cuadro arranca en 2020 con los valores al 31/12/2019
+  const desde2019 = anioAlta < ANIO_LEY_6380 && tieneVfn2019(activo)
+  const primerAnio = desde2019 ? ANIO_LEY_6380 : anioAlta
+  const vfnUltimoIracis = desde2019 ? n0(activo.vfn2019) : null
+  const depAnterior = desde2019 ? n0(activo.depAcum2019) : 0
+  const residual = Math.round((desde2019 ? vfnUltimoIracis : costo) * pct)
+  const residualCont = Math.round((desde2019 ? vfnUltimoIracis : costoCont) * pct)
 
-  for (let y = anioAlta; y <= ejercicio; y++) {
+  let vfn = desde2019 ? vfnUltimoIracis : costo // valor fiscal neto del ejercicio anterior
+  let depAcum = depAnterior
+  let vcn = desde2019 ? vfnUltimoIracis : costoCont // valor contable neto del ejercicio anterior
+  let depAcumCont = depAnterior
+  let bruto = desde2019 ? vfnUltimoIracis + depAnterior : costo // valor de origen más revalúos
+  const filas = []
+
+  for (let y = primerAnio; y <= Math.min(hasta, anioBaja); y++) {
     const coef = Number(coefs[y]) > 0 ? Number(coefs[y]) : 1
-    const valorInicio = valor
-    const depInicio = depAcum
-    const valorRev = Math.round(valorInicio * coef)
-    const depRev = Math.round(depInicio * coef)
-    const mesesAnio = y === anioAlta ? 13 - mesAlta : 12
-    const restantes = Math.max(vidaMeses - mesesUsados, 0)
-    const mesesDep = vidaMeses ? Math.min(mesesAnio, restantes) : 0
-    const residual = valorRev - depRev
-    const cuota = mesesDep && restantes ? Math.round((residual * mesesDep) / restantes) : 0
+    const proporcion = y === anioBaja ? mesBaja / 12 : 1
 
-    fila = {
+    const restantes = vida ? Math.min(Math.max(fin - y, 0), vida) : 0
+    const base = Math.round((vfn - residual) * coef)
+    const cuotaEntera = vida && y >= inicio && y <= fin ? Math.round(base / (restantes + 1)) : 0
+    const cuota = Math.round(cuotaEntera * proporcion)
+    const revaluo = base - (vfn - residual)
+
+    const restantesCont = vidaCont ? Math.min(Math.max(finCont - y, 0), vidaCont) : 0
+    const baseCont = Math.round((vcn - residualCont) * coef)
+    const cuotaContEntera = vidaCont && y >= inicio && y <= finCont ? Math.round(baseCont / (restantesCont + 1)) : 0
+    const cuotaCont = Math.round(cuotaContEntera * proporcion)
+
+    bruto += revaluo
+    const fila = {
       anio: y,
-      coef,
-      valorInicio,
-      valorRevaluado: valorRev,
-      revaluoValor: valorRev - valorInicio,
-      depInicio,
-      depRevaluada: depRev,
-      revaluoDep: depRev - depInicio,
-      cuota,
-      depCierre: depRev + cuota,
-      neto: valorRev - depRev - cuota,
-      mesesDep
+      alta: y === anioAlta,
+      baja: y === anioBaja,
+      proporcion,
+      // columnas del modelo RG 77/20
+      costo, // 2
+      vfnUltimoIracis, // 2b
+      coef, // 4
+      conRevaluo: coef !== 1,
+      residualPct: pct, // 5
+      residual, // 6
+      vida, // 7
+      restantes, // 8
+      vfnAnterior: vfn, // 9
+      base, // 10
+      cuota, // 11
+      cuotaEntera,
+      depAnterior: depAcum, // 12a
+      depCierre: depAcum + cuota, // 12
+      neto: base + residual - cuota, // 13
+      residualCont, // 14
+      vidaCont, // 15
+      restantesCont, // 16
+      vcnAnterior: vcn, // 17
+      baseCont, // 18
+      cuotaCont, // 19
+      noDeducible: Math.max(cuotaCont - cuota, 0), // 20
+      depCierreCont: depAcumCont + cuotaCont, // 21
+      netoCont: baseCont + residualCont - cuotaCont, // 22
+      // para el balance y el asiento de cierre
+      revaluoValor: revaluo,
+      revaluoDep: 0,
+      valorInicio: vfn,
+      depInicio: depAcum,
+      depRevaluada: depAcum,
+      valorRevaluado: bruto,
+      mesesDep: cuota ? Math.round(12 * proporcion) : 0
     }
-    valor = valorRev
-    depAcum = depRev + cuota
-    mesesUsados += mesesDep
+    filas.push(fila)
+    vfn = fila.neto
+    depAcum = fila.depCierre
+    vcn = fila.netoCont
+    depAcumCont = fila.depCierreCont
   }
-  return fila
+  return filas
+}
+
+/** bienes comprados antes de 2020 a los que les falta el valor fiscal neto al 31/12/2019 */
+export const faltaVfn2019 = (activo) => esAnterior6380(activo) && !tieneVfn2019(activo)
+
+/** fila del cuadro al cierre de `ejercicio` (null si el bien no existía o ya se dio de baja) */
+export const cuadroActivo = (activo, ejercicio) => {
+  const filas = cuadroActivoAnios(activo, ejercicio)
+  const f = filas[filas.length - 1]
+  return f && f.anio === ejercicio ? f : null
+}
+
+/**
+ * Cuadro completo de todos los bienes, desde el primer ejercicio con valores hasta `hasta`:
+ * un resumen por ejercicio (VFN inicial, revalúo, depreciación, VFN al cierre)
+ * con el detalle de cada bien.
+ */
+export const cuadroGeneral = (activos, hasta) => {
+  const porAnio = new Map()
+  activos.forEach((a) => {
+    cuadroActivoAnios(a, hasta).forEach((f) => {
+      if (!porAnio.has(f.anio)) porAnio.set(f.anio, [])
+      porAnio.get(f.anio).push({ a, f })
+    })
+  })
+  return [...porAnio.keys()].sort((x, y) => y - x).map((anio) => {
+    const filas = porAnio.get(anio).sort((x, y) => (x.a.fechaAlta || '').localeCompare(y.a.fechaAlta || ''))
+    const t = filas.reduce((s, { f }) => ({
+      altas: s.altas + (f.alta ? f.costo : 0),
+      vfnInicial: s.vfnInicial + f.vfnAnterior,
+      residual: s.residual + f.residual,
+      revaluo: s.revaluo + f.revaluoValor,
+      depreciacion: s.depreciacion + f.cuota,
+      depCierre: s.depCierre + f.depCierre,
+      vfnFinal: s.vfnFinal + f.neto,
+      noDeducible: s.noDeducible + f.noDeducible
+    }), { altas: 0, vfnInicial: 0, residual: 0, revaluo: 0, depreciacion: 0, depCierre: 0, vfnFinal: 0, noDeducible: 0 })
+    return { anio, filas, ...t }
+  })
 }
 
 /** asiento de cierre del activo fijo para un ejercicio */
