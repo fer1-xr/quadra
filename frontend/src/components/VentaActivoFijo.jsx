@@ -1,22 +1,28 @@
 import React, { useState } from 'react'
-import PageHead, { Figures } from './PageHead'
-import { Card, CardBody, CardHeader, Button, Input, Select, SelectItem, Spinner } from '@heroui/react'
-import { Download } from 'lucide-react'
-import { Var, MoneyInput, SetChoice, Step, F, fmtGs } from './MathInputs'
+import PageHead from './PageHead'
+import { Home, Car, CheckCircle2, Info, AlertTriangle, Receipt, RotateCcw, ExternalLink } from 'lucide-react'
+import { MoneyInput, fmtGs } from './MathInputs'
 import GuardarEnNube from './GuardarEnNube'
 import '../styles/VentaActivoFijo.css'
 
-const VentaActivoFijo = ({ restaurar = null }) => {
-  const [formData, setFormData] = useState({
-    tipoBien: 'inmueble',
-    tipoContribuyente: 'no-contribuyente',
-    esActivoEmpresa: 'no-aplica',
-    estadoVehiculo: 'usado',
-    monto: 0,
-  })
+const INICIAL = {
+  tipoBien: 'inmueble',
+  tipoContribuyente: 'no-contribuyente',
+  esActivoEmpresa: 'no-aplica',
+  estadoVehiculo: 'usado',
+  monto: 0,
+  ivaIncluido: true,
+}
 
-  const [resultado, setResultado] = useState(restaurar)
-  const [error, setError] = useState('')
+/**
+ * Calculadora de venta de activo fijo: según el bien, el régimen del vendedor y
+ * si el bien es activo de la empresa, dice si hay que facturar, qué parte va
+ * gravada y exenta, y cuánto IVA lleva. Todo se recalcula en vivo.
+ */
+const VentaActivoFijo = ({ restaurar = null }) => {
+  const [formData, setFormData] = useState(() => (restaurar
+    ? Object.fromEntries(Object.keys(INICIAL).map((k) => [k, restaurar[k] ?? INICIAL[k]]))
+    : INICIAL))
 
   // Base de conocimiento: Regulaciones tributarias para venta de activos fijos en Paraguay
   const regulaciones = {
@@ -649,21 +655,7 @@ const VentaActivoFijo = ({ restaurar = null }) => {
     }
   }
 
-  const handleChange = (e) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }))
-  }
-
-  const handleMonto = (e) => {
-    const valor = parseFloat(e.target.value) || 0
-    setFormData(prev => ({
-      ...prev,
-      monto: valor
-    }))
-  }
+  const set = (name) => (value) => setFormData((prev) => ({ ...prev, [name]: value }))
 
   const resolver = (fd) => {
     if (fd.tipoBien === 'inmueble') {
@@ -675,265 +667,188 @@ const VentaActivoFijo = ({ restaurar = null }) => {
     return regulaciones.vehiculo[fd.tipoContribuyente]?.[fd.estadoVehiculo]?.[fd.esActivoEmpresa] || null
   }
 
-  const setAf = (name) => (value) => setFormData((prev) => ({ ...prev, [name]: value }))
-  const previa = resolver(formData)
-  const baseG = previa ? (formData.monto * previa.porcentaje_gravado) / 100 : 0
-  const baseE = previa ? (formData.monto * previa.porcentaje_exento) / 100 : 0
-  const tasaIva = previa && previa.porcentaje_gravado > 0 ? (parseInt(previa.tasa_iva, 10) || 0) : 0
-  const iva = baseG * (tasaIva / 100)
-  const regimenCorto = {
-    'prestador-servicios': 'servicios',
-    'ire-simple': 'IRE Simple',
-    'ire-general': 'IRE General',
-    'playa-vehiculos': 'playa',
-    'no-contribuyente': 'no contrib.'
-  }[formData.tipoContribuyente]
+  // la playa de vehículos solo vende vehículos
+  const elegirBien = (tipoBien) => setFormData((prev) => ({
+    ...prev,
+    tipoBien,
+    tipoContribuyente: tipoBien === 'inmueble' && prev.tipoContribuyente === 'playa-vehiculos' ? 'no-contribuyente' : prev.tipoContribuyente,
+  }))
 
-  const calcular = () => {
-    setError('')
+  const regla = resolver(formData)
+  const monto = Number(formData.monto) || 0
+  const tasa = regla && regla.porcentaje_gravado > 0 ? (parseInt(regla.tasa_iva, 10) || 0) : 0
+  // con IVA incluido, el precio es el total de la factura y el IVA sale de adentro (10 % → ÷ 11; 5 % → ÷ 21)
+  const incluido = formData.ivaIncluido !== false
+  const gravada = regla ? Math.round((monto * regla.porcentaje_gravado) / 100) : 0
+  const exenta = regla ? monto - gravada : 0
+  const iva = !tasa ? 0 : incluido ? Math.round(gravada / (100 / tasa + 1)) : Math.round((gravada * tasa) / 100)
+  const totalFactura = incluido ? monto : monto + iva
+  const columnaGravada = incluido ? gravada : gravada + iva
+  const sinFactura = regla && !regla.debe_facturar
+  const listo = Boolean(regla && monto > 0)
 
-    if (formData.monto <= 0) {
-      setError('Por favor ingrese un monto válido mayor a 0')
-      return
-    }
-
-    const config = resolver(formData)
-
-    if (!config) {
-      setError('Configuración no encontrada para esta combinación')
-      return
-    }
-
-    const resultado = {
-      ...formData,
-      ...config,
-      montoFormateado: formData.monto.toLocaleString('es-PY', {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      })
-    }
-
-    setResultado(resultado)
-  }
-
-  const resetForm = () => {
-    setResultado(null)
-    setFormData({
-      tipoBien: 'inmueble',
-      tipoContribuyente: 'no-contribuyente',
-      esActivoEmpresa: 'no-aplica',
-      estadoVehiculo: 'usado',
-      monto: 0,
-    })
-    setError('')
-  }
-
-  const getModoFacturacion = () => {
-    if (!resultado) return ''
-    return resultado.debe_facturar ?
-      'DEBE FACTURAR LA VENTA' :
-      'NO REQUIERE FACTURACIÓN OBLIGATORIA'
-  }
+  const nuevaConsulta = () => setFormData(INICIAL)
+  const nombreBien = formData.tipoBien === 'inmueble' ? 'inmueble' : `vehículo ${formData.estadoVehiculo}`
+  const regimen = REGIMENES.find((r) => r.value === formData.tipoContribuyente)
 
   return (
     <div className="venta-activo-fijo-container">
       <PageHead
         title="Venta de Activo Fijo"
-        lede="Determina la modalidad de facturación según la normativa tributaria paraguaya."
-        equation={[{ v: 'f' }, { op: '(' }, { v: 'bien' }, { op: ',' }, { v: 'régimen' }, { op: ')' }, { op: '→' }, { v: 'Factura' }]}
-        caption="modalidad de facturación"
+        lede="Respondé cuatro preguntas y cargá el precio: la calculadora te dice si hay que facturar, cuánto va gravado y exento, y cuánto IVA lleva la factura."
       />
-      <div className="card">
 
-        {error && <div className="error-message">{error}</div>}
-
-        {!resultado ? (
-          <form className="qm" onSubmit={(e) => { e.preventDefault(); calcular() }}>
-            <div className="qm-vars">
-              <section className="qm-block">
-                <h3 className="qm-legend">Argumentos</h3>
-                <Var sym="bien" label="Tipo de bien" op="∈" wide>
-                  <SetChoice name="af-bien" label="Tipo de bien" value={formData.tipoBien} onChange={setAf('tipoBien')} options={[
-                    { value: 'inmueble', label: 'Inmueble' },
-                    { value: 'vehiculo', label: 'Vehículo' }
-                  ]} />
-                </Var>
-                <Var sym="r" label="Régimen del vendedor" op="∈" wide>
-                  <SetChoice name="af-reg" label="Régimen tributario" value={formData.tipoContribuyente} onChange={setAf('tipoContribuyente')} options={[
-                    { value: 'prestador-servicios', label: 'Prestador de servicios' },
-                    { value: 'ire-simple', label: 'IRE Simple' },
-                    { value: 'ire-general', label: 'IRE General' },
-                    { value: 'playa-vehiculos', label: 'Playa de vehículos' },
-                    { value: 'no-contribuyente', label: 'No contribuyente' }
-                  ]} />
-                </Var>
-                {formData.tipoContribuyente !== 'playa-vehiculos' && (
-                  <Var sym="a" label="¿Activo de la empresa?" op="∈" wide>
-                    <SetChoice name="af-act" label="Condición del bien" value={formData.esActivoEmpresa} onChange={setAf('esActivoEmpresa')} options={[
-                      { value: 'no-aplica', label: 'No aplica' },
-                      { value: 'si', label: 'Sí, activo de la empresa' },
-                      { value: 'no', label: 'No, uso personal' }
-                    ]} />
-                  </Var>
-                )}
-                {formData.tipoBien === 'vehiculo' && (
-                  <Var sym="e" label="Estado del vehículo" op="∈" wide>
-                    <SetChoice name="af-est" label="Estado del vehículo" value={formData.estadoVehiculo} onChange={setAf('estadoVehiculo')} options={[
-                      { value: 'nuevo', label: 'Nuevo' },
-                      { value: 'usado', label: 'Usado' }
-                    ]} />
-                  </Var>
-                )}
-              </section>
-
-              <section className="qm-block">
-                <h3 className="qm-legend">Monto</h3>
-                <Var sym="M" label="Precio de venta" htmlFor="af-M" unit="₲">
-                  <MoneyInput id="af-M" value={formData.monto} onChange={setAf('monto')} />
-                </Var>
-              </section>
+      <div className="afc">
+        <section className="afc-preguntas" aria-label="Datos de la venta">
+          <Pregunta n={1} titulo="¿Qué se vende?">
+            <div className="afc-tiles">
+              {BIENES.map(({ value, label, hint, Icon }) => (
+                <button key={value} type="button" className={`afc-tile ${formData.tipoBien === value ? 'is-on' : ''}`} aria-pressed={formData.tipoBien === value} onClick={() => elegirBien(value)}>
+                  <Icon size={22} strokeWidth={1.6} aria-hidden="true" />
+                  <span className="afc-tile__label">{label}</span>
+                  <small>{hint}</small>
+                </button>
+              ))}
             </div>
-
-            <aside className="qm-deriv" aria-label="Vista previa">
-              <h3 className="qm-legend">Resultado</h3>
-              <div className="qm-fx">
-                <F t={[{ v: 'f' }, { op: '(' }, { w: formData.tipoBien === 'inmueble' ? 'inmueble' : 'vehículo' }, { op: ',' }, { w: regimenCorto }, { op: ')' }]} />
-                <span className="qm-fx__arrow">→</span>
-                <strong className={previa ? (previa.debe_facturar ? 'tone-ok' : '') : 'tone-err'}>
-                  {previa ? (previa.debe_facturar ? 'Debe facturar' : 'Sin factura obligatoria') : 'Sin regla para esta combinación'}
-                </strong>
-              </div>
-              {previa && <p className="qm-fx__mode">{previa.modo_calculo}</p>}
-              {previa && (
-                <>
-                  <Step value={fmtGs(baseG)}><F t={[{ v: 'G' }, { op: '=' }, { v: 'M' }, { op: '×' }, { n: `${previa.porcentaje_gravado} %` }]} /></Step>
-                  <Step value={fmtGs(baseE)}><F t={[{ v: 'E' }, { op: '=' }, { v: 'M' }, { op: '×' }, { n: `${previa.porcentaje_exento} %` }]} /></Step>
-                  <Step kind="sum" value={fmtGs(formData.monto)}><F t={[{ v: 'G' }, { op: '+' }, { v: 'E' }, { op: '=' }, { v: 'M' }]} /></Step>
-                  <Step kind="total" value={<>{fmtGs(iva)} <small>₲</small></>}>
-                    <F t={tasaIva ? [{ w: 'IVA' }, { op: '=' }, { v: 'G' }, { op: '×' }, { n: `${tasaIva} %` }] : [{ w: 'IVA' }, { op: '=' }, { n: '0' }, { w: '(exento)' }]} />
-                  </Step>
-                </>
-              )}
-              <p className="qm-deriv__note">{formData.monto ? 'Vista previa en vivo. Calcula para ver normas, requisitos y marco legal.' : 'Ingresa el precio de venta para ver las bases.'}</p>
-              <button type="submit" className="btn btn-primary qm-deriv__go">Calcular</button>
-            </aside>
-          </form>
-        ) : (
-          <div className="resultado-section">
-            <div className="resultado-header">
-              <h3>Resultado de Análisis</h3>
-            </div>
-
-            {/* Resumen de Datos */}
-            <div className="resultado-card datos-card">
-              <h4>Datos de la Consulta</h4>
-              <div className="dato-row">
-                <span>Tipo de Bien:</span>
-                <strong>{resultado.tipoBien === 'inmueble' ? 'Inmueble' : 'Vehículo'}</strong>
-              </div>
-              <div className="dato-row">
-                <span>Régimen Tributario:</span>
-                <strong>{resultado.tipoContribuyente.toUpperCase().replace(/-/g, ' ')}</strong>
-              </div>
-              {resultado.tipoBien === 'vehiculo' && (
-                <div className="dato-row">
-                  <span>Estado del Vehículo:</span>
-                  <strong>{resultado.estadoVehiculo === 'nuevo' ? 'NUEVO' : 'USADO'}</strong>
-                </div>
-              )}
-              <div className="dato-row">
-                <span>Monto de Venta:</span>
-                <strong>₲ {resultado.montoFormateado}</strong>
-              </div>
-            </div>
-
-            {/* Modo de Facturación Principal */}
-            <div className={`resultado-card modo-facturacion ${resultado.debe_facturar ? 'debe-facturar' : 'no-facturar'}`}>
-              <h4>Modalidad de Facturación</h4>
-              <div className="modo-principal">
-                {getModoFacturacion()}
-              </div>
-            </div>
-
-            {/* Modo de Cálculo */}
-            {resultado.debe_facturar && (
-              <div className="resultado-card modo-calculo-card">
-                <h4>Modo de Cálculo</h4>
-                <div className="modo-calculo-content">
-                  <p className="modo-calculo-titulo">{resultado.modo_calculo}</p>
-                  <p className="modo-calculo-tasa">Tasa de IVA: <strong>{resultado.tasa_iva}</strong></p>
-
-                  <div className="calculo-desglose">
-                    <div className="desglose-item gravado">
-                      <span className="desglose-label">Base Gravada:</span>
-                      <span className="desglose-porcentaje">{resultado.porcentaje_gravado}%</span>
-                      <span className="desglose-monto">₲ {((resultado.monto * resultado.porcentaje_gravado) / 100).toLocaleString('es-PY', {minimumFractionDigits: 2})}</span>
-                    </div>
-                    <div className="desglose-item exento">
-                      <span className="desglose-label">Base Exenta:</span>
-                      <span className="desglose-porcentaje">{resultado.porcentaje_exento}%</span>
-                      <span className="desglose-monto">₲ {((resultado.monto * resultado.porcentaje_exento) / 100).toLocaleString('es-PY', {minimumFractionDigits: 2})}</span>
-                    </div>
-                  </div>
-
-                  {resultado.porcentaje_gravado > 0 && (
-                    <div className="calculo-iva">
-                      <p><strong>IVA a pagar:</strong></p>
-                      <p className="iva-monto">₲ {(((resultado.monto * resultado.porcentaje_gravado) / 100) * (parseInt(resultado.tasa_iva) / 100)).toLocaleString('es-PY', {minimumFractionDigits: 2})}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
+            {formData.tipoBien === 'vehiculo' && (
+              <Opciones label="Estado del vehículo" value={formData.estadoVehiculo} onChange={set('estadoVehiculo')} opciones={[
+                { value: 'usado', label: 'Usado' },
+                { value: 'nuevo', label: '0 km' }
+              ]} />
             )}
+          </Pregunta>
 
-            {/* Normativas y Requisitos */}
-            <div className="resultado-card normas-card">
-              <h4>Normas y Requisitos Aplicables</h4>
-              <ul className="normas-list">
-                {resultado.normas && resultado.normas.map((norma, idx) => (
-                  <li key={idx}>{norma}</li>
-                ))}
-              </ul>
-            </div>
+          <Pregunta n={2} titulo="¿Quién vende?" ayuda="El régimen con el que el vendedor está inscripto en la DNIT.">
+            <Opciones label="Régimen del vendedor" value={formData.tipoContribuyente} onChange={set('tipoContribuyente')}
+              opciones={REGIMENES.filter((r) => r.value !== 'playa-vehiculos' || formData.tipoBien === 'vehiculo')} />
+          </Pregunta>
 
-            {/* Marco Legal */}
-            <div className="resultado-card marco-legal-card">
-              <h4>Marco Legal</h4>
-              <p><strong>Decreto/Ley:</strong></p>
-              <p className="decreto">{resultado.decreto}</p>
-              <p><strong>Fuente:</strong></p>
-              <a href={resultado.fuente} target="_blank" rel="noopener noreferrer" className="fuente-link">
-                {resultado.fuente}
-              </a>
-            </div>
+          {formData.tipoContribuyente !== 'playa-vehiculos' && (
+            <Pregunta n={3} titulo="¿El bien es parte de la empresa?" ayuda="Si está registrado como activo fijo en la contabilidad del vendedor.">
+              <Opciones label="Condición del bien" value={formData.esActivoEmpresa} onChange={set('esActivoEmpresa')} opciones={[
+                { value: 'si', label: 'Sí, es activo de la empresa' },
+                { value: 'no', label: 'No, es de uso personal' },
+                { value: 'no-aplica', label: 'No sé / no aplica' }
+              ]} />
+            </Pregunta>
+          )}
 
-            {/* Advertencia */}
-            <div className="resultado-card advertencia-card">
-              <p>
-                <strong>ADVERTENCIA LEGAL:</strong> Esta calculadora proporciona información orientativa basada en la normativa tributaria paraguaya vigente.
-                Se recomienda consultar con un asesor tributario profesional antes de realizar la operación,
-                ya que cada caso puede tener particularidades que afecten el tratamiento fiscal aplicable.
+          <Pregunta n={formData.tipoContribuyente === 'playa-vehiculos' ? 3 : 4} titulo="¿En cuánto se vende?">
+            <label className="afc-monto">
+              <span className="afc-monto__moneda" aria-hidden="true">₲</span>
+              <MoneyInput id="af-monto" value={formData.monto} onChange={set('monto')} placeholder="0" aria-label="Precio de venta en guaraníes" />
+            </label>
+            {tasa > 0 && (
+              <Opciones label="¿El precio incluye IVA?" value={incluido ? 'si' : 'no'} onChange={(v) => set('ivaIncluido')(v === 'si')} opciones={[
+                { value: 'si', label: 'El precio ya incluye IVA' },
+                { value: 'no', label: 'Hay que sumarle el IVA' }
+              ]} />
+            )}
+          </Pregunta>
+        </section>
+
+        <aside className="afc-calc" aria-label="Resultado" aria-live="polite">
+          <div className="afc-pantalla">
+            <span className="afc-pantalla__rotulo">{sinFactura ? 'Precio de venta' : 'Total de la factura'}</span>
+            <output className="afc-pantalla__total" htmlFor="af-monto">₲ {fmtGs(sinFactura ? monto : totalFactura)}</output>
+            <span className="afc-pantalla__sub">Venta de {nombreBien} · {regimen?.label}</span>
+          </div>
+
+          {!regla ? (
+            <p className="afc-veredicto is-err"><AlertTriangle size={18} strokeWidth={1.8} aria-hidden="true" /> No hay una regla cargada para esta combinación. Revisá las respuestas.</p>
+          ) : (
+            <>
+              <p className={`afc-veredicto ${sinFactura ? 'is-info' : 'is-ok'}`}>
+                {sinFactura
+                  ? <><Info size={18} strokeWidth={1.8} aria-hidden="true" /> No es obligatorio emitir factura</>
+                  : <><CheckCircle2 size={18} strokeWidth={1.8} aria-hidden="true" /> Debe emitir factura</>}
               </p>
-            </div>
+              <p className="afc-modo">{regla.modo_calculo}</p>
 
-            {/* Botones de Acción */}
-            <div className="button-group">
+              {!sinFactura && (
+                <dl className="afc-filas">
+                  <div><dt>Parte gravada <small>{regla.porcentaje_gravado} %</small></dt><dd>₲ {fmtGs(gravada)}</dd></div>
+                  <div><dt>Parte exenta <small>{regla.porcentaje_exento} %</small></dt><dd>₲ {fmtGs(exenta)}</dd></div>
+                  <div className="is-iva"><dt>IVA {tasa ? `${tasa} %` : ''} <small>{tasa ? (incluido ? 'incluido en el precio' : 'se suma al precio') : 'exento'}</small></dt><dd>₲ {fmtGs(iva)}</dd></div>
+                </dl>
+              )}
+
+              {!sinFactura && listo && (
+                <div className="afc-factura">
+                  <span className="afc-factura__titulo"><Receipt size={15} strokeWidth={1.8} aria-hidden="true" /> Cómo completar la factura</span>
+                  <div className="afc-factura__cols">
+                    <div><small>Exentas</small><b>{fmtGs(exenta)}</b></div>
+                    <div><small>5 %</small><b>{tasa === 5 ? fmtGs(columnaGravada) : '—'}</b></div>
+                    <div><small>10 %</small><b>{tasa === 10 ? fmtGs(columnaGravada) : '—'}</b></div>
+                  </div>
+                  {tasa > 0 && <p>Liquidación del IVA ({tasa} %): <b>₲ {fmtGs(iva)}</b></p>}
+                </div>
+              )}
+              {!listo && <p className="afc-hint">Cargá el precio de venta para ver los montos.</p>}
+            </>
+          )}
+
+          <div className="afc-acciones">
+            {listo && (
               <GuardarEnNube
                 modulo="activofijo"
-                titulo={`Venta de ${resultado.tipoBien === 'inmueble' ? 'inmueble' : 'vehículo'} · ₲ ${resultado.montoFormateado}`}
-                resumen={{ Monto: resultado.monto, Factura: resultado.debe_facturar ? 'Sí' : 'No', IVA: resultado.tasa_iva || '—' }}
-                datos={resultado}
+                titulo={`Venta de ${nombreBien} · ₲ ${fmtGs(monto)}`}
+                resumen={{ Monto: monto, Factura: regla.debe_facturar ? 'Sí' : 'No', IVA: iva ? `₲ ${fmtGs(iva)}` : 'Exento' }}
+                datos={{ ...formData, ...regla, gravada, exenta, iva, totalFactura }}
               />
-              <button
-                className="btn btn-secondary"
-                onClick={resetForm}
-              >
-                Nueva Consulta
-              </button>
-            </div>
+            )}
+            <button type="button" className="btn btn-secondary" onClick={nuevaConsulta}><RotateCcw size={15} strokeWidth={1.8} aria-hidden="true" /> Nueva consulta</button>
           </div>
-        )}
+        </aside>
       </div>
+
+      {regla && (
+        <details className="afc-normas">
+          <summary>Normas, requisitos y marco legal</summary>
+          <ul>{regla.normas.map((n, i) => <li key={i}>{n.replace(/^\s*•\s*/, '')}</li>)}</ul>
+          <p><strong>Base legal:</strong> {regla.decreto}</p>
+          <p><a href={regla.fuente} target="_blank" rel="noopener noreferrer">Ver fuente <ExternalLink size={12} strokeWidth={1.8} aria-hidden="true" /></a></p>
+          <p className="afc-aviso">Información orientativa según la normativa paraguaya vigente. Antes de la operación, confirmala con un asesor tributario: cada caso puede tener particularidades.</p>
+        </details>
+      )}
+    </div>
+  )
+}
+
+/* ── piezas de la calculadora ───────────────────────────────── */
+
+const BIENES = [
+  { value: 'inmueble', label: 'Inmueble', hint: 'casa, terreno, departamento', Icon: Home },
+  { value: 'vehiculo', label: 'Vehículo', hint: 'auto, camioneta, moto', Icon: Car }
+]
+
+const REGIMENES = [
+  { value: 'no-contribuyente', label: 'No contribuyente' },
+  { value: 'prestador-servicios', label: 'Prestador de servicios' },
+  { value: 'ire-simple', label: 'IRE Simple' },
+  { value: 'ire-general', label: 'IRE General' },
+  { value: 'playa-vehiculos', label: 'Playa de vehículos' }
+]
+
+function Pregunta({ n, titulo, ayuda, children }) {
+  return (
+    <fieldset className="afc-pregunta">
+      <legend><span className="afc-pregunta__n" aria-hidden="true">{n}</span> {titulo}</legend>
+      {ayuda && <p className="afc-pregunta__ayuda">{ayuda}</p>}
+      {children}
+    </fieldset>
+  )
+}
+
+function Opciones({ label, value, onChange, opciones }) {
+  return (
+    <div className="afc-opciones" role="radiogroup" aria-label={label}>
+      {opciones.map((o) => (
+        <button key={o.value} type="button" role="radio" aria-checked={value === o.value}
+          className={`afc-opcion ${value === o.value ? 'is-on' : ''}`} onClick={() => onChange(o.value)}>
+          {o.label}
+        </button>
+      ))}
     </div>
   )
 }
