@@ -268,3 +268,183 @@ export function RevaluoDepreciacion() {
     </div>
   )
 }
+
+// tipos de bien del registro simple; cada uno cae en una categoría del activo fijo
+// para que los datos sirvan tal cual si el cliente pasa a liquidar IRE
+export const TIPOS_BIEN = [
+  { id: 'inmueble', label: 'Casa / inmueble', categoria: 'edificios', ident: 'Finca o cta. cte. catastral', ej: 'p. ej. Casa en Lambaré' },
+  { id: 'terreno', label: 'Terreno', categoria: 'terrenos', ident: 'Finca o cta. cte. catastral', ej: 'p. ej. Lote 12, manzana B, Luque' },
+  { id: 'auto', label: 'Automóvil / camioneta', categoria: 'rodados', ident: 'Chapa o chasis', ej: 'p. ej. Toyota Hilux 2024' },
+  { id: 'moto', label: 'Motocicleta', categoria: 'rodados', ident: 'Chapa o chasis', ej: 'p. ej. Honda CG 150 2023' },
+  { id: 'camion', label: 'Camión / otro rodado', categoria: 'rodados', ident: 'Chapa o chasis', ej: 'p. ej. Camión Mercedes-Benz Atego' },
+  { id: 'maquinaria', label: 'Maquinaria y equipos', categoria: 'maquinarias', ident: 'N.º de serie', ej: 'p. ej. Tractor John Deere 5075E' },
+  { id: 'muebles', label: 'Muebles y útiles', categoria: 'muebles', ident: 'Identificación', ej: 'p. ej. Juego de escritorio' },
+  { id: 'informatica', label: 'Equipos de informática', categoria: 'informatica', ident: 'N.º de serie', ej: 'p. ej. Notebook Lenovo ThinkPad' },
+  { id: 'otro', label: 'Otro bien', categoria: 'herramientas', ident: 'Identificación', ej: 'Describí el bien' }
+]
+const tipoBien = (a) => TIPOS_BIEN.find((t) => t.id === a.tipoBien) || TIPOS_BIEN.find((t) => t.categoria === a.categoria) || TIPOS_BIEN[TIPOS_BIEN.length - 1]
+
+/** Registro de bienes del activo fijo, sin revalúo ni depreciación (IVA, IRP, IRP-RSP, IRP-RGC) */
+export function BienesRegistro() {
+  const { activos, ejercicio, contribuyente } = useContable()
+  const [form, setForm] = useState(null)
+  const [errores, setErrores] = useState([])
+  const [filtro, setFiltro] = useState('')
+  const set = (c) => { setForm((f) => ({ ...f, ...c })); setErrores([]) }
+
+  const nuevo = () => {
+    setForm({ tipoBien: 'inmueble', descripcion: '', identificacion: '', ubicacion: '', fechaAlta: `${ejercicio}-01-01`, valorOrigen: '', comprobante: '', fechaBaja: '', observaciones: '' })
+    setErrores([])
+  }
+
+  const guardar = (e) => {
+    e.preventDefault()
+    const errs = []
+    if (!form.descripcion.trim()) errs.push('Describí el bien.')
+    if (!form.fechaAlta) errs.push('Indicá la fecha de adquisición.')
+    if (!n0(form.valorOrigen)) errs.push('El valor de adquisición tiene que ser mayor a cero.')
+    if (form.fechaBaja && form.fechaBaja < form.fechaAlta) errs.push('La baja no puede ser anterior a la adquisición.')
+    if (errs.length) { setErrores(errs); return }
+    const tb = TIPOS_BIEN.find((x) => x.id === form.tipoBien)
+    const cat = CATEGORIAS_ACTIVO.find((c) => c.id === tb.categoria)
+    // categoría, cuenta y vida útil se completan solas; si no cambió la categoría se conservan
+    const mismaCat = form.categoria === cat.id
+    activos.guardar({
+      ...form,
+      descripcion: form.descripcion.trim(),
+      identificacion: (form.identificacion || '').trim(),
+      valorOrigen: n0(form.valorOrigen),
+      categoria: cat.id,
+      cuenta: mismaCat && form.cuenta ? form.cuenta : cat.cuenta,
+      vidaUtil: mismaCat && form.vidaUtil != null ? form.vidaUtil : cat.vida,
+      coeficientes: form.coeficientes || {}
+    })
+    setForm(null)
+  }
+
+  const todos = activos.items.slice().sort((a, b) => (a.fechaAlta || '').localeCompare(b.fechaAlta || ''))
+  const lista = filtro ? todos.filter((a) => tipoBien(a).id === filtro) : todos
+  const vigentes = todos.filter((a) => !a.fechaBaja)
+  const total = vigentes.reduce((s, a) => s + n0(a.valorOrigen), 0)
+  const rodados = vigentes.filter((a) => a.categoria === 'rodados').length
+  const inmuebles = vigentes.filter((a) => a.categoria === 'edificios' || a.categoria === 'terrenos').length
+  const tf = form && TIPOS_BIEN.find((x) => x.id === form.tipoBien)
+
+  const exportar = () => exportarExcel(`Bienes del activo fijo ${contribuyente.ruc}`, 'Bienes', [
+    [`Bienes del activo fijo · ${contribuyente.razonSocial} · RUC ${contribuyente.ruc}`], [],
+    ['Tipo', 'Descripción', 'Identificación', 'Ubicación', 'Adquisición', 'Valor de adquisición', 'Documento', 'Baja', 'Observaciones'],
+    ...lista.map((a) => [tipoBien(a).label, a.descripcion, a.identificacion || '', a.ubicacion || '', fechaCorta(a.fechaAlta), n0(a.valorOrigen), a.comprobante || '', a.fechaBaja ? fechaCorta(a.fechaBaja) : '', a.observaciones || '']),
+    ['TOTAL', '', '', '', '', lista.reduce((s, a) => s + n0(a.valorOrigen), 0)]
+  ])
+
+  return (
+    <div className="q-sheet q-sheet--wide ct-sheet">
+      <PageHead
+        title="Bienes del activo fijo"
+        lede="Registro de los bienes del contribuyente: casas, terrenos, autos, motos y demás. Llevá el valor de adquisición, su documento respaldatorio y, si corresponde, la fecha de venta o baja."
+        status={activos.status}
+      />
+      <Figures items={[
+        { label: 'Bienes vigentes', value: vigentes.length },
+        { label: 'Inmuebles', value: inmuebles },
+        { label: 'Rodados', value: rodados },
+        { label: 'Valor de adquisición', value: gs(total) }
+      ]} />
+      <div className="ct-toolbar">
+        <div className="q-field">
+          <label className="q-label" htmlFor="bn-filtro">Tipo de bien</label>
+          <select id="bn-filtro" className="q-input ct-select" value={filtro} onChange={(e) => setFiltro(e.target.value)}>
+            <option value="">Todos</option>
+            {TIPOS_BIEN.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+          </select>
+        </div>
+        <div className="ct-toolbar__end">
+          {lista.length > 0 && <button type="button" className="q-btn q-btn--line" onClick={exportar}><Download size={16} strokeWidth={1.8} /> Excel</button>}
+          {!form && <button type="button" className="q-btn q-btn--primary" onClick={nuevo}><Plus size={16} strokeWidth={1.8} /> Nuevo bien</button>}
+        </div>
+      </div>
+
+      {form && (
+        <form className="q-card ct-form" onSubmit={guardar} noValidate>
+          <div className="ct-form__head">
+            <h2 className="ct-form__title">{form.id ? 'Editar bien' : 'Nuevo bien'}</h2>
+            <button type="button" className="q-ghost-icon" onClick={() => setForm(null)} aria-label="Cerrar formulario"><X size={18} strokeWidth={1.7} /></button>
+          </div>
+          <div className="ct-grid">
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-tipo">Tipo de bien</label>
+              <select id="bn-tipo" className="q-input ct-select" value={form.tipoBien} onChange={(e) => set({ tipoBien: e.target.value })}>
+                {TIPOS_BIEN.map((x) => <option key={x.id} value={x.id}>{x.label}</option>)}
+              </select>
+            </div>
+            <div className="q-field ct-span-2">
+              <label className="q-label" htmlFor="bn-desc">Descripción</label>
+              <input id="bn-desc" className="q-input" value={form.descripcion} placeholder={tf.ej} onChange={(e) => set({ descripcion: e.target.value })} />
+            </div>
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-ident">{tf.ident} <small>opcional</small></label>
+              <input id="bn-ident" className="q-input" value={form.identificacion || ''} onChange={(e) => set({ identificacion: e.target.value })} />
+            </div>
+            <div className="q-field ct-span-2">
+              <label className="q-label" htmlFor="bn-ubic">Ubicación <small>opcional</small></label>
+              <input id="bn-ubic" className="q-input" value={form.ubicacion || ''} placeholder="Dirección, ciudad o departamento" onChange={(e) => set({ ubicacion: e.target.value })} />
+            </div>
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-alta">Fecha de adquisición</label>
+              <input id="bn-alta" className="q-input" type="date" value={form.fechaAlta} onChange={(e) => set({ fechaAlta: e.target.value })} />
+            </div>
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-valor">Valor de adquisición</label>
+              <MontoInput id="bn-valor" value={form.valorOrigen} onChange={(v) => set({ valorOrigen: v })} />
+            </div>
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-doc">Factura o escritura <small>opcional</small></label>
+              <input id="bn-doc" className="q-input" value={form.comprobante || ''} placeholder="001-001-0000001 o N.º de escritura" onChange={(e) => set({ comprobante: e.target.value })} />
+            </div>
+            <div className="q-field">
+              <label className="q-label" htmlFor="bn-baja">Fecha de venta o baja <small>opcional</small></label>
+              <input id="bn-baja" className="q-input" type="date" value={form.fechaBaja || ''} onChange={(e) => set({ fechaBaja: e.target.value })} />
+            </div>
+            <div className="q-field ct-span-2">
+              <label className="q-label" htmlFor="bn-obs">Observaciones <small>opcional</small></label>
+              <input id="bn-obs" className="q-input" value={form.observaciones || ''} onChange={(e) => set({ observaciones: e.target.value })} />
+            </div>
+          </div>
+          <Errores lista={errores} />
+          <div className="ct-form__actions">
+            <button type="submit" className="q-btn q-btn--primary">{form.id ? 'Guardar cambios' : 'Agregar bien'}</button>
+            <button type="button" className="q-btn q-btn--line" onClick={() => setForm(null)}>Cancelar</button>
+          </div>
+        </form>
+      )}
+
+      {lista.length === 0 ? (
+        !form && <Vacio titulo={filtro ? 'Sin bienes de este tipo' : 'Sin bienes cargados'}>Registrá las casas, terrenos, autos, motos y demás bienes del contribuyente.</Vacio>
+      ) : (
+        <div className="q-card ct-card">
+          <div className="ct-tabla-wrap">
+            <table className="q-table ct-tabla">
+              <thead><tr><th>Bien</th><th>Tipo</th><th>Identificación</th><th>Adquisición</th><th className="ct-der">Valor</th><th>Estado</th><th><span className="sr-only">Acciones</span></th></tr></thead>
+              <tbody>
+                {lista.map((a) => (
+                  <tr key={a.id}>
+                    <td className="ct-nombre">{a.descripcion}{a.ubicacion && <div className="ct-sub">{a.ubicacion}</div>}</td>
+                    <td className="ct-sub">{tipoBien(a).label}</td>
+                    <td className="ct-mono">{a.identificacion || '—'}</td>
+                    <td className="ct-mono">{fechaCorta(a.fechaAlta)}</td>
+                    <td className="ct-num ct-strong">{gs(a.valorOrigen)}</td>
+                    <td>{a.fechaBaja ? <span className="ct-estado is-err">Baja {fechaCorta(a.fechaBaja)}</span> : <span className="ct-estado is-ok">Vigente</span>}</td>
+                    <td className="ct-acciones">
+                      <button type="button" className="ct-icon" onClick={() => { setForm({ ...a, tipoBien: tipoBien(a).id }); setErrores([]) }} aria-label={`Editar ${a.descripcion}`} title="Editar"><Pencil size={14} strokeWidth={1.8} /></button>
+                      <button type="button" className="ct-icon ct-icon--del" onClick={() => window.confirm(`¿Eliminar ${a.descripcion}?`) && activos.eliminar(a.id)} aria-label={`Eliminar ${a.descripcion}`} title="Eliminar"><X size={14} strokeWidth={1.8} /></button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

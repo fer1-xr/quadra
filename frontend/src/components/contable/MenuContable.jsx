@@ -21,6 +21,8 @@ const MENUS = [
           { id: 'ct-revaluo', label: 'Cuadro de revalúo y depreciación' }
         ]
       },
+      // reemplaza a Revalúo & Depreciación en IVA, IRP, IRP-RSP e IRP-RGC
+      { id: 'ct-bienes', label: 'Bienes de activo fijo', hint: 'casas, autos, motos y más' },
       { id: 'ct-personas', label: 'Personas' },
       { id: 'ct-plan', label: 'Plan de Cuentas' },
       { id: 'ct-timbrados', label: 'Timbrados' }
@@ -139,6 +141,10 @@ const INFORME_DE = { 'ct-libro-compras': 'ct-inf-compras', 'ct-libro-ventas': 'c
 // Documentos e Informes auxiliares: clientes con IVA y/o IRP (cualquier modalidad)
 const REPORTES = ['ct-pend-pago', 'ct-pend-cobro', 'ct-resumen-iva']
 const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map((l) => l.id))
+// Revalúo & Depreciación (y su informe): no aplica a quien solo tributa IVA, IRP, IRP-RSP o IRP-RGC;
+// a ellos se les muestra el registro simple de bienes (ct-bienes)
+const ACTIVO_FIJO = ['ct-activos', 'ct-revaluo', 'ct-inf-activos']
+const SIN_ACTIVO_FIJO = new Set(['iva', 'irp', 'irp_rsp', 'irp_rgc'])
 
 /**
  * Menús según el impuesto elegido al ingresar: Movimientos e Informes muestran
@@ -154,7 +160,11 @@ export const menusPara = (contribuyente) => {
   const conReportes = !(contribuyente?.impuestos || []).length || tieneReportes(contribuyente)
   const imps = contribuyente?.impuestos || []
   const conRenta = !imps.length || imps.some((id) => /^(irp|ire)/.test(id))
+  const activos = impuestosActivos(contribuyente)
+  const conActivoFijo = !activos.length || activos.some((id) => !SIN_ACTIVO_FIJO.has(id))
   const ver = (id) => {
+    if (ACTIVO_FIJO.includes(id)) return conActivoFijo
+    if (id === 'ct-bienes') return !conActivoFijo
     if (REPORTES.includes(id)) return conReportes
     if (id === 'ct-inf-retenciones') return !regla || obl.has('ct-ret-emitida') || obl.has('ct-ret-recibida')
     if (id === 'ct-inf-recibo-cobro' || id === 'ct-inf-recibo-pago') return !regla || obl.has('ct-recibo-pago')
@@ -178,7 +188,7 @@ export const menusPara = (contribuyente) => {
   return MENUS
     .map((m) => {
       if (m.id === 'formularios') return { ...m, items: formularios }
-      return m.id === 'movimientos' || m.id === 'informes' ? { ...m, items: filtrar(m.items) } : m
+      return m.id === 'catastros' || m.id === 'movimientos' || m.id === 'informes' ? { ...m, items: filtrar(m.items) } : m
     })
     .filter((m) => m.items.length)
 }
