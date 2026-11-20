@@ -1,4 +1,4 @@
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generarConGemini, MODELO_PRINCIPAL } from '../gemini.js';
 import { validateRG90Data, calculateConfidence, detectMissingFields } from './field-validator.js';
 
 const logger = {
@@ -7,7 +7,7 @@ const logger = {
   warn: (msg) => console.warn(`[OCR WARN] ${msg}`),
 };
 
-const MODELO = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
+const MODELO = MODELO_PRINCIPAL;
 
 const MIME = {
   jpg: 'image/jpeg',
@@ -229,21 +229,15 @@ class InvoiceExtractor {
    * lanza el error: una factura que no se pudo leer no puede salir en blanco.
    */
   async leerConGemini(buffer, filename) {
-    const apiKey = process.env.GOOGLE_API_KEY;
-    if (!apiKey) throw new Error('GOOGLE_API_KEY no configurada en el servidor');
     const mimeType = this.getMimeType(filename);
     if (!mimeType) throw new Error('Tipo de archivo no soportado. Use JPG, PNG, WEBP o PDF.');
 
-    const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({
-      model: MODELO,
-      generationConfig: { temperature: 0, responseMimeType: 'application/json' },
-    });
-    logger.info(`Leyendo ${filename} con ${MODELO} (${mimeType})`);
-    const response = await model.generateContent([
+    logger.info(`Leyendo ${filename} (${mimeType})`);
+    const { texto: salida, modelo } = await generarConGemini([
       { inlineData: { data: buffer.toString('base64'), mimeType } },
       { text: PROMPT },
-    ]);
-    const salida = response.response.text();
+    ], { generationConfig: { temperature: 0, responseMimeType: 'application/json' } });
+    if (modelo !== MODELO) logger.warn(`${filename} se leyó con el modelo de respaldo ${modelo}`);
     const json = salida.match(/\{[\s\S]*\}/);
     if (!json) throw new Error('La lectura de la factura no devolvió datos');
     return JSON.parse(json[0]);
@@ -272,7 +266,7 @@ class InvoiceExtractor {
         validation: { valid: validationResult.valid, errors: validationResult.errors, warnings: validationResult.warnings },
         confidence: { overall: parseFloat((confidence * 100).toFixed(2)) },
         missingFields: detectMissingFields(extractedData),
-        method: `Google Gemini (${MODELO})`,
+        method: 'Google Gemini',
       };
     } catch (error) {
       logger.error(`${filename}: ${error.message}`);
@@ -283,7 +277,7 @@ class InvoiceExtractor {
   /** varias facturas, de a 5 en paralelo; cada resultado trae la factura o el motivo del error */
   async processFileBatch(files) {
     logger.info(`Procesando lote de ${files.length} archivos...`);
-    const MAX_CONCURRENT = 5;
+    const MAX_CONCURRENT = 3;
     const results = [];
     for (let i = 0; i < files.length; i += MAX_CONCURRENT) {
       const parte = await Promise.all(files.slice(i, i + MAX_CONCURRENT).map(async (file) => {
@@ -292,7 +286,7 @@ class InvoiceExtractor {
           return { success: true, filename: file.originalname, factura };
         } catch (error) {
           logger.error(`${file.originalname}: ${error.message}`);
-          return { success: false, filename: file.originalname, error: error.message };
+          return { success: false, filename: file.originalname, error: error.message, saturado: error.code === 'GEMINI_SATURADO' };
         }
       }));
       results.push(...parte);

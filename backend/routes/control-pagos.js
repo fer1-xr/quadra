@@ -1,12 +1,11 @@
 import express from 'express';
 import fs from 'fs';
 import path from 'path';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+import { generarConGemini } from '../services/gemini.js';
 import { upload, cleanupTempFiles } from '../middleware/upload-handler.js';
 
 const router = express.Router();
 
-const MODELO = process.env.GEMINI_MODEL || 'gemini-3.8-flash';
 
 const MIME = {
   '.pdf': 'application/pdf',
@@ -72,18 +71,14 @@ export function normalizar(raw = {}) {
 }
 
 async function leerDocumento(buffer, filename, tipo) {
-  const apiKey = process.env.GOOGLE_API_KEY;
-  if (!apiKey) throw new Error('GOOGLE_API_KEY no configurada');
-
   const mimeType = MIME[path.extname(filename).toLowerCase()];
   if (!mimeType) throw new Error('Tipo de archivo no soportado');
 
-  const model = new GoogleGenerativeAI(apiKey).getGenerativeModel({ model: MODELO });
-  const response = await model.generateContent([
+  const { texto } = await generarConGemini([
     { inlineData: { data: buffer.toString('base64'), mimeType } },
     { text: PROMPT(tipo) },
   ]);
-  const json = response.response.text().match(/\{[\s\S]*\}/);
+  const json = texto.match(/\{[\s\S]*\}/);
   if (!json) throw new Error('La lectura del documento no devolvió datos');
   return normalizar(JSON.parse(json[0]));
 }
@@ -113,6 +108,7 @@ router.post('/process', upload.single('file'), async (req, res) => {
       documento = await leerDocumento(buffer, req.file.originalname, documentType);
     } catch (err) {
       console.error('[ControlPagos] No se pudo leer el documento:', err.message);
+      if (err.code === 'GEMINI_SATURADO') return res.status(503).json({ error: `${err.message} También podés cargar los datos a mano.` });
       return res.status(422).json({
         error: 'No se pudieron leer los datos del documento. Podés cargarlos a mano.',
       });

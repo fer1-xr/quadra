@@ -231,7 +231,7 @@ function ImportarDocumentos({ contribuyente }) {
           <div className="processing">
             <div className="spinner"></div>
             <p>{processingProgress || 'Procesando archivos...'}</p>
-            <p className="subtitle">Esto puede tomar unos segundos</p>
+            <p className="subtitle">Suele tardar unos segundos por factura. Si Google está con mucha demanda, Quadra reintenta sola y puede demorar hasta un minuto.</p>
           </div>
         )}
         {step === 'complete' && renderCompleteStep()}

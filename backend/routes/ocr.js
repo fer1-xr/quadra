@@ -189,11 +189,16 @@ router.post('/batch', upload.array('files', 20), async (req, res) => {
     const fallidas = batchResult.results.filter((r) => !r.success);
 
     if (leidas.length === 0) {
-      const motivo = fallidas[0]?.error || 'sin datos';
+      const details = fallidas.map((r) => ({ archivo: r.filename, motivo: r.error }));
+      // Google saturado: no es problema de la foto, hay que reintentar más tarde
+      if (fallidas.every((r) => r.saturado)) {
+        return res.status(503).json({ success: false, error: fallidas[0].error, errorCode: 'GEMINI_SATURADO', details });
+      }
+      const motivo = fallidas.find((r) => !r.saturado)?.error || 'sin datos';
       return res.status(422).json({
         success: false,
-        error: `No se pudo leer ninguna factura (${motivo}). Probá con una foto más nítida y derecha.`,
-        details: fallidas.map((r) => ({ archivo: r.filename, motivo: r.error })),
+        error: `No se pudo leer ninguna factura: ${motivo}. Si la foto está borrosa o torcida, probá con una más nítida y derecha.`,
+        details,
       });
     }
 
