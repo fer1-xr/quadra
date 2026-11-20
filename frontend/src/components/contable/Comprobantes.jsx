@@ -7,7 +7,7 @@ import {
 } from 'lucide-react'
 import PageHead from '../PageHead'
 import { useContable } from './ContableContext'
-import { MontoInput, AsientoPreview, exportarExcel, MesStepper, SyncEstado } from './ui'
+import { MontoInput, AsientoPreview, exportarExcel, MesStepper, SyncEstado, InfoCarga } from './ui'
 import { Buscador } from './AsientosManuales'
 import { rucDnitExacto } from '../../services/rucDnit'
 import { API_BASE_URL, authHeaders } from '../../services/api'
@@ -325,6 +325,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
       if (e.altKey && k === 'e') { e.preventDefault(); setTab('encabezado') }
       if (e.altKey && k === 'd') { e.preventDefault(); setTab('debe') }
       if (e.altKey && k === 'h') { e.preventDefault(); setTab('haber') }
+      if (e.altKey && k === 'r') { e.preventDefault(); setTab('registro') }
       if (e.altKey && k === 'g') { e.preventDefault(); guardar(false) }
       if (e.ctrlKey && k === 'enter') { e.preventDefault(); guardar(!f.id) }
       if (k === 'escape') onCerrar(cargados > 0)
@@ -338,7 +339,8 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
   const TABS = [
     { id: 'encabezado', label: 'Encabezado', tecla: 'E' },
     { id: 'debe', label: 'Asiento Debe', tecla: 'D', n: lineas.filter((l) => l.debe).length },
-    { id: 'haber', label: 'Asiento Haber', tecla: 'H', n: lineas.filter((l) => l.haber).length }
+    { id: 'haber', label: 'Asiento Haber', tecla: 'H', n: lineas.filter((l) => l.haber).length },
+    { id: 'registro', label: 'Registro', tecla: 'R' }
   ]
   const conTecla = (tb) => {
     const i = tb.label.indexOf(tb.tecla)
@@ -637,6 +639,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
           )}
           {tab === 'debe' && ladoAsiento('debe')}
           {tab === 'haber' && ladoAsiento('haber')}
+          {tab === 'registro' && <InfoCarga doc={f} />}
         </div>
 
         {errores.length > 0 && (

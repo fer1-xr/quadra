@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import axios from 'axios'
 import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle, Search } from 'lucide-react'
 import { useContable } from './ContableContext'
-import { MontoInput, MesStepper, SyncEstado } from './ui'
+import { MontoInput, MesStepper, SyncEstado, InfoCarga } from './ui'
 import { Buscador } from './AsientosManuales'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
@@ -268,11 +268,11 @@ function ModalRetencion({ inicial, onCerrar, mesRef }) {
     onCerrar(true)
   }
 
-  // atajos: Alt+E/C/D/H pestañas, Alt+G guardar, Esc cancelar
+  // atajos: Alt+E/O/D/H/R pestañas, Alt+G guardar, Esc cancelar
   useEffect(() => {
     const onKey = (e) => {
       const k = e.key.toLowerCase()
-      const tabs = { e: 'encabezado', o: 'comprobantes', d: 'debe', h: 'haber' }
+      const tabs = { e: 'encabezado', o: 'comprobantes', d: 'debe', h: 'haber', r: 'registro' }
       if (e.altKey && tabs[k]) { e.preventDefault(); setTab(tabs[k]) }
       if (e.altKey && k === 'g') { e.preventDefault(); guardar() }
       if (e.altKey && k === 'c') { e.preventDefault(); onCerrar(false) }
@@ -287,7 +287,8 @@ function ModalRetencion({ inicial, onCerrar, mesRef }) {
     { id: 'encabezado', label: 'Encabezado' },
     { id: 'comprobantes', label: 'Comprobantes', n: f.comprobantesRet.length },
     { id: 'debe', label: 'Asiento Debe' },
-    { id: 'haber', label: 'Asiento Haber' }
+    { id: 'haber', label: 'Asiento Haber' },
+    { id: 'registro', label: 'Registro' }
   ]
 
   /* pestañas del asiento: la cuenta editable es la de la persona */
@@ -509,6 +510,7 @@ function ModalRetencion({ inicial, onCerrar, mesRef }) {
 
           {tab === 'debe' && ladoAsiento('debe')}
           {tab === 'haber' && ladoAsiento('haber')}
+          {tab === 'registro' && <InfoCarga doc={f} />}
         </div>
 
         {errores.length > 0 && (

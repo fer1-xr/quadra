@@ -9,7 +9,7 @@ export const useContable = () => useContext(Ctx)
 /* ── auditoría ──────────────────────────────────────────────── */
 
 // campos de control: no cuentan como cambio
-const INTERNOS = new Set(['id', 'clienteId', 'creadoEn', 'creadoPor', 'modificadoEn', 'modificadoPor', 'editadoEn'])
+const INTERNOS = new Set(['id', 'clienteId', 'creadoEn', 'creadoPor', 'creadoPorNombre', 'modificadoEn', 'modificadoPor', 'modificadoPorNombre', 'editadoEn'])
 
 /** descripción corta del registro, para leer la auditoría sin abrirlo */
 export const resumenDe = (coleccion, x) => {
@@ -48,7 +48,7 @@ const diferencias = (antes, despues) => {
  * Si recibe `registrar`, cada alta, modificación o baja deja su rastro en la auditoría
  * y el registro guarda quién lo creó y quién lo modificó por última vez.
  */
-const usePorCliente = (kind, key, clienteId, registrar, usuario) => {
+const usePorCliente = (kind, key, clienteId, registrar, usuario, usuarioNombre) => {
   const [todos, setTodos, status] = useCloudCollection(kind, key)
   const ultimo = useRef(todos)
   ultimo.current = todos
@@ -64,7 +64,8 @@ const usePorCliente = (kind, key, clienteId, registrar, usuario) => {
       creadoEn: item.creadoEn || previo?.creadoEn || ahora,
       ...(registrar ? {
         creadoPor: item.creadoPor || previo?.creadoPor || usuario,
-        ...(previo ? { modificadoEn: ahora, modificadoPor: usuario } : {})
+        creadoPorNombre: item.creadoPorNombre || previo?.creadoPorNombre || (previo?.creadoPor ? '' : usuarioNombre),
+        ...(previo ? { modificadoEn: ahora, modificadoPor: usuario, modificadoPorNombre: usuarioNombre } : {})
       } : {})
     }
     if (registrar) {
@@ -91,10 +92,16 @@ const usePorCliente = (kind, key, clienteId, registrar, usuario) => {
 export function ContableProvider({ contribuyente, onNavigate, children }) {
   const clienteId = String(contribuyente.clienteId)
   const [usuario, setUsuario] = useState('Este equipo')
+  const [usuarioNombre, setUsuarioNombre] = useState('')
   useEffect(() => {
     let vivo = true
     supabase.auth.getSession()
-      .then(({ data }) => { if (vivo && data?.session?.user?.email) setUsuario(data.session.user.email) })
+      .then(({ data }) => {
+        const u = data?.session?.user
+        if (!vivo || !u?.email) return
+        setUsuario(u.email)
+        setUsuarioNombre(u.user_metadata?.name || u.user_metadata?.full_name || '')
+      })
       .catch(() => {})
     return () => { vivo = false }
   }, [])
@@ -102,10 +109,10 @@ export function ContableProvider({ contribuyente, onNavigate, children }) {
   const auditoria = usePorCliente('auditoria', 'quadra_ct_auditoria', clienteId)
   const registrar = (e) => auditoria.guardar({ ...e, fecha: new Date().toISOString(), usuario })
 
-  const comprobantes = usePorCliente('comprobante', 'quadra_ct_comprobantes', clienteId, registrar, usuario)
-  const cuentas = usePorCliente('cuenta', 'quadra_ct_cuentas', clienteId, registrar, usuario)
-  const activos = usePorCliente('activo', 'quadra_ct_activos', clienteId, registrar, usuario)
-  const timbrados = usePorCliente('timbrado', 'quadra_ct_timbrados', clienteId, registrar, usuario)
+  const comprobantes = usePorCliente('comprobante', 'quadra_ct_comprobantes', clienteId, registrar, usuario, usuarioNombre)
+  const cuentas = usePorCliente('cuenta', 'quadra_ct_cuentas', clienteId, registrar, usuario, usuarioNombre)
+  const activos = usePorCliente('activo', 'quadra_ct_activos', clienteId, registrar, usuario, usuarioNombre)
+  const timbrados = usePorCliente('timbrado', 'quadra_ct_timbrados', clienteId, registrar, usuario, usuarioNombre)
 
   const [personasTodas, setPersonas, statusPersonas] = useCloudCollection('persona', 'quadra_ct_personas')
   const personasRef = useRef(personasTodas)
@@ -148,6 +155,7 @@ export function ContableProvider({ contribuyente, onNavigate, children }) {
     contribuyente,
     ejercicio: Number(contribuyente.ejercicio) || new Date().getFullYear(),
     usuario,
+    usuarioNombre,
     comprobantes,
     cuentas,
     activos,

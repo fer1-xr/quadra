@@ -1,6 +1,6 @@
 import React, { useId } from 'react'
 import * as XLSX from 'xlsx'
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, UserRound, Clock, Pencil } from 'lucide-react'
 import { MESES, analizarRuc, gs } from '../../services/contabilidad'
 import { useContable } from './ContableContext'
 import { SYNC_LABELS } from '../../services/useCloudCollection'
@@ -203,5 +203,46 @@ export function Vacio({ titulo, children, accion }) {
       {children && <p>{children}</p>}
       {accion}
     </div>
+  )
+}
+
+/* ── quién cargó el registro ────────────────────────────────── */
+
+const fechaHoraLarga = (iso) => (iso ? new Date(iso).toLocaleString('es-PY', { dateStyle: 'long', timeStyle: 'short' }) : '')
+
+/** nombre y email de quien hizo el cambio; acepta el email solo o { nombre, email } */
+const persona = (quien, nombre) => {
+  if (!quien && !nombre) return null
+  const email = typeof quien === 'object' ? quien?.email || '' : String(quien || '')
+  const n = nombre || (typeof quien === 'object' ? quien?.nombre : '') || (email.includes('@') ? email.split('@')[0] : email)
+  return { nombre: n, email: email.includes('@') && email !== n ? email : '' }
+}
+
+/** pestaña «Registro»: usuario que cargó el comprobante, cuándo, y la última modificación */
+export function InfoCarga({ doc }) {
+  const { usuario, usuarioNombre } = useContable()
+  const nuevo = !doc?.id
+  const autor = nuevo ? persona(usuario, usuarioNombre) : persona(doc.creadoPor, doc.creadoPorNombre)
+  const modEn = doc?.modificadoEn || doc?.editadoEn
+  const editor = persona(doc?.modificadoPor, doc?.modificadoPorNombre)
+  return (
+    <dl className="ct-carga">
+      <div>
+        <dt><UserRound size={14} strokeWidth={1.9} aria-hidden="true" /> Cargado por</dt>
+        <dd>
+          {autor ? autor.nombre : 'Sin registro (cargado antes de esta versión)'}
+          {autor?.email && <small>{autor.email}</small>}
+          {nuevo && <small>Quedará registrado al guardar</small>}
+        </dd>
+      </div>
+      <div>
+        <dt><Clock size={14} strokeWidth={1.9} aria-hidden="true" /> Fecha y hora de carga</dt>
+        <dd>{doc?.creadoEn ? fechaHoraLarga(doc.creadoEn) : 'Se registra al guardar'}</dd>
+      </div>
+      <div>
+        <dt><Pencil size={14} strokeWidth={1.9} aria-hidden="true" /> Última modificación</dt>
+        <dd>{modEn ? <>{fechaHoraLarga(modEn)}{editor && <small>por {editor.nombre}{editor.email ? ` · ${editor.email}` : ''}</small>}</> : 'Sin modificaciones'}</dd>
+      </div>
+    </dl>
   )
 }

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import axios from 'axios'
 import { Plus, Pencil, Trash2, X, Check, ChevronUp, ChevronDown, AlertTriangle, QrCode, Info, BadgeCheck, ExternalLink, Search } from 'lucide-react'
 import { useContable } from './ContableContext'
-import { MontoInput, MesStepper, SyncEstado } from './ui'
+import { MontoInput, MesStepper, SyncEstado, InfoCarga } from './ui'
 import { Buscador } from './AsientosManuales'
 import { API_BASE_URL, authHeaders } from '../../services/api'
 import {
@@ -279,11 +279,11 @@ function ModalNotaCredito({ inicial, onCerrar, mesRef }) {
     onCerrar(true)
   }
 
-  // atajos: Alt+E/F/D/H pestañas, Alt+G guardar, Esc cancelar
+  // atajos: Alt+E/F/D/H/R pestañas, Alt+G guardar, Esc cancelar
   useEffect(() => {
     const onKey = (e) => {
       const k = e.key.toLowerCase()
-      const tabs = { e: 'encabezado', f: 'facturas', d: 'debe', h: 'haber' }
+      const tabs = { e: 'encabezado', f: 'facturas', d: 'debe', h: 'haber', r: 'registro' }
       if (e.altKey && tabs[k]) { e.preventDefault(); setTab(tabs[k]) }
       if (e.altKey && k === 'g') { e.preventDefault(); guardar() }
       if (e.altKey && k === 'c') { e.preventDefault(); onCerrar(false) }
@@ -298,7 +298,8 @@ function ModalNotaCredito({ inicial, onCerrar, mesRef }) {
     { id: 'encabezado', label: 'Encabezado' },
     { id: 'facturas', label: 'Facturas', n: doc.facturas.length },
     { id: 'debe', label: 'Asiento Debe' },
-    { id: 'haber', label: 'Asiento Haber' }
+    { id: 'haber', label: 'Asiento Haber' },
+    { id: 'registro', label: 'Registro' }
   ]
 
   /* pestañas del asiento */
@@ -535,6 +536,7 @@ function ModalNotaCredito({ inicial, onCerrar, mesRef }) {
 
           {tab === 'debe' && ladoAsiento('debe')}
           {tab === 'haber' && ladoAsiento('haber')}
+          {tab === 'registro' && <InfoCarga doc={f} />}
         </div>
 
         {errores.length > 0 && (
