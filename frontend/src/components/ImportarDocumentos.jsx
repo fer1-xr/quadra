@@ -2,9 +2,19 @@ import React, { useState } from 'react'
 import PageHead, { Figures } from './PageHead'
 import axios from 'axios'
 import { Card, CardBody, CardHeader, Button, Spinner, Progress, Chip } from '@heroui/react'
-import { Upload, File, X, FileUp, CheckCircle2, Paperclip } from 'lucide-react'
+import { Upload, File, X, FileUp, CheckCircle2, Paperclip, Download, FileSpreadsheet, AlertTriangle, RotateCcw } from 'lucide-react'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/ImportarDocumentos.css'
+
+/** baja un archivo ya generado (blob URL) con su nombre */
+const bajar = (url, nombre) => {
+  const link = document.createElement('a')
+  link.href = url
+  link.setAttribute('download', nombre)
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+}
 
 function ImportarDocumentos({ contribuyente }) {
   const [dragActive, setDragActive] = useState(false)
@@ -15,6 +25,8 @@ function ImportarDocumentos({ contribuyente }) {
   const [step, setStep] = useState('upload') // upload, processing, complete
   const [processingProgress, setProcessingProgress] = useState('')
   const [resumen, setResumen] = useState(null)
+  // Excel de la última lectura, para volver a bajarlo sin procesar de nuevo
+  const [descarga, setDescarga] = useState(null)
 
   const handleDrag = (e) => {
     e.preventDefault()
@@ -99,17 +111,12 @@ function ImportarDocumentos({ contribuyente }) {
       } catch { /* sin resumen: se asume que se leyeron todas */ }
       setResumen(r)
 
-      // Descargar Excel directamente
+      // Descargar Excel directamente (queda guardado para volver a bajarlo)
       const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      link.setAttribute('download', `FACTURAS_LEIDAS_${contribuyente?.ruc ? `${contribuyente.ruc}_` : ''}${new Date().toISOString().split('T')[0]}.xlsx`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-
-      setSuccess(`${r.leidas} de ${files.length} factura(s) leídas${r.fallidas.length ? `; ${r.fallidas.length} no se pudieron leer` : ''}`)
+      const nombre = `FACTURAS_LEIDAS_${contribuyente?.ruc ? `${contribuyente.ruc}_` : ''}${new Date().toISOString().split('T')[0]}.xlsx`
+      if (descarga) window.URL.revokeObjectURL(descarga.url)
+      setDescarga({ url, nombre, total: files.length })
+      bajar(url, nombre)
       setStep('complete')
       setFiles([])
     } catch (err) {
@@ -185,33 +192,71 @@ function ImportarDocumentos({ contribuyente }) {
     </div>
   )
 
-  const renderCompleteStep = () => (
-    <div className="complete-container">
-      <div className="complete-icon"><CheckCircle2 size={28} strokeWidth={1.6} /></div>
-      <h2>¡Listo!</h2>
-      <p>Tu Excel se descargó con las hojas Libro Compras, Ítems y Datos completos de cada factura.</p>
-      {resumen?.observadas > 0 && (
-        <p className="subtitle">{resumen.observadas} factura(s) tienen observaciones (IVA, totales o RUC por revisar): mirá la columna Observaciones.</p>
-      )}
-      {resumen?.fallidas?.length > 0 && (
-        <div className="alert alert-error" style={{ textAlign: 'left' }}>
-          <strong>No se pudieron leer:</strong>
-          <ul>{resumen.fallidas.map((f) => <li key={f.archivo}>{f.archivo}: {f.motivo}</li>)}</ul>
-          Están en la hoja «No leídos» del Excel. Probá con una foto más nítida y derecha.
+  const nuevaLectura = () => {
+    setStep('upload')
+    setSuccess('')
+    setResumen(null)
+  }
+
+  const renderCompleteStep = () => {
+    const leidas = resumen?.leidas ?? 0
+    const fallidas = resumen?.fallidas || []
+    const observadas = resumen?.observadas || 0
+    const parcial = fallidas.length > 0
+    return (
+      <div className="idoc-res" role="status">
+        <div className={`idoc-res__icono ${parcial ? 'is-warn' : ''}`} aria-hidden="true">
+          {parcial ? <AlertTriangle size={30} strokeWidth={1.8} /> : <CheckCircle2 size={30} strokeWidth={1.8} />}
         </div>
-      )}
-      <button
-        className="btn btn-primary"
-        onClick={() => {
-          setStep('upload')
-          setSuccess('')
-          setResumen(null)
-        }}
-      >
-        Procesar más archivos
-      </button>
-    </div>
-  )
+        <h2 className="idoc-res__titulo">{parcial ? 'Excel descargado, con archivos sin leer' : 'Listo, tu Excel ya se descargó'}</h2>
+        <p className="idoc-res__lede">
+          {leidas === 1 ? 'Se leyó 1 factura' : `Se leyeron ${leidas} facturas`}
+          {descarga?.total ? ` de ${descarga.total} archivo${descarga.total === 1 ? '' : 's'}` : ''}.
+          {descarga && <> Archivo: <b>{descarga.nombre}</b></>}
+        </p>
+
+        <dl className="idoc-res__cifras">
+          <div className="is-ok"><dt>Leídas</dt><dd>{leidas}</dd></div>
+          <div className={observadas ? 'is-warn' : ''}><dt>Para revisar</dt><dd>{observadas}</dd></div>
+          <div className={fallidas.length ? 'is-err' : ''}><dt>Sin leer</dt><dd>{fallidas.length}</dd></div>
+        </dl>
+
+        {observadas > 0 && (
+          <p className="idoc-res__aviso is-warn">
+            <AlertTriangle size={16} strokeWidth={1.8} aria-hidden="true" />
+            <span>{observadas === 1 ? '1 factura tiene' : `${observadas} facturas tienen`} algo para revisar (IVA, totales o RUC). Está anotado en la columna <b>Observaciones</b>.</span>
+          </p>
+        )}
+        {parcial && (
+          <div className="idoc-res__aviso is-err">
+            <AlertTriangle size={16} strokeWidth={1.8} aria-hidden="true" />
+            <div>
+              <b>No se pudieron leer:</b>
+              <ul>{fallidas.map((f) => <li key={f.archivo}><b>{f.archivo}</b>: {f.motivo}</li>)}</ul>
+              También están en la hoja «No leídos» del Excel.
+            </div>
+          </div>
+        )}
+
+        <ul className="idoc-res__hojas" aria-label="Hojas del Excel">
+          <li><FileSpreadsheet size={16} strokeWidth={1.7} aria-hidden="true" /><span><b>Libro Compras</b> una fila por factura, con IVA y totales</span></li>
+          <li><FileSpreadsheet size={16} strokeWidth={1.7} aria-hidden="true" /><span><b>Ítems</b> el detalle de cada factura</span></li>
+          <li><FileSpreadsheet size={16} strokeWidth={1.7} aria-hidden="true" /><span><b>Datos completos</b> emisor, timbrado, cliente, totales en letras</span></li>
+        </ul>
+
+        <div className="idoc-res__acciones">
+          {descarga && (
+            <button type="button" className="idoc-btn idoc-btn--linea" onClick={() => bajar(descarga.url, descarga.nombre)}>
+              <Download size={16} strokeWidth={1.8} aria-hidden="true" /> Descargar de nuevo
+            </button>
+          )}
+          <button type="button" className="idoc-btn idoc-btn--primario" onClick={nuevaLectura}>
+            <RotateCcw size={16} strokeWidth={1.8} aria-hidden="true" /> Leer más facturas
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="importar-documentos">
@@ -224,7 +269,7 @@ function ImportarDocumentos({ contribuyente }) {
       <div className="card">
 
         {error && <div className="alert alert-error">{error}</div>}
-        {success && <div className="alert alert-success">{success}</div>}
+        {success && step !== 'complete' && <div className="alert alert-success">{success}</div>}
 
         {step === 'upload' && renderUploadStep()}
         {step === 'processing' && (
