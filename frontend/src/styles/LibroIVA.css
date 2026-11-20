@@ -143,3 +143,10 @@
   .lf-span-3, .lf-span-2 { grid-column: 1 / -1; }
   .lf-reparto__fila { grid-template-columns: minmax(0, 1fr) 120px auto; }
 }
+
+/* proveedor completado por el timbrado */
+.lf-portimb { display: flex; align-items: baseline; gap: 5px; flex-wrap: wrap; margin-top: 4px; }
+.lf-portimb svg { display: inline-block; flex: none; align-self: center; color: var(--q-accent, currentColor); }
+.lf-portimb .ct-link { font-size: inherit; }
+/* un aviso debajo de un campo no estira a sus vecinos de fila */
+.lf-grid > .q-field { align-self: start; }

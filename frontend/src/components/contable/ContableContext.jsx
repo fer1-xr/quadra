@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { useCloudCollection } from '../../services/useCloudCollection'
 import { supabase } from '../../services/supabaseClient'
-import { armarPlan, nuevoId, analizarRuc, TIPOS } from '../../services/contabilidad'
+import { armarPlan, nuevoId, analizarRuc, TIPOS, indiceTimbrados } from '../../services/contabilidad'
 
 const Ctx = createContext(null)
 export const useContable = () => useContext(Ctx)
@@ -80,7 +80,8 @@ const usePorCliente = (kind, key, clienteId, registrar, usuario, usuarioNombre) 
     if (registrar && previo) registrar({ accion: 'baja', coleccion: kind, docId: id, ref: resumenDe(kind, previo), cambios: [] })
     setTodos((prev) => prev.filter((x) => x.id !== id))
   }
-  return { items, guardar, eliminar, status }
+  // `todos`: los de todos los clientes del estudio (para lo que se aprende entre clientes)
+  return { items, todos, guardar, eliminar, status }
 }
 
 /**
@@ -144,6 +145,13 @@ export function ContableProvider({ contribuyente, onNavigate, children }) {
     }
   }
 
+  // quién emite cada timbrado, según lo cargado para todos los clientes
+  const [clientes] = useCloudCollection('cliente', 'quadra_clientes')
+  const quienTimbro = useMemo(
+    () => indiceTimbrados({ comprobantes: comprobantes.todos, timbrados: timbrados.todos, clientes }),
+    [comprobantes.todos, timbrados.todos, clientes]
+  )
+
   const plan = useMemo(() => armarPlan(cuentas.items), [cuentas.items])
   const nombreCuenta = useMemo(() => {
     const m = new Map(plan.map((c) => [c.codigo, c.nombre]))
@@ -165,6 +173,7 @@ export function ContableProvider({ contribuyente, onNavigate, children }) {
     plan,
     imputables,
     nombreCuenta,
+    quienTimbro,
     /** abre otra hoja de Quadra (libros, conciliación…) */
     ir: onNavigate || (() => {})
   }

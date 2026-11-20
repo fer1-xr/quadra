@@ -303,6 +303,48 @@ export const siguienteNumero = (timbrado, docs) => {
 
 export const timbradoVigente = (t, fecha = hoyISO()) => (!t.inicio || t.inicio <= fecha) && (!t.fin || t.fin >= fecha)
 
+/**
+ * Quién emite cada timbrado, aprendido de lo ya cargado para todos los clientes del estudio:
+ * las compras dicen el timbrado de cada proveedor; las ventas y los timbrados del catastro,
+ * el del propio cliente (que puede ser proveedor de otro cliente).
+ * Devuelve una función: timbrado → { ruc, nombre, usos, otros } | null.
+ * (La DNIT no ofrece una consulta pública timbrado → RUC: sus consultas piden el RUC y un captcha.)
+ */
+export const indiceTimbrados = ({ comprobantes = [], timbrados = [], clientes = [] }) => {
+  const porCliente = new Map(clientes.filter((c) => c.ruc).map((c) => [String(c.id), { ruc: c.ruc, nombre: c.razonSocial || '' }]))
+  const mapa = new Map() // timbrado → Map(ruc → { ruc, nombre, usos, fecha })
+  const sumar = (timbrado, ruc, nombre, fecha = '') => {
+    if (!timbradoValido(timbrado) || !analizarRuc(ruc).formato) return
+    if (!mapa.has(timbrado)) mapa.set(timbrado, new Map())
+    const m = mapa.get(timbrado)
+    const p = m.get(ruc) || { ruc, nombre: '', usos: 0, fecha: '' }
+    p.usos += 1
+    // el nombre más reciente gana (corrige razones sociales mal escritas)
+    if (nombre && (!p.nombre || fecha >= p.fecha)) { p.nombre = String(nombre).trim(); p.fecha = fecha }
+    m.set(ruc, p)
+  }
+  comprobantes.forEach((d) => {
+    const lado = TIPOS[d.tipo]?.lado
+    if (!lado || !d.timbrado) return
+    if (lado === 'compra' && !TIPOS[d.tipo].emitido) sumar(String(d.timbrado), d.personaRuc, d.personaNombre, d.fecha)
+    else if (TIPOS[d.tipo].emitido) {
+      const c = porCliente.get(String(d.clienteId))
+      if (c) sumar(String(d.timbrado), c.ruc, c.nombre, d.fecha)
+    }
+  })
+  timbrados.forEach((t) => {
+    const c = porCliente.get(String(t.clienteId))
+    if (c) sumar(String(t.numero), c.ruc, c.nombre, t.inicio || '')
+  })
+  return (timbrado) => {
+    const m = mapa.get(String(timbrado || ''))
+    if (!m) return null
+    const lista = [...m.values()].filter((p) => p.nombre).sort((a, b) => b.usos - a.usos || b.fecha.localeCompare(a.fecha))
+    if (!lista.length) return null
+    return { ...lista[0], otros: lista.slice(1) }
+  }
+}
+
 /* ── asientos automáticos ───────────────────────────────────── */
 
 const linea = (cuenta, debe, haber, glosa) => ({ cuenta, debe: n0(debe), haber: n0(haber), glosa })

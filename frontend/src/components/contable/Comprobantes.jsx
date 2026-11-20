@@ -34,6 +34,9 @@ const TIPOS_TIMB = [
   { id: 'autoimpresor', label: 'Autoimpresor' }
 ]
 
+// consulta pública de la DNIT (pide RUC, timbrado y captcha: la completa el usuario)
+const DNIT_VALIDEZ = 'https://servicios.set.gov.py/eset-publico/consultarValidezDocumentos.do'
+
 const normalizar = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
 const mesActual = () => String(new Date().getMonth() + 1).padStart(2, '0')
 const nuevaKey = () => `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`
@@ -99,7 +102,7 @@ const aDoc = (f) => {
 /* ── ventana de carga ───────────────────────────────────────── */
 
 function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
-  const { comprobantes, timbrados, personas, imputables, nombreCuenta, ejercicio, contribuyente } = useContable()
+  const { comprobantes, timbrados, personas, imputables, nombreCuenta, ejercicio, contribuyente, quienTimbro } = useContable()
   const [f, setF] = useState(inicial)
   const [tab, setTab] = useState('encabezado')
   const [errores, setErrores] = useState([])
@@ -107,6 +110,8 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
   const [cargados, setCargados] = useState(0)
   const [cotizando, setCotizando] = useState('')
   const [personaNueva, setPersonaNueva] = useState(false)
+  // proveedor completado a partir del timbrado (lo que se aprendió de otras cargas)
+  const [porTimbrado, setPorTimbrado] = useState(null)
   const panel = useRef(null)
   const primerCampo = useRef(null)
 
@@ -153,6 +158,11 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
       const destino = pendiente || document.getElementById('lf-cond')
       if (destino) { destino.focus(); destino.select?.(); return }
     }
+    // con el proveedor tomado del timbrado, del número se pasa directo a la fecha
+    if (actual?.id === 'lf-numero' && porTimbrado && f.personaRuc === porTimbrado.ruc) {
+      const fecha = document.getElementById('lf-fecha')
+      if (fecha) { fecha.focus(); fecha.select?.(); return }
+    }
     const campos = [...(panel.current?.querySelectorAll('[data-nav]:not([disabled])') || [])]
     const i = campos.indexOf(actual)
     const prox = campos[i + 1]
@@ -171,10 +181,10 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     if (!previo) { setSugerido(null); return base }
     const c = { ...base }
     const usados = []
-    if (esCompra && !f.timbrado && previo.timbrado) { c.timbrado = previo.timbrado; c.tipoTimbrado = previo.tipoTimbrado || c.tipoTimbrado; usados.push('timbrado') }
-    if (previo.cuenta && f.cuenta === TIPOS[f.tipo].cuenta) { c.cuenta = previo.cuenta; usados.push('cuenta') }
+    if (esCompra && !base.timbrado && previo.timbrado) { c.timbrado = previo.timbrado; c.tipoTimbrado = previo.tipoTimbrado || c.tipoTimbrado; usados.push('timbrado') }
+    if (previo.cuenta && base.cuenta === TIPOS[base.tipo].cuenta) { c.cuenta = previo.cuenta; usados.push('cuenta') }
     if (previo.condicion) { c.condicion = previo.condicion; c.cuentaPago = previo.cuentaPago || CTA.CAJA; usados.push('condición') }
-    if (previo.moneda && previo.moneda !== 'PYG' && f.moneda === 'PYG') { c.moneda = previo.moneda; usados.push('moneda') }
+    if (previo.moneda && previo.moneda !== 'PYG' && base.moneda === 'PYG') { c.moneda = previo.moneda; usados.push('moneda') }
     setSugerido(usados.length ? { fecha: previo.fecha, numero: previo.numero, usados } : null)
     return c
   }
@@ -184,6 +194,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     if (!ruc) { set({ personaRuc: '', personaNombre: '' }); return }
     const p = personas.items.find((x) => x.ruc === ruc)
     setPersonaNueva(false)
+    setPorTimbrado(null)
     setF((prev) => recordar(ruc, { ...prev, personaRuc: ruc, personaNombre: p?.nombre || (item?.dnit ? item.text : prev.personaNombre) }))
     setErrores([])
     setTimeout(() => siguiente(document.getElementById('lf-persona')), 0)
@@ -203,6 +214,26 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     setF((prev) => recordar(ruc, { ...prev, personaRuc: ruc, personaNombre: '' }))
     setPersonaNueva(true)
     setTimeout(() => document.getElementById('lf-nombre')?.focus(), 0)
+  }
+
+  /** timbrado de compra completo: trae el proveedor que ya lo usó en otra carga */
+  const aplicarTimbrado = (numero) => {
+    if (!esCompra || t.emitido || leerCDC(f.cdc)) return
+    const q = quienTimbro(numero)
+    const autollenado = porTimbrado && f.personaRuc === porTimbrado.ruc
+    if (!q) {
+      // el proveedor lo había puesto otro timbrado: no dejarlo colgado
+      if (autollenado) set({ personaRuc: '', personaNombre: '' })
+      setPorTimbrado(null)
+      return
+    }
+    // si el usuario ya eligió otro proveedor a mano, no se pisa (queda el aviso «timbrado de otro RUC»)
+    if (f.personaRuc && f.personaRuc !== q.ruc && !autollenado) return
+    const p = personas.items.find((x) => x.ruc === q.ruc)
+    setF((prev) => recordar(q.ruc, { ...prev, timbrado: numero, personaRuc: q.ruc, personaNombre: p?.nombre || q.nombre }))
+    setPersonaNueva(false)
+    setPorTimbrado(q)
+    setErrores([])
   }
 
   const aplicarCDC = (texto) => {
@@ -314,6 +345,7 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
     setCargados((n) => n + 1)
     setSugerido(null)
     setPersonaNueva(false)
+    setPorTimbrado(null)
     setTab('encabezado')
     setTimeout(() => (t.emitido ? document.getElementById('lf-persona') : primerCampo.current)?.focus(), 0)
   }
@@ -493,7 +525,11 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
                       </select>
                     ) : (
                       <input id="lf-timbrado" className={`q-input q-input--num ${timbradoDeOtro ? 'is-warn' : ''}`} inputMode="numeric" maxLength={8} value={f.timbrado} placeholder="12345678"
-                        onChange={(e) => set({ timbrado: e.target.value.replace(/\D/g, '') })} {...nav} />
+                        onChange={(e) => {
+                          const v = e.target.value.replace(/\D/g, '').slice(0, 8)
+                          set({ timbrado: v })
+                          if (v.length === 8) aplicarTimbrado(v)
+                        }} {...nav} />
                     )}
                   </div>
                   <div className="q-field">
@@ -512,12 +548,21 @@ function ModalComprobante({ inicial, tipos, onCerrar, mesRef }) {
                       onElegir={elegirPersona}
                       onEnterVacio={rucLibre}
                       dnit
-                      onTexto={() => setPersonaNueva(false)}
+                      onTexto={() => { setPersonaNueva(false); setPorTimbrado(null) }}
                       placeholder="RUC o nombre"
                       ariaLabel={quien}
                       inputProps={{ 'data-nav': true }}
                     />
                     {f.personaRuc && rucInfo.formato && !rucInfo.valido && <small className="ct-hint is-warn">DV {rucInfo.esperado}</small>}
+                    {porTimbrado && f.personaRuc === porTimbrado.ruc && (
+                      <small className={`ct-hint lf-portimb ${porTimbrado.otros.length ? 'is-warn' : ''}`}>
+                        <Sparkles size={12} strokeWidth={1.8} aria-hidden="true" />
+                        {porTimbrado.otros.length
+                          ? ` Por el timbrado (también figura con ${porTimbrado.otros.map((o) => o.nombre).join(', ')}).`
+                          : ` Por el timbrado ${f.timbrado}, usado en ${porTimbrado.usos} ${porTimbrado.usos === 1 ? 'carga' : 'cargas'}.`}
+                        {' '}<a href={DNIT_VALIDEZ} target="_blank" rel="noreferrer" className="ct-link">Verificar en la DNIT</a>
+                      </small>
+                    )}
                   </div>
                   <div className="q-field">
                     <label className="q-label" htmlFor="lf-fecha">Fecha</label>
