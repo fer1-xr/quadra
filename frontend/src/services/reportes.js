@@ -6,6 +6,7 @@
  * la pantalla, el PDF y el Excel.
  */
 import { TIPOS, TIPOS_FISCALES, MESES, totalesDe, n0, facturasPendientes } from './contabilidad.js'
+import { TRAMOS_IRP } from './formularios.js'
 
 /** impuestos con los que el cliente ve Documentos e Informes auxiliares */
 export const IMPUESTOS_REPORTES = ['iva', 'irp', 'irp_rsp', 'irp_rgc']
@@ -142,9 +143,10 @@ export const resumenIVA = (docs, desde, hasta) => {
 
 /**
  * Ventas y gastos de cada mes en los últimos `n` años hasta `anioFin`
- * (un año por línea en el gráfico histórico).
+ * (un año por línea en el gráfico histórico). `monto` da el importe con signo
+ * de cada comprobante (por defecto, el total con IVA).
  */
-export const historico = (docs, anioFin, n = 5) => {
+export const historico = (docs, anioFin, n = 5, monto = (d) => importes(d).total) => {
   const anios = Array.from({ length: n }, (_, i) => anioFin - n + 1 + i)
   const datos = new Map(anios.map((a) => [a, { anio: a, ventas: Array(12).fill(0), gastos: Array(12).fill(0) }]))
   docs.forEach((d) => {
@@ -153,9 +155,8 @@ export const historico = (docs, anioFin, n = 5) => {
     if (!a) return
     const m = Number(d.fecha.slice(5, 7)) - 1
     if (m < 0 || m > 11) return
-    const x = importes(d)
-    if (x.lado === 'venta') a.ventas[m] += x.total
-    else a.gastos[m] += x.total
+    if (TIPOS[d.tipo].lado === 'venta') a.ventas[m] += monto(d)
+    else a.gastos[m] += monto(d)
   })
   // meses que todavía no pasaron: sin valor, para que la línea del año en curso no caiga a cero
   const hoy = new Date()
@@ -177,6 +178,88 @@ export const historico = (docs, anioFin, n = 5) => {
       conDatos: ventas !== 0 || gastos !== 0
     }
   })
+}
+
+/* ── resúmenes de IRP (servicios personales y ganancia de capital) ── */
+
+/** Gs. 80.000.000: con ingresos gravados por encima, el IRP-RSP se liquida */
+export const UMBRAL_IRP_RSP = 80000000
+/** IRP-RGC: tasa única y renta neta presunta sobre el precio de venta */
+export const TASA_IRP_RGC = 0.08
+export const PRESUNTA_IRP_RGC = 0.3
+
+/**
+ * Comprobante deducible para el IRP: los importados de Marangatu traen la marca
+ * «Imputa IRP»; los cargados a mano en Quadra cuentan como deducibles.
+ */
+export const deducibleIRP = (d) => !d.imputa || (Boolean(d.imputa.irp) && !d.imputa.ninguno)
+
+/** importe con signo del comprobante: sin IVA si el contribuyente lo liquida, con IVA si no (para él es costo) */
+export const montoRenta = (conIva) => (d) => {
+  const x = totalesDe(d)
+  return TIPOS[d.tipo].signo * (conIva ? x.base10 + x.base5 + x.ex : x.total)
+}
+
+/** ingresos (ventas) y egresos (compras) del ejercicio: importe total y la parte deducible */
+export const ingresosEgresosIRP = (docs, ejercicio, conIva) => {
+  const monto = montoRenta(conIva)
+  const r = { ingresos: { importe: 0, deducible: 0, n: 0 }, egresos: { importe: 0, deducible: 0, n: 0 } }
+  docs.forEach((d) => {
+    if (d.anulado || !TIPOS_FISCALES.includes(d.tipo) || !String(d.fecha || '').startsWith(String(ejercicio))) return
+    const lado = TIPOS[d.tipo].lado === 'venta' ? r.ingresos : r.egresos
+    const m = monto(d)
+    lado.importe += m
+    lado.n += 1
+    if (deducibleIRP(d)) lado.deducible += m
+  })
+  return r
+}
+
+/**
+ * IRP por servicios personales (Formulario 515): ingresos menos egresos y
+ * donaciones deducibles, con la escala progresiva del 8 %, 9 % y 10 %.
+ * Solo se liquida si los ingresos deducibles superan el umbral.
+ */
+export const resumenIRPRSP = (docs, ejercicio, { conIva = false, donaciones = 0 } = {}) => {
+  const { ingresos, egresos } = ingresosEgresosIRP(docs, ejercicio, conIva)
+  const don = Math.max(n0(donaciones), 0)
+  const saldo = { importe: ingresos.importe - egresos.importe - don, deducible: ingresos.deducible - egresos.deducible - don }
+  const aplica = ingresos.deducible > UMBRAL_IRP_RSP
+  const base = aplica ? Math.max(saldo.deducible, 0) : 0
+  let desde = 0
+  const tramos = TRAMOS_IRP.map((t) => {
+    const imponible = Math.max(Math.min(base, t.hasta) - desde, 0)
+    const fila = { tasa: t.tasa, desde, hasta: t.hasta, base: imponible, impuesto: Math.round(imponible * t.tasa) }
+    desde = t.hasta
+    return fila
+  })
+  return { ingresos, egresos, donaciones: don, saldo, aplica, base, tramos, impuesto: tramos.reduce((s, t) => s + t.impuesto, 0) }
+}
+
+/**
+ * IRP por rentas y ganancias del capital (Formulario 516): precio de venta
+ * menos precio de compra y gastos; la renta imponible es la menor entre la
+ * real y la presunta (30 % del precio de venta), al 8 %.
+ */
+export const resumenIRPRGC = (docs, ejercicio, { conIva = false } = {}) => {
+  const { ingresos, egresos } = ingresosEgresosIRP(docs, ejercicio, conIva)
+  const venta = Math.max(ingresos.deducible, 0)
+  const costo = Math.max(egresos.deducible, 0)
+  const real = Math.max(venta - costo, 0)
+  const presunta = Math.round(venta * PRESUNTA_IRP_RGC)
+  const imponible = Math.min(real, presunta)
+  return {
+    ingresos,
+    egresos,
+    saldo: { importe: ingresos.importe - egresos.importe, deducible: ingresos.deducible - egresos.deducible },
+    venta,
+    costo,
+    real,
+    presunta,
+    imponible,
+    porPresunta: presunta < real,
+    impuesto: Math.round(imponible * TASA_IRP_RGC)
+  }
 }
 
 /* ── colores (paleta categórica validada, modo claro) ───────── */

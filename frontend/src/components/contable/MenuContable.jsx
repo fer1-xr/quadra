@@ -108,7 +108,8 @@ const MENUS = [
         label: 'Informes Auxiliares',
         items: [
           { id: 'ct-resumen-iva', label: 'Resumen general de IVA', hint: 'PDF con gráficos' },
-          { id: 'ct-iva', label: 'Liquidación de IVA', hint: 'Formulario 120, mes a mes' },
+          { id: 'ct-resumen-irp', label: 'Resumen de IRP-RSP', hint: 'servicios personales, PDF' },
+          { id: 'ct-resumen-rgc', label: 'Resumen de IRP-RGC', hint: 'ganancia de capital, PDF' },
           { id: 'ct-balance', label: 'Balance General' },
           { id: 'ct-resultados', label: 'Estado de Resultados' },
           { id: 'ct-mayor', label: 'Balance de sumas y saldos' }
@@ -155,12 +156,13 @@ export const menusPara = (contribuyente) => {
   const obl = new Set(librosObligatorios(contribuyente))
   // los recibos de cobro acompañan a los de pago
   if (obl.has('ct-recibo-pago')) obl.add('ct-recibo-cobro')
-  const conIva = !regla || impuestosActivos(contribuyente).includes('iva')
   const conBalance = !regla || obl.has('ct-inventario')
   const conReportes = !(contribuyente?.impuestos || []).length || tieneReportes(contribuyente)
   const imps = contribuyente?.impuestos || []
   const conRenta = !imps.length || imps.some((id) => /^(irp|ire)/.test(id))
   const activos = impuestosActivos(contribuyente)
+  // resúmenes de IRP: IRP-RSP o IRP-RGC (o IRP sin modalidad); sin impuestos cargados, se ven los dos
+  const conIrp = (id) => !activos.length || activos.includes(id) || activos.includes('irp')
   const conActivoFijo = !activos.length || activos.some((id) => !SIN_ACTIVO_FIJO.has(id))
   const ver = (id) => {
     if (ACTIVO_FIJO.includes(id)) return conActivoFijo
@@ -169,7 +171,8 @@ export const menusPara = (contribuyente) => {
     if (id === 'ct-inf-retenciones') return !regla || obl.has('ct-ret-emitida') || obl.has('ct-ret-recibida')
     if (id === 'ct-inf-recibo-cobro' || id === 'ct-inf-recibo-pago') return !regla || obl.has('ct-recibo-pago')
     if (id === 'ct-rg55-venta' || id === 'ct-rg55-compra') return conRenta
-    if (id === 'ct-iva') return conIva
+    if (id === 'ct-resumen-irp') return conIrp('irp_rsp')
+    if (id === 'ct-resumen-rgc') return conIrp('irp_rgc')
     if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
     if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'
     return true

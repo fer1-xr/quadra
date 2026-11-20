@@ -85,7 +85,8 @@ export const asegurar = (doc, y, necesita) => {
 
 /**
  * Tabla simple. cols: [{ t, w (proporción), der }]; filas: arrays de texto;
- * estilos por fila: { tipo: 'grupo' | 'subtotal' | 'total' }.
+ * estilos por fila: { tipo: 'grupo' | 'subtotal' | 'total', tono, nota } (nota: segunda
+ * línea chica bajo la primera columna).
  */
 export const tablaPdf = (doc, y, { cols, filas, estilos = [] }) => {
   const total = ancho(doc) - MARGEN * 2
@@ -94,7 +95,7 @@ export const tablaPdf = (doc, y, { cols, filas, estilos = [] }) => {
   let acc = MARGEN
   cols.forEach((c) => { xs.push(acc); acc += ((c.w || 1) / suma) * total })
   const anchoCol = (i) => ((cols[i].w || 1) / suma) * total
-  const alturaFila = 5.6
+  const ALTO = 5.6
 
   const cabecera = () => {
     doc.setFont('helvetica', 'bold')
@@ -110,6 +111,7 @@ export const tablaPdf = (doc, y, { cols, filas, estilos = [] }) => {
 
   filas.forEach((fila, n) => {
     const e = estilos[n] || {}
+    const alturaFila = e.nota ? 9.4 : ALTO
     if (y + alturaFila > alto(doc) - 16) { doc.addPage(); y = 18; cabecera() }
     if (e.tipo === 'grupo') {
       doc.setFillColor(FONDO)
@@ -127,9 +129,16 @@ export const tablaPdf = (doc, y, { cols, filas, estilos = [] }) => {
     fila.forEach((v, i) => {
       if (v === '' || v == null) return
       const txt = doc.splitTextToSize(String(v), anchoCol(i) - 3)[0]
-      if (cols[i].der) doc.text(txt, xs[i] + anchoCol(i) - 1.5, y + 3.6, { align: 'right' })
-      else doc.text(txt, xs[i] + 1.5, y + 3.6)
+      const ty = y + (e.nota && cols[i].der ? 5.4 : 3.6)
+      if (cols[i].der) doc.text(txt, xs[i] + anchoCol(i) - 1.5, ty, { align: 'right' })
+      else doc.text(txt, xs[i] + 1.5, ty)
     })
+    if (e.nota) {
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(6.8)
+      doc.setTextColor(TINTA_3)
+      doc.text(doc.splitTextToSize(String(e.nota), anchoCol(0) - 3)[0], xs[0] + 1.5, y + 7.4)
+    }
     doc.setDrawColor(e.tipo === 'total' ? TINTA : LINEA)
     doc.setLineWidth(e.tipo === 'total' ? 0.35 : 0.15)
     doc.line(MARGEN, y + alturaFila - 0.4, MARGEN + total, y + alturaFila - 0.4)

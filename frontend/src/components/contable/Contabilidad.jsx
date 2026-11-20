@@ -8,10 +8,11 @@ import Recibos from './Recibos'
 import { LibroDiario, LibroMayor } from './Libros'
 import { Personas, PlanCuentas, Timbrados } from './Catastros'
 import { ActivosFijos, RevaluoDepreciacion, BienesRegistro } from './ActivosFijos'
-import { LibroInventario, EstadosContables, LiquidacionIVA, LibroIngresosEgresos } from './Informes'
+import { LibroInventario, EstadosContables, LibroIngresosEgresos } from './Informes'
 import InformeLibro from './InformeLibro'
 import FacturasPendientes from './FacturasPendientes'
 import ResumenIVA from './ResumenIVA'
+import ResumenIRP from './ResumenIRP'
 import {
   InfContribuyentes, InfRetenciones, InfIngresosEgresos, InfActivos, InfRecibos, InfTimbrados, InfNumeracion, InfUsuarios, InfAuditoria, InfRG55
 } from './InformesVarios'
@@ -29,6 +30,8 @@ export const VISTAS_CONTABLES = {
   'ct-pend-pago': { titulo: 'Facturas pendientes de pago', grupo: 'Informes · Documentos' },
   'ct-pend-cobro': { titulo: 'Facturas pendientes de cobro', grupo: 'Informes · Documentos' },
   'ct-resumen-iva': { titulo: 'Resumen general de IVA', grupo: 'Informes · Auxiliares' },
+  'ct-resumen-irp': { titulo: 'Resumen de IRP · Servicios personales', grupo: 'Informes · Auxiliares' },
+  'ct-resumen-rgc': { titulo: 'Resumen de IRP · Ganancia de capital', grupo: 'Informes · Auxiliares' },
   'ct-inf-contribuyentes': { titulo: 'Contribuyentes', grupo: 'Informes' },
   'ct-inf-retenciones': { titulo: 'Retenciones de IVA', grupo: 'Informes' },
   'ct-inf-ing-egr': { titulo: 'Resumen de ingresos y egresos', grupo: 'Informes' },
@@ -58,7 +61,6 @@ export const VISTAS_CONTABLES = {
   'ct-inventario': { titulo: 'Libro Inventario y Balances', grupo: 'Informes · Libros' },
   'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Auxiliares' },
   'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Auxiliares' },
-  'ct-iva': { titulo: 'Liquidación de IVA', grupo: 'Informes' },
   'ct-importar': { titulo: 'Importar', grupo: 'Importar-Exportar' },
   'ct-exportar': { titulo: 'Exportar', grupo: 'Importar-Exportar' }
 }
@@ -86,6 +88,8 @@ function Vista({ vista }) {
     case 'ct-pend-pago': return <FacturasPendientes key={vista} lado="compra" />
     case 'ct-pend-cobro': return <FacturasPendientes key={vista} lado="venta" />
     case 'ct-resumen-iva': return <ResumenIVA />
+    case 'ct-resumen-irp': return <ResumenIRP key={vista} tipo="rsp" />
+    case 'ct-resumen-rgc': return <ResumenIRP key={vista} tipo="rgc" />
     case 'ct-inf-contribuyentes': return <InfContribuyentes />
     case 'ct-inf-retenciones': return <InfRetenciones />
     case 'ct-inf-ing-egr': return <InfIngresosEgresos />
@@ -109,7 +113,6 @@ function Vista({ vista }) {
     case 'ct-inventario': return <LibroInventario />
     case 'ct-balance': return <EstadosContables key={vista} tipo="balance" />
     case 'ct-resultados': return <EstadosContables key={vista} tipo="resultados" />
-    case 'ct-iva': return <LiquidacionIVA />
     case 'ct-importar':
     case 'ct-exportar':
       return <ImportarExportar key={vista} modo={vista.slice(3)} />

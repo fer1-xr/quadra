@@ -124,3 +124,9 @@
 .fm-modal__body .q-input { width: 100%; min-width: 0; }
 .fm-modal__error { padding: 8px 24px 0; }
 .fm-modal__foot { display: flex; justify-content: flex-end; gap: 10px; padding: 18px 24px 22px; }
+
+/* resúmenes de IRP: importes alineados a la derecha y títulos dentro de la tarjeta */
+.rp-irp .ct-tabla td.ct-num { text-align: right; }
+.rp-irp .ct-tabla :is(td.ct-num, th.ct-der) { width: 190px; }
+.rp-irp__titulo { margin: 0; padding: 14px 14px 6px; }
+.rp-irp .ct-glosa { color: var(--q-ink-3); font-size: 12px; }

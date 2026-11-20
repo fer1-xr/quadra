@@ -332,7 +332,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
         { id: 'ct-libro-ventas', title: 'Libro Ventas', desc: 'Facturas y notas emitidas con su débito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'DF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
         { id: 'ct-inf-compras', title: 'Informe de Compras', desc: 'Libro Compras filtrado, para imprimir, rubricar o pasar a Excel', icon: BookOpen, eq: [{ v: 'Comprobantes' }, { op: '→' }, { v: 'Libro' }] },
         { id: 'ct-balance', title: 'Balance General', desc: 'Activo, pasivo y patrimonio al cierre del ejercicio', icon: Scale, eq: [{ v: 'A' }, { op: '=' }, { v: 'P' }, { op: '+' }, { v: 'PN' }] },
-        { id: 'ct-iva', title: 'Liquidación de IVA', desc: 'Débito menos crédito fiscal, mes a mes', icon: Calculator, eq: [{ v: 'DF' }, { op: '−' }, { v: 'CF' }, { op: '−' }, { v: 'Ret' }] },
+        { id: 'ct-resumen-irp', title: 'Resumen de IRP', desc: 'Ingresos, egresos deducibles e impuesto del año', icon: Calculator, eq: [{ v: 'IRP' }, { op: '=' }, { v: 'Renta' }, { op: '×' }, { v: 't' }] },
         { id: 'ct-importar', title: 'Importar', desc: 'Marangatu, Excel o respaldo: Quadra reconoce el archivo', icon: FileText, eq: [{ v: 'Archivo' }, { op: '→' }, { v: 'Libros' }] }
       ]
     },
