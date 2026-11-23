@@ -16,14 +16,16 @@ export function Sym({ v, sub }) {
 
 /** Fila de variable. `htmlFor` enlaza la descripción con el control. */
 export function Var({ sym, sub, label, htmlFor, unit, hint, op = '=', children, wide }) {
+  // Sin `sym` la fila queda en lenguaje llano: descripción y valor, sin notación.
+  const plain = !sym
   return (
-    <div className={`qm-var ${wide ? 'qm-var--wide' : ''}`}>
-      <span className="qm-var__sym" aria-hidden="true"><Sym v={sym} sub={sub} /></span>
+    <div className={`qm-var ${wide ? 'qm-var--wide' : ''} ${plain ? 'qm-var--plain' : ''}`}>
+      {!plain && <span className="qm-var__sym" aria-hidden="true"><Sym v={sym} sub={sub} /></span>}
       <span className="qm-var__desc">
         {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : <span>{label}</span>}
         {hint && <small>{hint}</small>}
       </span>
-      <span className="qm-var__op" aria-hidden="true">{op}</span>
+      {!plain && <span className="qm-var__op" aria-hidden="true">{op}</span>}
       <span className="qm-var__field">
         {children}
         {unit && <span className="qm-var__unit">{unit}</span>}
@@ -101,9 +103,9 @@ export function SetChoice({ name, value, options, onChange, label }) {
 }
 
 /** Interruptor de un término de la ecuación (incluido / excluido). */
-export function TermToggle({ id, checked, onChange, children }) {
+export function TermToggle({ id, checked, onChange, children, plain }) {
   return (
-    <label className={`qm-toggle ${checked ? 'is-on' : ''}`} htmlFor={id}>
+    <label className={`qm-toggle ${checked ? 'is-on' : ''} ${plain ? 'is-plain' : ''}`} htmlFor={id}>
       <input id={id} type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />
       <span className="qm-toggle__box" aria-hidden="true" />
       {children}

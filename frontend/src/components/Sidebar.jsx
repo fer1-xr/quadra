@@ -154,7 +154,7 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
           </svg>
           <div>
             <p className="q-sidebar__name">Quadra</p>
-            <p className="q-sidebar__tag">Σ debe = Σ haber</p>
+            <p className="q-sidebar__tag">Debe = Haber</p>
           </div>
           <button
             type="button"

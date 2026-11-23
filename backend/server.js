@@ -780,156 +780,115 @@ app.get('/api/session/:sessionId', verifyToken, async (req, res) => {
 });
 
 // ==================== LIQUIDACIÓN SALARIAL ====================
+// Conceptos de la liquidación. Versiones nuevas envían haberes/descuentos;
+// las guardadas antes traen los campos sueltos.
+function conceptosLiquidacion(d) {
+  if (Array.isArray(d.haberes)) return { haberes: d.haberes, descuentos: d.descuentos || [] };
+  const lista = (xs) => xs.filter(([, m]) => Number(m) > 0).map(([concepto, monto]) => ({ concepto, monto: Number(monto), detalle: '' }));
+  return {
+    haberes: lista([
+      ['Salario devengado', d.salarioDevengado], ['Horas extras', d.horasExtras], ['Aguinaldo proporcional', d.decimotercera],
+      ['Vacaciones no gozadas', d.vacaciones], ['Bonificaciones', d.bonificaciones], ['Indemnización', d.indemnizacion], ['Preaviso', d.preaviso]
+    ]),
+    descuentos: lista([['Descuento AFP', d.descuentoAFP], ['Descuento IPS', d.descuentoIPS], ['Impuesto a la Renta', d.impuestoRenta]])
+  };
+}
+
+const MODALIDAD_LIQ = {
+  'renuncia': 'Renuncia',
+  'despido-injustificado': 'Despido sin causa',
+  'despido-justificado': 'Despido con causa',
+  'retiro-justificado': 'Retiro con causa'
+};
+
+const LEYES_LIQ = [
+  'Código del Trabajo (Ley 213/93 y Ley 496/95)',
+  'Art. 87 y 90: preaviso de 30, 45, 60 o 90 días según antigüedad',
+  'Art. 91 y 92: indemnización de 15 días de salario por año o fracción de más de 6 meses',
+  'Art. 218 a 221: vacaciones de 12, 18 o 30 días',
+  'Art. 243 y 244: aguinaldo, la doceava parte de lo ganado en el año',
+  'IPS: aporte del trabajador del 9 % sobre lo que es salario'
+];
+
+function antiguedadTexto(a) {
+  if (!a) return '';
+  const p = [];
+  if (a.y) p.push(`${a.y} ${a.y === 1 ? 'año' : 'años'}`);
+  if (a.m) p.push(`${a.m} ${a.m === 1 ? 'mes' : 'meses'}`);
+  if (a.d || !p.length) p.push(`${a.d} ${a.d === 1 ? 'día' : 'días'}`);
+  return p.join(', ');
+}
+
 app.post('/api/liquidacion/excel', verifyToken, async (req, res) => {
   try {
     const datos = req.body;
+    const { haberes, descuentos } = conceptosLiquidacion(datos);
     const wb = new ExcelJS.Workbook();
     const ws = wb.addWorksheet('Liquidación');
 
-    // Estilos
     const headerStyle = {
       fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2C3E50' } },
       font: { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 },
       alignment: { horizontal: 'center', vertical: 'middle', wrapText: true }
     };
+    const gsFormat = '#,##0';
+    const bold = { bold: true, color: { argb: 'FF333333' } };
 
-    const titleStyle = {
-      font: { bold: true, size: 14, color: { argb: 'FF2C3E50' } },
-      alignment: { horizontal: 'left', vertical: 'middle' }
-    };
+    ws.columns = [{ width: 32 }, { width: 46 }, { width: 18 }];
 
-    const currencyFormat = '_("₲" * #,##0.00_);_("₲" * \(#,##0.00\);_("₲" * "-"??_);_(@_)';
-    const labelStyle = { font: { bold: true, color: { argb: 'FF333333' } } };
-    const valueStyle = { numFmt: currencyFormat };
-
-    // Título
     ws.addRow(['LIQUIDACIÓN DE HABERES']);
-    ws.getCell('A1').style = titleStyle;
-    ws.mergeCells('A1:D1');
-
+    ws.getCell('A1').font = { bold: true, size: 14, color: { argb: 'FF2C3E50' } };
+    ws.mergeCells('A1:C1');
     ws.addRow([]);
 
-    // Datos del empleado
-    ws.addRow(['Nombre del Empleado:', datos.nombreEmpleado]);
-    ws.addRow(['Cédula de Identidad:', datos.cedula]);
-    ws.addRow(['Cargo:', datos.cargo || '']);
-    ws.addRow(['Modalidad:', datos.modalidad.replace('-', ' ').toUpperCase()]);
-
-    // Aplicar estilos a datos del empleado
-    for (let i = 4; i <= 7; i++) {
-      ws.getCell(`A${i}`).style = labelStyle;
-    }
-
+    const info = [
+      ['Empleado', datos.nombreEmpleado],
+      ['Cédula de identidad', datos.cedula],
+      ['Cargo', datos.cargo || ''],
+      ['Modalidad', MODALIDAD_LIQ[datos.modalidad] || datos.modalidad || ''],
+      ['Fecha de ingreso', datos.fechaIngreso || ''],
+      ['Último día trabajado', datos.fechaEgreso || ''],
+      ['Antigüedad', antiguedadTexto(datos.antiguedad)],
+      ['Salario mensual (Gs.)', Number(datos.salarioMensual) || 0]
+    ];
+    info.forEach(([k, v]) => {
+      const r = ws.addRow([k, v]);
+      r.getCell(1).font = bold;
+      if (typeof v === 'number') r.getCell(2).numFmt = gsFormat;
+    });
     ws.addRow([]);
 
-    // Encabezados de cálculo
-    const headerRow = ws.addRow(['Concepto', 'Cantidad', 'Valor Unit.', 'Total']);
-    headerRow.eachCell(cell => { cell.style = headerStyle; });
+    const header = ws.addRow(['Concepto', 'Cálculo', 'Monto (Gs.)']);
+    header.eachCell((c) => { c.style = headerStyle; });
 
-    // Devengos
-    const devengoStart = ws.rowCount + 1;
+    const seccion = (titulo, items, totalLabel, total) => {
+      ws.addRow([titulo]).getCell(1).font = bold;
+      items.forEach((it) => {
+        const r = ws.addRow([it.concepto, it.detalle || '', Number(it.monto) || 0]);
+        r.getCell(3).numFmt = gsFormat;
+      });
+      const t = ws.addRow([totalLabel, '', Number(total) || 0]);
+      t.font = bold;
+      t.getCell(3).numFmt = gsFormat;
+      ws.addRow([]);
+    };
+    seccion('HABERES', haberes, 'TOTAL HABERES', datos.totalDevengado);
+    seccion('DESCUENTOS', descuentos, 'TOTAL DESCUENTOS', datos.totalDescuentos);
 
-    ws.addRow(['DEVENGOS', '', '', '']);
-    ws.addRow(['Salario Devengado', datos.diasTrabajados, datos.salarioMensual / 30, datos.salarioDevengado]);
-
-    if (datos.horasExtras > 0) {
-      ws.addRow(['Horas Extras', datos.horasExtras, (datos.salarioMensual / 240) * datos.tasaHoraExtra, datos.horasExtras]);
-    }
-
-    if (datos.decimotercera > 0) {
-      ws.addRow(['Decimotercera Proporcional', '', '', datos.decimotercera]);
-    }
-
-    if (datos.vacaciones > 0) {
-      ws.addRow(['Vacaciones No Gozadas', datos.vacacionesNoGozadas, datos.salarioMensual / 30, datos.vacaciones]);
-    }
-
-    if (datos.bonificaciones > 0) {
-      ws.addRow(['Bonificaciones', '', '', datos.bonificaciones]);
-    }
-
-    ws.addRow(['SUBTOTAL', '', '', datos.subtotal]);
-
-    if (datos.indemnizacion > 0) {
-      ws.addRow(['Indemnización', '', '', datos.indemnizacion]);
-    }
-
-    if (datos.preaviso > 0) {
-      ws.addRow(['Preaviso', '', '', datos.preaviso]);
-    }
-
-    const totalRow = ws.addRow(['TOTAL DEVENGADO', '', '', datos.totalDevengado]);
-    totalRow.eachCell(cell => { cell.style = { ...labelStyle, font: { ...labelStyle.font, size: 12 } }; });
+    const neto = ws.addRow(['NETO A COBRAR', '', Number(datos.neto) || 0]);
+    neto.eachCell((c) => {
+      c.font = { bold: true, size: 13, color: { argb: 'FF27AE60' } };
+      c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FFF0' } };
+    });
+    neto.getCell(3).numFmt = gsFormat;
 
     ws.addRow([]);
-
-    // Descuentos
-    ws.addRow(['DESCUENTOS', '', '', '']);
-
-    if (datos.descuentoAFP > 0) {
-      ws.addRow(['Descuento AFP', '', '', datos.descuentoAFP]);
-    }
-
-    if (datos.descuentoIPS > 0) {
-      ws.addRow(['Descuento IPS', '', '', datos.descuentoIPS]);
-    }
-
-    if (datos.impuestoRenta > 0) {
-      ws.addRow(['Impuesto a la Renta (5%)', '', '', datos.impuestoRenta]);
-    }
-
-    const descuentosRow = ws.addRow(['TOTAL DESCUENTOS', '', '', datos.totalDescuentos]);
-    descuentosRow.eachCell(cell => { cell.style = { ...labelStyle, font: { ...labelStyle.font, size: 11 } }; });
-
-    ws.addRow([]);
-
-    const netoRow = ws.addRow(['NETO A PAGAR', '', '', datos.neto]);
-    netoRow.eachCell(cell => {
-      cell.style = {
-        ...labelStyle,
-        font: { ...labelStyle.font, size: 13, color: { argb: 'FF27AE60' } },
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF0FFF0' } }
-      };
+    ws.addRow(['MARCO LEGAL']).getCell(1).font = { ...bold, size: 10 };
+    LEYES_LIQ.forEach((ley) => {
+      ws.addRow([ley]).getCell(1).font = { size: 9, color: { argb: 'FF666666' } };
     });
 
-    // Aplicar formato de moneda
-    for (let i = devengoStart; i <= ws.rowCount; i++) {
-      const cell = ws.getCell(`D${i}`);
-      if (cell.value && typeof cell.value === 'number') {
-        cell.numFmt = currencyFormat;
-      }
-    }
-
-    // Ajustar ancho de columnas
-    ws.columns = [
-      { width: 30 },
-      { width: 12 },
-      { width: 15 },
-      { width: 18 }
-    ];
-
-    // Footer con leyes
-    ws.addRow([]);
-    const footerStart = ws.rowCount + 1;
-    ws.addRow(['MARCO LEGAL Y REFERENCIAS']);
-    ws.getCell(`A${footerStart}`).style = { ...labelStyle, font: { ...labelStyle.font, size: 10 } };
-
-    const leyes = [
-      'Código Laboral de Paraguay (Ley Nº 213/1993) - Artículos 65-67: Despido y sus modalidades',
-      'Artículo 88: Decimotercera remuneración',
-      'Artículos 80-87: Régimen de Vacaciones',
-      'Ley de AFP Nº 1.860/2002: Descuentos obligatorios por aportaciones',
-      'Ley de Impuesto a la Renta Nº 2.421/2004: Cálculo de retenciones y descuentos',
-      'Resolución del Ministerio de Trabajo: Tasa de hora extra y cálculos de indemnización'
-    ];
-
-    leyes.forEach(ley => {
-      const row = ws.addRow([ley]);
-      row.getCell('A').style = { font: { size: 9, color: { argb: 'FF666666' } }, alignment: { wrapText: true } };
-      ws.getRow(row.number).height = 'auto';
-    });
-
-    res.setHeader('Content-Disposition', `attachment; filename=Liquidacion_${datos.nombreEmpleado}_${Date.now()}.xlsx`);
+    res.setHeader('Content-Disposition', `attachment; filename=Liquidacion_${encodeURIComponent(datos.nombreEmpleado || 'empleado')}_${Date.now()}.xlsx`);
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     await wb.xlsx.write(res);
     res.end();
@@ -942,134 +901,93 @@ app.post('/api/liquidacion/excel', verifyToken, async (req, res) => {
 app.post('/api/liquidacion/pdf', verifyToken, async (req, res) => {
   try {
     const datos = req.body;
-    const { PDFDocument, PDFPage, rgb } = await import('pdf-lib');
+    const { haberes, descuentos } = conceptosLiquidacion(datos);
+    const { PDFDocument, rgb, StandardFonts } = await import('pdf-lib');
 
     const pdfDoc = await PDFDocument.create();
     const page = pdfDoc.addPage([595, 842]); // A4
     const { width, height } = page.getSize();
-    const fontSize = 11;
+    const fontNormal = await pdfDoc.embedFont(StandardFonts.Helvetica);
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
 
-    let y = height - 50;
-    const lineHeight = 15;
     const margin = 40;
+    const lineHeight = 15;
+    let y = height - 50;
+    const ink = rgb(0.2, 0.2, 0.2);
+    const soft = rgb(0.45, 0.45, 0.45);
+    // Helvetica estándar sólo codifica WinAnsi: el signo del guaraní no existe, se escribe "Gs.".
+    const gs = (n) => `Gs. ${Math.round(Number(n) || 0).toLocaleString('es-PY')}`;
+    const limpio = (t) => String(t ?? '').replace(/₲/g, 'Gs.').replace(/[−–]/g, '-').replace(/[^\x20-\xFF]/g, '');
 
-    // Cargar fuentes una sola vez
-    const fontNormal = await pdfDoc.embedFont('Helvetica');
-    const fontBold = await pdfDoc.embedFont('Helvetica-Bold');
-
-    // Función para escribir texto
-    const drawText = (text, x = margin, size = fontSize, bold = false) => {
-      page.drawText(text, {
-        x,
-        y,
-        size,
-        font: bold ? fontBold : fontNormal,
-        color: rgb(0.2, 0.2, 0.2)
-      });
-      y -= lineHeight;
+    const texto = (t, x, size = 10, font = fontNormal, color = ink) => page.drawText(limpio(t), { x, y, size, font, color });
+    const derecha = (t, size = 10, font = fontNormal, color = ink) => {
+      const w = font.widthOfTextAtSize(limpio(t), size);
+      page.drawText(limpio(t), { x: width - margin - w, y, size, font, color });
     };
-
-    const drawLine = () => {
+    const linea = () => {
       page.drawLine({ start: { x: margin, y }, end: { x: width - margin, y }, thickness: 0.5, color: rgb(0.8, 0.8, 0.8) });
-      y -= lineHeight / 2;
+      y -= lineHeight;
     };
 
-    // Título
-    page.drawText('LIQUIDACIÓN DE HABERES', {
-      x: margin,
-      y,
-      size: 16,
-      font: fontBold,
-      color: rgb(0.18, 0.24, 0.31)
-    });
-    y -= lineHeight * 1.5;
+    texto('LIQUIDACIÓN DE HABERES', margin, 16, fontBold, rgb(0.18, 0.24, 0.31));
+    y -= lineHeight * 1.6;
 
-    drawText(`Empleado: ${datos.nombreEmpleado}`, margin, 11, true);
-    drawText(`Cédula: ${datos.cedula}`);
-    drawText(`Cargo: ${datos.cargo || ''}`, margin, 10);
-    drawText(`Modalidad: ${datos.modalidad.replace('-', ' ').toUpperCase()}`, margin, 10);
-
-    y -= 10;
-    drawLine();
-
-    // Devengos
-    drawText('DEVENGOS', margin, 12, true);
-    y -= 5;
-
-    const devengos = [
-      ['Salario Devengado', `₲ ${datos.salarioDevengado.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`],
-      ...(datos.horasExtras > 0 ? [['Horas Extras', `₲ ${datos.horasExtras.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.decimotercera > 0 ? [['Decimotercera Proporcional', `₲ ${datos.decimotercera.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.vacaciones > 0 ? [['Vacaciones No Gozadas', `₲ ${datos.vacaciones.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.bonificaciones > 0 ? [['Bonificaciones', `₲ ${datos.bonificaciones.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ['Subtotal', `₲ ${datos.subtotal.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`],
-      ...(datos.indemnizacion > 0 ? [['Indemnización', `₲ ${datos.indemnizacion.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.preaviso > 0 ? [['Preaviso', `₲ ${datos.preaviso.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : [])
-    ];
-
-    devengos.forEach(([concepto, monto]) => {
-      const text = `${concepto}`;
-      page.drawText(text, { x: margin + 10, y, size: 10, font: fontNormal, color: rgb(0.3, 0.3, 0.3) });
-      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: fontNormal, color: rgb(0.2, 0.2, 0.2) });
+    [
+      ['Empleado', datos.nombreEmpleado],
+      ['Cédula', datos.cedula],
+      ['Cargo', datos.cargo || ''],
+      ['Modalidad', MODALIDAD_LIQ[datos.modalidad] || datos.modalidad || ''],
+      ['Período', datos.fechaIngreso && datos.fechaEgreso ? `${datos.fechaIngreso} al ${datos.fechaEgreso}` : ''],
+      ['Antigüedad', antiguedadTexto(datos.antiguedad)],
+      ['Salario mensual', datos.salarioMensual ? gs(datos.salarioMensual) : '']
+    ].filter(([, v]) => v).forEach(([k, v]) => {
+      texto(`${k}:`, margin, 10, fontBold);
+      texto(v, margin + 110, 10);
       y -= lineHeight;
     });
 
-    y -= 5;
-    page.drawText('TOTAL DEVENGADO', { x: margin, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
-    page.drawText(`₲ ${datos.totalDevengado.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
-    y -= lineHeight * 1.2;
+    y -= 6;
+    linea();
 
-    drawLine();
+    const seccion = (titulo, items, totalLabel, total) => {
+      texto(titulo, margin, 12, fontBold);
+      y -= lineHeight * 1.2;
+      items.forEach((it) => {
+        texto(it.concepto, margin + 10, 10);
+        derecha(gs(it.monto));
+        if (it.detalle) {
+          y -= 11;
+          texto(it.detalle, margin + 10, 8, fontNormal, soft);
+        }
+        y -= lineHeight;
+      });
+      if (!items.length) {
+        texto('Sin conceptos', margin + 10, 10, fontNormal, soft);
+        y -= lineHeight;
+      }
+      texto(totalLabel, margin, 11, fontBold);
+      derecha(gs(total), 11, fontBold);
+      y -= lineHeight * 1.2;
+      linea();
+    };
+    seccion('HABERES', haberes, 'TOTAL HABERES', datos.totalDevengado);
+    seccion('DESCUENTOS', descuentos, 'TOTAL DESCUENTOS', datos.totalDescuentos);
 
-    // Descuentos
-    drawText('DESCUENTOS', margin, 12, true);
-    y -= 5;
-
-    const descuentos = [
-      ...(datos.descuentoAFP > 0 ? [['Descuento AFP', `₲ ${datos.descuentoAFP.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.descuentoIPS > 0 ? [['Descuento IPS', `₲ ${datos.descuentoIPS.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : []),
-      ...(datos.impuestoRenta > 0 ? [['Impuesto a la Renta (5%)', `₲ ${datos.impuestoRenta.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`]] : [])
-    ];
-
-    descuentos.forEach(([concepto, monto]) => {
-      const text = `${concepto}`;
-      page.drawText(text, { x: margin + 10, y, size: 10, font: fontNormal, color: rgb(0.3, 0.3, 0.3) });
-      page.drawText(monto, { x: width - margin - 100, y, size: 10, font: fontNormal, color: rgb(0.2, 0.2, 0.2) });
-      y -= lineHeight;
-    });
-
-    y -= 5;
-    page.drawText('TOTAL DESCUENTOS', { x: margin, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
-    page.drawText(`₲ ${datos.totalDescuentos.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 11, font: fontBold, color: rgb(0.2, 0.2, 0.2) });
-    y -= lineHeight * 1.5;
-
-    drawLine();
-
-    // Neto
-    y -= 5;
-    page.drawText('NETO A PAGAR', { x: margin, y, size: 13, font: fontBold, color: rgb(0.39, 0.68, 0.38) });
-    page.drawText(`₲ ${datos.neto.toLocaleString('es-PY', { minimumFractionDigits: 2 })}`, { x: width - margin - 100, y, size: 13, font: fontBold, color: rgb(0.39, 0.68, 0.38) });
+    const verde = rgb(0.15, 0.6, 0.35);
+    texto('NETO A COBRAR', margin, 13, fontBold, verde);
+    derecha(gs(datos.neto), 13, fontBold, verde);
     y -= lineHeight * 2;
+    linea();
 
-    drawLine();
-
-    // Marco Legal
-    drawText('MARCO LEGAL Y REFERENCIAS', margin, 10, true);
-    y -= 5;
-
-    const leyes = [
-      'Código Laboral de Paraguay (Ley Nº 213/1993) - Artículos 65-67',
-      'Ley de AFP Nº 1.860/2002 - Descuentos obligatorios',
-      'Ley de Impuesto a la Renta Nº 2.421/2004'
-    ];
-
-    leyes.forEach(ley => {
-      page.drawText(ley, { x: margin + 10, y, size: 8, font: fontNormal, color: rgb(0.4, 0.4, 0.4) });
+    texto('MARCO LEGAL', margin, 10, fontBold);
+    y -= lineHeight;
+    LEYES_LIQ.forEach((ley) => {
+      texto(ley, margin + 10, 8, fontNormal, soft);
       y -= lineHeight * 0.8;
     });
 
     const pdfBytes = await pdfDoc.save();
-    res.setHeader('Content-Disposition', `attachment; filename=Liquidacion_${datos.nombreEmpleado}_${Date.now()}.pdf`);
+    res.setHeader('Content-Disposition', `attachment; filename=Liquidacion_${encodeURIComponent(datos.nombreEmpleado || 'empleado')}_${Date.now()}.pdf`);
     res.setHeader('Content-Type', 'application/pdf');
     res.send(Buffer.from(pdfBytes));
   } catch (e) {

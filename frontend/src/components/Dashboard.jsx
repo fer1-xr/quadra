@@ -24,7 +24,7 @@ import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
 import MenuContable, { MarangatuLink } from './contable/MenuContable'
 import { ContribuyenteContext } from '../services/historialService'
 import { moduloDisponible } from '../services/informes'
-import PageHead, { Figures, Eq } from './PageHead'
+import PageHead, { Figures } from './PageHead'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Dashboard.css'
 import '../styles/QuadraModules.css'
@@ -300,11 +300,11 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   const today = new Date().toLocaleDateString('es-PY', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
 
   const accesos = [
-    { id: 'seleccionar', title: 'Clientes', desc: 'Elegí un contribuyente y entrá a su espacio de trabajo', icon: Briefcase, eq: [{ v: 'RUC' }, { op: '→' }, { v: 'Espacio' }], destacado: true },
-    { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, eq: [{ n: '1' }, { op: '/' }, { v: 'día' }] },
-    { id: 'todo', title: 'Tareas del Día', desc: 'Tus tareas de hoy y del resto de la semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'hoy' }] },
-    { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, eq: [{ v: 'Avance en %' }] },
-    { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, eq: [{ op: 'Σ' }, { v: 'Honorarios' }] }
+    { id: 'seleccionar', title: 'Clientes', desc: 'Elegí un contribuyente y entrá a su espacio de trabajo', icon: Briefcase, sym: '→', destacado: true },
+    { id: 'leccion', title: 'Lección del Día', desc: 'Una nota de estudio contable por día hábil', icon: BookOpen, sym: '+' },
+    { id: 'todo', title: 'Tareas del Día', desc: 'Tus tareas de hoy y del resto de la semana', icon: CheckSquare, sym: '+' },
+    { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos con fecha, estrategia y avance', icon: Target, sym: '%' },
+    { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, sym: '+' }
   ]
 
   const hora = new Date().getHours()
@@ -315,44 +315,44 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     {
       group: 'Conciliación',
       items: [
-        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Marangatu frente a compras, ventas y notas de crédito', icon: BarChart3, eq: [{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }] },
-        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Extracto contra libro, con partidas en tránsito', icon: Wallet, eq: [{ v: 'S', sub: 'banco' }, { op: '±' }, { v: 'P' }, { op: '=' }, { v: 'S', sub: 'libro' }] },
-        { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, eq: [{ v: 'Factura' }, { op: '→' }, { v: 'Excel' }] },
-        { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, eq: [{ v: 'Saldo', sub: 'n' }, { op: '=' }, { v: 'Saldo', sub: 'n−1' }, { op: '−' }, { v: 'Pago', sub: 'n' }] }
+        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Marangatu frente a compras, ventas y notas de crédito', icon: BarChart3, sym: '=' },
+        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Extracto contra libro, con partidas en tránsito', icon: Wallet, sym: '±' },
+        { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, sym: '→' },
+        { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, sym: '÷' }
       ]
     },
     {
       group: 'Cálculo',
       items: [
-        { id: 'liquidacion', title: 'Liquidación Salarial', desc: 'Haberes, indemnización y aportes por empleado', icon: Calculator, eq: [{ v: 'Neto' }, { op: '=' }, { v: 'H' }, { op: '−' }, { v: 'D' }] },
-        { id: 'activofijo', title: 'Venta de Activo Fijo', desc: 'Modalidad de facturación según bien y régimen', icon: Building2, eq: [{ v: 'f' }, { op: '(' }, { v: 'bien' }, { op: ',' }, { v: 'régimen' }, { op: ')' }] },
-        { id: 'flujo', title: 'Flujo de Caja', desc: 'Saldo inicial, ingresos y egresos del período', icon: TrendingUp, eq: [{ v: 'S', sub: 'f' }, { op: '=' }, { v: 'S', sub: '0' }, { op: '+' }, { v: 'I' }, { op: '−' }, { v: 'E' }] },
-        { id: 'cotizacion', title: 'Cotización', desc: 'Conversión al tipo de cambio de la DNIT', icon: LineChart, eq: [{ v: 'PYG' }, { op: '=' }, { v: 'M' }, { op: '×' }, { v: 'TC' }] }
+        { id: 'liquidacion', title: 'Liquidación Salarial', desc: 'Haberes, indemnización y aportes por empleado', icon: Calculator, sym: '−' },
+        { id: 'activofijo', title: 'Venta de Activo Fijo', desc: 'Modalidad de facturación según bien y régimen', icon: Building2, sym: '%' },
+        { id: 'flujo', title: 'Flujo de Caja', desc: 'Saldo inicial, ingresos y egresos del período', icon: TrendingUp, sym: '+' },
+        { id: 'cotizacion', title: 'Cotización', desc: 'Conversión al tipo de cambio de la DNIT', icon: LineChart, sym: '×' }
       ]
     },
     {
       group: 'Contabilidad',
       items: [
-        { id: 'ct-libro-compras', title: 'Libro Compras', desc: 'Facturas y notas de proveedores con su crédito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'CF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
-        { id: 'ct-libro-ventas', title: 'Libro Ventas', desc: 'Facturas y notas emitidas con su débito fiscal', icon: FileText, eq: [{ v: 'IVA', sub: 'DF' }, { op: '=' }, { v: 'G' }, { op: '÷' }, { n: '11' }] },
-        { id: 'ct-inf-compras', title: 'Informe de Compras', desc: 'Libro Compras filtrado, para imprimir, rubricar o pasar a Excel', icon: BookOpen, eq: [{ v: 'Comprobantes' }, { op: '→' }, { v: 'Libro' }] },
-        { id: 'ct-balance', title: 'Balance General', desc: 'Activo, pasivo y patrimonio al cierre del ejercicio', icon: Scale, eq: [{ v: 'A' }, { op: '=' }, { v: 'P' }, { op: '+' }, { v: 'PN' }] },
-        { id: 'ct-resumen-irp', title: 'Resumen de IRP', desc: 'Ingresos, egresos deducibles e impuesto del año', icon: Calculator, eq: [{ v: 'IRP' }, { op: '=' }, { v: 'Renta' }, { op: '×' }, { v: 't' }] },
-        { id: 'ct-importar', title: 'Importar', desc: 'Marangatu, Excel o respaldo: Quadra reconoce el archivo', icon: FileText, eq: [{ v: 'Archivo' }, { op: '→' }, { v: 'Libros' }] }
+        { id: 'ct-libro-compras', title: 'Libro Compras', desc: 'Facturas y notas de proveedores con su crédito fiscal', icon: FileText, sym: '%' },
+        { id: 'ct-libro-ventas', title: 'Libro Ventas', desc: 'Facturas y notas emitidas con su débito fiscal', icon: FileText, sym: '%' },
+        { id: 'ct-inf-compras', title: 'Informe de Compras', desc: 'Libro Compras filtrado, para imprimir, rubricar o pasar a Excel', icon: BookOpen, sym: '→' },
+        { id: 'ct-balance', title: 'Balance General', desc: 'Activo, pasivo y patrimonio al cierre del ejercicio', icon: Scale, sym: '=' },
+        { id: 'ct-resumen-irp', title: 'Resumen de IRP', desc: 'Ingresos, egresos deducibles e impuesto del año', icon: Calculator, sym: '%' },
+        { id: 'ct-importar', title: 'Importar', desc: 'Marangatu, Excel o respaldo: Quadra reconoce el archivo', icon: FileText, sym: '→' }
       ]
     },
     {
       group: 'Agenda del cliente',
       items: [
-        { id: 'todo', title: 'Tareas de la semana', desc: 'Lo que agendaste para este cliente en tu semana', icon: CheckSquare, eq: [{ op: 'Σ' }, { v: 'Tareas', sub: 'L–V' }] },
-        { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos propios de este cliente', icon: Target, eq: [{ v: 'Avance en %' }] },
-        { id: 'notas', title: 'Notas y Reuniones', desc: 'Conversaciones, minutas y acuerdos', icon: NotebookPen, eq: [{ v: 'Acuerdos' }] }
+        { id: 'todo', title: 'Tareas de la semana', desc: 'Lo que agendaste para este cliente en tu semana', icon: CheckSquare, sym: '+' },
+        { id: 'metas', title: 'Metas y Objetivos', desc: 'Objetivos propios de este cliente', icon: Target, sym: '%' },
+        { id: 'notas', title: 'Notas y Reuniones', desc: 'Conversaciones, minutas y acuerdos', icon: NotebookPen, sym: '=' }
       ]
     },
     {
       group: 'Gestión',
       items: [
-        { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, eq: [{ op: 'Σ' }, { v: 'Honorarios' }] }
+        { id: 'clientes', title: 'Gestión de Clientes', desc: 'Cartera, honorarios y estado de cada cliente', icon: Users, sym: '+' }
       ]
     }
   ]
@@ -446,7 +446,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                     <p className="q-hero__lede">Elegí por dónde empezar: un cliente para trabajar, una lección, tareas del día, o el seguimiento de tus metas y tu cartera.</p>
                   </div>
                   <p className="q-hero__formula" aria-hidden="true">
-                    <span>Σ</span><i>Debe</i> − <span>Σ</span><i>Haber</i> = 0
+                    Debe = Haber
                   </p>
                 </section>
 
@@ -467,7 +467,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                             </span>
                             <span className="q-access__title">{a.title}</span>
                             <span className="q-access__desc">{a.desc}</span>
-                            <Eq terms={a.eq} className="q-access__eq" />
+                            <span className="q-sym q-access__sym" aria-hidden="true">{a.sym}</span>
                           </button>
                         </li>
                       )
@@ -500,7 +500,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                 <section className="q-modules" aria-labelledby="q-modules-title">
                   <header className="q-section-head">
                     <h3 id="q-modules-title">Módulos</h3>
-                    <p><span className="q-mono">{moduleIndex.reduce((n, g) => n + g.items.length, 0)}</span> hojas de trabajo, cada una con su ecuación</p>
+                    <p><span className="q-mono">{moduleIndex.reduce((n, g) => n + g.items.length, 0)}</span> hojas de trabajo</p>
                   </header>
 
                   <div className="q-index">
@@ -521,7 +521,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                                     <span className="q-index__title">{m.title}</span>
                                     <span className="q-index__desc">{m.desc}</span>
                                   </span>
-                                  <Eq terms={m.eq} className="q-index__eq" />
+                                  <span className="q-sym q-index__sym" aria-hidden="true">{m.sym}</span>
                                   <ArrowUpRight className="q-index__arrow" size={16} strokeWidth={1.7} />
                                 </button>
                               </li>

@@ -145,7 +145,7 @@ components:
 Tres ideas sostienen todo el sistema:
 
 1. **Papel técnico.** El fondo es un papel frío (`paper`) con cuadrícula fina de 8 px y líneas mayores cada 40 px que se desvanecen hacia abajo. Las hojas de trabajo se apoyan sobre él como fichas blancas.
-2. **Cada hoja tiene su ecuación.** El encabezado de cada módulo muestra la ecuación que lo gobierna, tipografiada como notación matemática (variables en itálica serif, operadores en romana): *Σ Libro − Σ RG90 = 0*, *Saldoₙ = Saldoₙ₋₁ − Pagoₙ*, *Neto = Haberes − Deducciones*. Es el sello del producto; no se usa como adorno fuera del encabezado.
+2. **Símbolos sencillos.** En el índice de módulos cada hoja lleva un único signo matemático simple (=, ±, +, −, ×, ÷, %, →) en una pastilla; nada de sumatorias, subíndices ni letras griegas. Los formularios de cálculo hablan en lenguaje llano: concepto arriba y la cuenta debajo (*45 días × 116.667*), sin variables simbólicas. Las ecuaciones tipografiadas quedan sólo en encabezados donde ayudan a leer el módulo.
 3. **Las cifras mandan.** Todo número va en Geist Mono con numerales tabulares, alineado a la derecha en tablas. Los totales cierran con doble raya contable.
 
 Modo: **Operate** en las hojas de trabajo (escaneo rápido, consistencia, densidad); **Read** en Lección del Día (medida de lectura, jerarquía editorial). Existe modo claro y oscuro; el oscuro cambia el papel a navy profundo y el acento a menta.
