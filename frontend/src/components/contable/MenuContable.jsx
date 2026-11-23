@@ -65,6 +65,15 @@ const MENUS = [
     label: 'Informes',
     icon: BarChart3,
     items: [
+      {
+        label: 'Balance General',
+        items: [
+          { id: 'ct-bal-49', label: 'Balance Resolución 49/14', hint: 'Anexos 1 y 2, comparativo' },
+          { id: 'ct-bal-5', label: 'Balance 49/14 a 5 años', hint: 'o más ejercicios' },
+          { id: 'ct-bal-sumas', label: 'Balance Sumas y Saldos' },
+          { id: 'ct-anexo5', label: 'Anexo 5 – Notas', hint: 'Word y PDF' }
+        ]
+      },
       { id: 'ct-inf-contribuyentes', label: 'Contribuyentes', hint: 'cartera de clientes' },
       {
         label: 'Documentos',
@@ -111,8 +120,7 @@ const MENUS = [
           { id: 'ct-resumen-irp', label: 'Resumen de IRP-RSP', hint: 'servicios personales, PDF' },
           { id: 'ct-resumen-rgc', label: 'Resumen de IRP-RGC', hint: 'ganancia de capital, PDF' },
           { id: 'ct-balance', label: 'Balance General' },
-          { id: 'ct-resultados', label: 'Estado de Resultados' },
-          { id: 'ct-mayor', label: 'Balance de sumas y saldos' }
+          { id: 'ct-resultados', label: 'Estado de Resultados' }
         ]
       }
     ]
@@ -146,6 +154,8 @@ const LIBRO_CONTABLE = new Set(LIBROS.filter((l) => l.clase === 'contable').map(
 // a ellos se les muestra el registro simple de bienes (ct-bienes)
 const ACTIVO_FIJO = ['ct-activos', 'ct-revaluo', 'ct-inf-activos']
 const SIN_ACTIVO_FIJO = new Set(['iva', 'irp', 'irp_rsp', 'irp_rgc'])
+// Informes → Balance General: para quien lleva contabilidad (Libro Inventario y Balances)
+const BALANCES = ['ct-bal-49', 'ct-bal-5', 'ct-bal-sumas', 'ct-anexo5']
 
 /**
  * Menús según el impuesto elegido al ingresar: Movimientos e Informes muestran
@@ -169,7 +179,7 @@ export const menusPara = (contribuyente) => {
     if (id === 'ct-inf-retenciones') return !regla || obl.has('ct-ret-emitida') || obl.has('ct-ret-recibida')
     if (id === 'ct-inf-recibo-cobro' || id === 'ct-inf-recibo-pago') return !regla || obl.has('ct-recibo-pago')
     if (id === 'ct-rg55-venta' || id === 'ct-rg55-compra') return conRenta
-    if (id === 'ct-balance' || id === 'ct-resultados') return conBalance
+    if (id === 'ct-balance' || id === 'ct-resultados' || BALANCES.includes(id)) return conBalance
     if (id === 'ct-recibo-cobro' || REGISTROS.includes(id)) return regla ? obl.has(id) : id !== 'ct-ingresos-egresos'
     return true
   }
@@ -179,7 +189,6 @@ export const menusPara = (contribuyente) => {
         const ids = (regla ? [...obl] : librosObligatorios(null)).filter((id) => LIBRO_CONTABLE.has(id))
         return { ...it, items: ids.map((id) => ({ id: INFORME_DE[id] || id, label: LIBROS.find((l) => l.id === id).nombre, hint: INFORME_DE[id] ? 'filtros, rubricada y Excel' : undefined })) }
       }
-      if (it.id === 'ct-mayor') return conBalance || obl.has('ct-mayor') ? it : null
       return it.items ? { ...it, items: filtrar(it.items) } : (ver(it.id) ? it : null)
     })
     .filter((it) => it && (!it.items || it.items.length))

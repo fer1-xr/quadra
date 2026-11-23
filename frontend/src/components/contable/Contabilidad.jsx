@@ -17,6 +17,7 @@ import {
   InfContribuyentes, InfRetenciones, InfIngresosEgresos, InfActivos, InfRecibos, InfTimbrados, InfNumeracion, InfUsuarios, InfAuditoria, InfRG55
 } from './InformesVarios'
 import ImportarExportar from './ImportarExportar'
+import { BalanceSumasSaldos, BalanceRG49, Anexo5Notas } from './Balances'
 import '../../styles/Contabilidad.css'
 
 /** vistas del sistema contable: id → { título, grupo } */
@@ -61,6 +62,10 @@ export const VISTAS_CONTABLES = {
   'ct-inventario': { titulo: 'Libro Inventario y Balances', grupo: 'Informes · Libros' },
   'ct-balance': { titulo: 'Balance General', grupo: 'Informes · Auxiliares' },
   'ct-resultados': { titulo: 'Estado de Resultados', grupo: 'Informes · Auxiliares' },
+  'ct-bal-sumas': { titulo: 'Balance de Sumas y Saldos', grupo: 'Informes · Balance General' },
+  'ct-bal-49': { titulo: 'Balance Resolución 49/14', grupo: 'Informes · Balance General' },
+  'ct-bal-5': { titulo: 'Balance 49/14 a 5 años', grupo: 'Informes · Balance General' },
+  'ct-anexo5': { titulo: 'Anexo 5 · Notas a los estados contables', grupo: 'Informes · Balance General' },
   'ct-importar': { titulo: 'Importar', grupo: 'Importar-Exportar' },
   'ct-exportar': { titulo: 'Exportar', grupo: 'Importar-Exportar' }
 }
@@ -113,6 +118,10 @@ function Vista({ vista }) {
     case 'ct-inventario': return <LibroInventario />
     case 'ct-balance': return <EstadosContables key={vista} tipo="balance" />
     case 'ct-resultados': return <EstadosContables key={vista} tipo="resultados" />
+    case 'ct-bal-sumas': return <BalanceSumasSaldos />
+    case 'ct-bal-49': return <BalanceRG49 key={vista} />
+    case 'ct-bal-5': return <BalanceRG49 key={vista} multi />
+    case 'ct-anexo5': return <Anexo5Notas />
     case 'ct-importar':
     case 'ct-exportar':
       return <ImportarExportar key={vista} modo={vista.slice(3)} />
