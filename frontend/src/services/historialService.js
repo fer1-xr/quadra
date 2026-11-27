@@ -13,7 +13,7 @@ export const ContribuyenteContext = createContext(null)
 export const useContribuyente = () => useContext(ContribuyenteContext)
 
 export const MODULOS = {
-  rg90: 'Conciliación RG90',
+  rg90: 'Conciliación Registro de Comprobantes - RG 90/2021',
   bancaria: 'Conciliación Bancaria',
   liquidacion: 'Liquidación Salarial',
   activofijo: 'Venta de Activo Fijo',

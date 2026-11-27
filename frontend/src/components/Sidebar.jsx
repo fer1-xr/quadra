@@ -103,7 +103,7 @@ function Sidebar({ currentView, onNavigate, user, onLogout, isOpen = false, onCl
         {
           label: 'Conciliación',
           items: [
-            { id: 'rg90', label: 'Conciliación RG90', icon: BarChart3 },
+            { id: 'rg90', label: 'Conciliación RG 90/2021', icon: BarChart3 },
             { id: 'bancaria', label: 'Conciliación Bancaria', icon: Wallet },
             { id: 'importar-documentos', label: 'Importar Documentos', icon: FileText },
             { id: 'control-pagos', label: 'Control de Pagos', icon: CreditCard }
