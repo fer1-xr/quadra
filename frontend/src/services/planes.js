@@ -8,14 +8,15 @@ export const PLANES = [
     precio: 80000,
     desc: 'Lo básico para el día a día con tus clientes',
     contable: false,
-    maxClientes: null,
+    maxClientes: 15,
     features: [
       'Lección y tareas del día, metas y objetivos',
       'Gestión de clientes',
       'Conciliación RG90 y bancaria',
       'Importar documentos',
       'Activo fijo, flujo de caja y cotización',
-      'Historial, notas y reuniones por cliente'
+      'Historial, notas y reuniones por cliente',
+      'Hasta 15 clientes'
     ]
   },
   {
