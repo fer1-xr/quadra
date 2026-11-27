@@ -777,3 +777,19 @@
   font-weight: 600;
   margin-right: 2px;
 }
+
+/* Tope de clientes del plan alcanzado */
+.clientes-limite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  border: 1px solid var(--q-line, rgba(0, 0, 0, 0.12));
+  border-left: 3px solid var(--q-brand, #1747d1);
+  border-radius: 6px;
+}
+.clientes-limite p { margin: 0; font-size: 13px; }
+.clientes-limite .btn-add-cliente { margin-bottom: 0; }

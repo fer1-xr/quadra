@@ -6,7 +6,7 @@ const toLocalUser = (u) => ({
   email: u.email,
   name: u.user_metadata?.name || u.email.split('@')[0],
   avatar_url: u.user_metadata?.avatar_url || null,
-  plan: u.user_metadata?.plan || 'basico',
+  plan: u.user_metadata?.plan || 'auxiliar',
   created_at: u.created_at,
 })
 

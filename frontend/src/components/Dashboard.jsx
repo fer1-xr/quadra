@@ -24,6 +24,7 @@ import Contabilidad, { VISTAS_CONTABLES } from './contable/Contabilidad'
 import MenuContable, { MarangatuLink } from './contable/MenuContable'
 import { ContribuyenteContext } from '../services/historialService'
 import { moduloDisponible } from '../services/informes'
+import { tieneContable } from '../services/planes'
 import PageHead, { Figures } from './PageHead'
 import { API_BASE_URL, authHeaders } from '../services/api'
 import '../styles/Dashboard.css'
@@ -77,6 +78,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   const [flujoCalculado, setFlujoCalculado] = useState(null)
   // resultado reabierto desde el Historial: { id, modulo, datos }
   const [restaurado, setRestaurado] = useState(null)
+  // el plan Auxiliar no incluye el sistema contable
+  const conContable = tieneContable(user)
 
   const handleMarangatuFile = (index, file) => {
     const newFiles = [...libroFiles]
@@ -175,7 +178,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       setView('seleccionar')
       return
     }
-    if (!moduloDisponible(contribuyente, viewId)) {
+    if (!moduloDisponible(contribuyente, viewId) || (VISTAS_CONTABLES[viewId] && !conContable)) {
       setView('inicio')
       return
     }
@@ -356,6 +359,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
       ]
     }
   ]
+    .filter((g) => conContable || g.group !== 'Contabilidad')
     .map((g) => ({ ...g, items: g.items.filter((it) => moduloDisponible(contribuyente, it.id)) }))
     .filter((g) => g.items.length)
 
@@ -382,7 +386,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             <Menu size={18} strokeWidth={1.6} />
           </button>
           {/* El menú contable sólo aplica dentro de un cliente; en el dashboard propio del usuario no se muestra. */}
-          {contribuyente && <MenuContable vista={view} onNavigate={handleNavigate} habilitado contribuyente={contribuyente} />}
+          {contribuyente && conContable && <MenuContable vista={view} onNavigate={handleNavigate} habilitado contribuyente={contribuyente} />}
           <span className="q-topbar__spacer" />
           {contribuyente && (
             <button
@@ -866,12 +870,12 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
               <Historial onAbrir={abrirDesdeHistorial} />
             )}
 
-            {VISTAS_CONTABLES[view] && contribuyente && (
+            {VISTAS_CONTABLES[view] && contribuyente && conContable && (
               <Contabilidad key={`${contribuyente.clienteId}-${contribuyente.ejercicio}`} vista={view} contribuyente={contribuyente} onNavigate={handleNavigate} />
             )}
 
             {view === 'clientes' && (
-              <GestionClientes onTrabajar={trabajarEnCliente} />
+              <GestionClientes user={user} onTrabajar={trabajarEnCliente} onVerPlanes={() => handleNavigate('cuenta')} />
             )}
           </div>
         </main>

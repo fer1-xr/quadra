@@ -9,3 +9,5 @@ build/
 
 # Large video files - Download from Pexels links in SETUP.md
 frontend/public/videos/*.mp4
+# Credenciales de usuarios de prueba (no subir)
+USUARIOS_PRUEBA.md

@@ -45,6 +45,13 @@ function App() {
 
     if (token && storedUser && !resetTokenFromUrl) {
       setUser(JSON.parse(storedUser))
+      // Refresca el perfil (plan incluido) por si cambió desde otra sesión o desde el panel
+      authService.getProfile()
+        .then((p) => {
+          localStorage.setItem('quaedra_user', JSON.stringify(p))
+          setUser(p)
+        })
+        .catch(() => {})
       // Iniciar el scheduler de lecciones cuando el usuario está autenticado
       leccionScheduler.start()
     }

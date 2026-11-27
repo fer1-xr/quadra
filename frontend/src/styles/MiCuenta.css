@@ -117,6 +117,8 @@
 /* datos */
 .q-cuenta__datos { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); column-gap: 24px; }
 .q-cuenta__datos dd { display: grid; gap: 4px; }
+.q-cuenta__nivel { display: inline-flex; align-items: center; gap: 6px; color: var(--q-brand); }
+a.q-btn { text-decoration: none; }
 .q-cuenta__desde { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--q-ink-3); }
 
 /* planes */

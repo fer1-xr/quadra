@@ -1,37 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Camera, Check, KeyRound, Pencil, ArrowUp, ArrowDown, X, CalendarDays } from 'lucide-react'
+import { Camera, Check, KeyRound, Pencil, ArrowUp, ArrowDown, X, CalendarDays, Mail, ShieldCheck } from 'lucide-react'
 import { authService } from '../services/authService'
+import { PLANES, planDe, precioPlan } from '../services/planes'
 import '../styles/MiCuenta.css'
-
-// Mismos planes y precios que la landing (quadra-landing/src/components/Pricing.jsx)
-export const PLANES = [
-  {
-    id: 'basico',
-    nombre: 'Básico',
-    precio: 100000,
-    desc: 'Para contadores independientes',
-    features: ['Hasta 8 conciliaciones/mes', '1 usuario', '1 uso por calculadora/mes', 'Historial de 3 meses']
-  },
-  {
-    id: 'profesional',
-    nombre: 'Profesional',
-    precio: 250000,
-    desc: 'Para estudios contables',
-    features: ['Hasta 18 conciliaciones/mes', '2 usuarios', '3 usos por calculadora/mes', 'Historial de 8 meses', 'Finiquitos y activos fijos']
-  },
-  {
-    id: 'senior',
-    nombre: 'Contador Senior',
-    precio: 600000,
-    desc: 'Para empresas y contadores senior',
-    features: ['Conciliaciones ilimitadas', 'Usuarios ilimitados', 'Calculadoras ilimitadas', 'Historial ilimitado']
-  }
-]
 
 const MAX_FOTO_MB = 5
 const LADO_FOTO = 256
 
-const gs = (n) => `₲ ${n.toLocaleString('es-PY')}`
+const porMes = (plan) => (plan.precio == null ? precioPlan(plan) : `${precioPlan(plan)} por mes`)
+const limites = (plan) => [
+  plan.contable ? 'con sistema contable' : 'sin sistema contable',
+  plan.maxClientes ? `hasta ${plan.maxClientes} clientes` : 'sin tope de clientes'
+].join(', ')
 
 // "1 año, 2 meses y 5 días" desde la fecha de alta
 function antiguedad(desde) {
@@ -167,8 +147,8 @@ function MiCuenta({ user, onUserUpdate, onChangePassword }) {
 
   const nombreVisible = perfil?.name || perfil?.email || ''
   const inicial = nombreVisible.trim().charAt(0).toUpperCase() || 'Q'
-  const idxActual = Math.max(0, PLANES.findIndex((p) => p.id === (perfil?.plan || 'basico')))
-  const planActual = PLANES[idxActual]
+  const planActual = planDe(perfil)
+  const idxActual = PLANES.indexOf(planActual)
   const fechaAlta = perfil?.created_at
     ? new Date(perfil.created_at).toLocaleDateString('es-PY', { day: 'numeric', month: 'long', year: 'numeric' })
     : null
@@ -255,10 +235,10 @@ function MiCuenta({ user, onUserUpdate, onChangePassword }) {
             </dd>
           </div>
           <div>
-            <dt>Plan actual</dt>
+            <dt>Nivel de usuario</dt>
             <dd>
-              <strong>{planActual.nombre}</strong>
-              <span className="q-cuenta__desde">{gs(planActual.precio)} por mes</span>
+              <strong className="q-cuenta__nivel"><ShieldCheck size={15} strokeWidth={1.8} /> {planActual.nombre}</strong>
+              <span className="q-cuenta__desde">{porMes(planActual)} · {limites(planActual)}</span>
             </dd>
           </div>
         </dl>
@@ -280,12 +260,16 @@ function MiCuenta({ user, onUserUpdate, onChangePassword }) {
                 {actual && <span className="q-plan__badge">Plan actual</span>}
                 <h3 className="q-plan__nombre">{plan.nombre}</h3>
                 <p className="q-plan__desc">{plan.desc}</p>
-                <p className="q-plan__precio"><span className="q-mono">{gs(plan.precio)}</span> /mes</p>
+                <p className="q-plan__precio"><span className="q-mono">{precioPlan(plan)}</span>{plan.precio != null && ' /mes'}</p>
                 <ul className="q-plan__features">
                   {plan.features.map((f) => <li key={f}><Check size={13} strokeWidth={2.2} /> {f}</li>)}
                 </ul>
                 {actual ? (
                   <button type="button" className="q-btn q-cuenta__btn-sec" disabled>Tu plan</button>
+                ) : plan.contacto ? (
+                  <a className="q-btn q-btn--primary" href={plan.contacto}>
+                    <Mail size={15} strokeWidth={2} /> Contactar
+                  </a>
                 ) : (
                   <button type="button" className={`q-btn ${sube ? 'q-btn--primary' : 'q-cuenta__btn-sec'}`} onClick={() => setPlanDestino(plan)}>
                     {sube ? <ArrowUp size={15} strokeWidth={2} /> : <ArrowDown size={15} strokeWidth={2} />}
@@ -303,12 +287,12 @@ function MiCuenta({ user, onUserUpdate, onChangePassword }) {
           <div className="q-cuenta__modal" role="dialog" aria-modal="true" aria-labelledby="cambio-plan-titulo" onClick={(e) => e.stopPropagation()}>
             <h3 id="cambio-plan-titulo">{esSubida ? 'Subir' : 'Bajar'} a {planDestino.nombre}</h3>
             <p>
-              Pasás de <strong>{planActual.nombre}</strong> ({gs(planActual.precio)}/mes) a{' '}
-              <strong>{planDestino.nombre}</strong> ({gs(planDestino.precio)}/mes).
+              Pasás de <strong>{planActual.nombre}</strong> ({porMes(planActual)}) a{' '}
+              <strong>{planDestino.nombre}</strong> ({porMes(planDestino)}).
             </p>
             {!esSubida && (
               <p className="q-cuenta__modal-warn">
-                Al bajar de plan se aplican los límites de {planDestino.nombre}: {planDestino.features.join(', ').toLowerCase()}.
+                Al bajar de plan se aplican los límites de {planDestino.nombre}: {limites(planDestino)}.
               </p>
             )}
             <div className="q-cuenta__modal-acciones">

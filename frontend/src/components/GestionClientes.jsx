@@ -8,6 +8,7 @@ import { Plus, Edit2, Trash2, Download, Users, X, Pencil, Check, LogIn } from 'l
 import '../styles/GestionClientes.css'
 import CampoDnit from './CampoDnit'
 import { rucDnitExacto } from '../services/rucDnit'
+import { planDe, clientesDisponibles } from '../services/planes'
 
 // Impuestos vigentes en Paraguay
 export const TIPOS_IMPUESTO = [
@@ -55,8 +56,10 @@ export const sucursalesDe = (c) => (
   Array.isArray(c?.sucursales) && c.sucursales.length ? c.sucursales : [SUCURSAL_INICIAL]
 )
 
-function GestionClientes({ onTrabajar }) {
+function GestionClientes({ user, onTrabajar, onVerPlanes }) {
   const [clientes, setClientes, syncStatus] = useCloudCollection('cliente', 'quadra_clientes')
+  const plan = planDe(user)
+  const sinCupo = clientesDisponibles(user, clientes.length) <= 0
   const [mostrarFormulario, setMostrarFormulario] = useState(false)
   const [editandoId, setEditandoId] = useState(null)
   const [busqueda, setBusqueda] = useState('')
@@ -103,6 +106,10 @@ function GestionClientes({ onTrabajar }) {
       ))
       setEditandoId(null)
     } else {
+      if (sinCupo) {
+        alert(`Tu plan ${plan.nombre} permite hasta ${plan.maxClientes} clientes.`)
+        return
+      }
       setClientes([...clientes, {
         id: Date.now(),
         ...datos
@@ -304,7 +311,7 @@ function GestionClientes({ onTrabajar }) {
           </div>
         )}
         <Figures items={[
-          { label: 'Total clientes', value: clientes.length },
+          { label: 'Total clientes', value: plan.maxClientes ? <>{clientes.length}<small> / {plan.maxClientes}</small></> : clientes.length, tone: sinCupo ? 'err' : undefined },
           { label: 'Cuentas al día', value: <>{clientesAlDia}<small> / {clientes.length}</small></>, tone: clientesAlDia ? 'ok' : undefined },
           { label: 'Pagos al día', value: <>{clientesPagosAlDia}<small> / {clientes.length}</small></>, tone: clientesPagosAlDia ? 'ok' : undefined },
           { label: 'Honorarios total', value: <>{honorariosTotal.toLocaleString('es-PY', { maximumFractionDigits: 0 })}<small> Gs.</small></> }
@@ -470,10 +477,19 @@ function GestionClientes({ onTrabajar }) {
       )}
 
       {/* Botón para mostrar formulario */}
-      {!mostrarFormulario && (
+      {!mostrarFormulario && !sinCupo && (
         <button className="btn btn-add-cliente" onClick={() => setMostrarFormulario(true)}>
           <Plus size={16} strokeWidth={1.8} /> Agregar Cliente
         </button>
+      )}
+      {!mostrarFormulario && sinCupo && (
+        <div className="clientes-limite" role="status">
+          <p>
+            Llegaste a <strong>{plan.maxClientes} clientes</strong>, el máximo del plan {plan.nombre}.
+            Para agregar más, subí de plan.
+          </p>
+          <button type="button" className="btn btn-add-cliente" onClick={onVerPlanes}>Ver planes</button>
+        </div>
       )}
 
       {/* Búsqueda */}
