@@ -9,6 +9,7 @@ import LiquidacionSalarial from './LiquidacionSalarial'
 import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
 import ControlPagos from './ControlPagos'
+import ConciliacionBancaria from './ConciliacionBancaria'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
@@ -123,7 +124,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   })
 
   const handleReconciliation = async () => {
-    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá los archivos mensuales y archivos de Marangatu'); return }
+    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá el libro compras / ventas de tu sistema y el registro de comprobantes RG 90 de Marangatu'); return }
     setLoading(true)
     setError('')
     try {
@@ -273,7 +274,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     todo: contribuyente ? 'Tareas de la semana' : 'Tareas del Día',
     metas: 'Metas y Objetivos',
     notas: 'Notas y Reuniones',
-    rg90: 'Conciliación RG90',
+    rg90: 'Conciliación Registro de Comprobantes - RG 90/2021',
     'rg90-results': 'Resultados de Conciliación',
     bancaria: 'Conciliación Bancaria',
     'importar-documentos': 'Importar Documentos',
@@ -318,8 +319,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     {
       group: 'Conciliación',
       items: [
-        { id: 'rg90', title: 'Conciliación RG90', desc: 'Libro Marangatu frente a compras, ventas y notas de crédito', icon: BarChart3, sym: '=' },
-        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Extracto contra libro, con partidas en tránsito', icon: Wallet, sym: '±' },
+        { id: 'rg90', title: 'Conciliación Registro de Comprobantes - RG 90/2021', desc: 'Libro compras / ventas de tu sistema frente al registro de comprobantes de Marangatu', icon: BarChart3, sym: '=' },
+        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Libro mayor / bancos de tu sistema contra el extracto del banco en PDF', icon: Wallet, sym: '=' },
         { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, sym: '→' },
         { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, sym: '÷' }
       ]
@@ -489,7 +490,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                     <p className="q-hero__lede">Plataforma integral de conciliación y gestión contable</p>
                     <div className="q-hero__actions">
                       <button type="button" className="q-btn q-btn--light" onClick={() => handleNavigate('rg90')}>
-                        Nueva conciliación RG90
+                        Nueva conciliación RG 90/2021
                         <ArrowRight size={16} strokeWidth={1.8} />
                       </button>
                       <button type="button" className="q-btn q-btn--ghost" onClick={() => handleNavigate('todo')}>
@@ -542,8 +543,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
             {view === 'rg90' && (
               <div className="q-sheet">
               <PageHead
-                title="Conciliación RG90"
-                lede="Libro Marangatu frente a reportes de compras, ventas y notas de crédito."
+                title="Conciliación Registro de Comprobantes - RG 90/2021"
+                lede="Libro compras / ventas de tu sistema frente al registro de comprobantes RG 90 descargado de Marangatu."
                 equation={[{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }]}
                 caption="tolerancia ± 1,00 por concepto"
               />
@@ -557,30 +558,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                   )}
 
                   <div className="q-field-group">
-                    <span className="q-label">Archivos Marangatu</span>
-                    <div className="q-drop-grid">
-                      {Array.from({ length: marangatuInputCount }).map((_, index) => (
-                        <label key={index} htmlFor={`marangatu-${index}`} className={`q-drop ${libroFiles[index] ? 'is-filled' : ''}`}>
-                          {libroFiles[index] ? <Check size={20} strokeWidth={1.8} /> : <FileText size={20} strokeWidth={1.6} />}
-                          <span>{libroFiles[index] ? libroFiles[index].name : 'Seleccionar archivo'}</span>
-                          <small>.csv · .xlsx · .xls</small>
-                          <input
-                            id={`marangatu-${index}`}
-                            type="file"
-                            accept=".csv,.xlsx,.xls"
-                            className="hidden"
-                            onChange={(e) => handleMarangatuFile(index, e.target.files[0])}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                    <button type="button" className="q-btn q-btn--line" onClick={addMarangatuInput}>
-                      <Plus size={16} strokeWidth={1.8} /> Agregar archivo Marangatu
-                    </button>
-                  </div>
-
-                  <div className="q-field-group">
-                    <span className="q-label">Reportes (Compras/Ventas/Notas de Crédito)</span>
+                    <span className="q-label">Libro compras / ventas de tu sistema</span>
                     <div className="q-drop-grid">
                       {Array.from({ length: monthlyInputCount }).map((_, index) => (
                         <label key={index} htmlFor={`monthly-${index}`} className={`q-drop ${rg90Files[index] ? 'is-filled' : ''}`}>
@@ -598,7 +576,30 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                       ))}
                     </div>
                     <button type="button" className="q-btn q-btn--line" onClick={addMonthlyInput}>
-                      <Plus size={16} strokeWidth={1.8} /> Agregar archivo RG90
+                      <Plus size={16} strokeWidth={1.8} /> Agregar libro compras / ventas
+                    </button>
+                  </div>
+
+                  <div className="q-field-group">
+                    <span className="q-label">Registro de Comprobantes RG 90 (Marangatu)</span>
+                    <div className="q-drop-grid">
+                      {Array.from({ length: marangatuInputCount }).map((_, index) => (
+                        <label key={index} htmlFor={`marangatu-${index}`} className={`q-drop ${libroFiles[index] ? 'is-filled' : ''}`}>
+                          {libroFiles[index] ? <Check size={20} strokeWidth={1.8} /> : <FileText size={20} strokeWidth={1.6} />}
+                          <span>{libroFiles[index] ? libroFiles[index].name : 'Seleccionar archivo'}</span>
+                          <small>.csv · .xlsx · .xls</small>
+                          <input
+                            id={`marangatu-${index}`}
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            className="hidden"
+                            onChange={(e) => handleMarangatuFile(index, e.target.files[0])}
+                          />
+                        </label>
+                      ))}
+                    </div>
+                    <button type="button" className="q-btn q-btn--line" onClick={addMarangatuInput}>
+                      <Plus size={16} strokeWidth={1.8} /> Agregar registro RG 90
                     </button>
                   </div>
 
@@ -673,7 +674,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                   <div className="q-actions">
                     <GuardarEnNube
                       modulo="rg90"
-                      titulo={`Conciliación RG90 · ${discrepancies.length} comprobantes`}
+                      titulo={`Conciliación RG 90/2021 · ${discrepancies.length} comprobantes`}
                       resumen={{
                         Comprobantes: discrepancies.length,
                         Coinciden: totalCoincidencias,
@@ -707,35 +708,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
               </div>
             )}
 
-            {view === 'bancaria' && (
-              <div className="q-sheet">
-                <PageHead
-                  title="Conciliación Bancaria"
-                  lede="Explica la diferencia entre el extracto del banco y el saldo contable, partida por partida."
-                  equation={[{ v: 'S', sub: 'banco' }, { op: '±' }, { v: 'P', sub: 'tránsito' }, { op: '=' }, { v: 'S', sub: 'libro' }]}
-                  caption="en desarrollo"
-                />
-                <section className="q-card q-recon" aria-label="Estructura de la conciliación bancaria">
-                  <div className="q-recon__head">
-                    <h2 className="q-card__title">Estructura de la conciliación</h2>
-                    <span className="q-tag">En desarrollo</span>
-                  </div>
-                  <table className="q-recon__table">
-                    <thead>
-                      <tr><th scope="col">Concepto</th><th scope="col">Importe</th></tr>
-                    </thead>
-                    <tbody>
-                      <tr><th scope="row"><span className="q-recon__op" /> Saldo según extracto bancario</th><td /></tr>
-                      <tr><th scope="row"><span className="q-recon__op">+</span> Depósitos en tránsito</th><td /></tr>
-                      <tr><th scope="row"><span className="q-recon__op">−</span> Cheques emitidos no cobrados</th><td /></tr>
-                      <tr><th scope="row"><span className="q-recon__op">±</span> Débitos y créditos bancarios no registrados</th><td /></tr>
-                      <tr className="is-total"><th scope="row"><span className="q-recon__op">=</span> Saldo según libros</th><td /></tr>
-                    </tbody>
-                  </table>
-                  <p className="q-recon__note">La carga de extractos y el cruce automático con el libro banco estarán disponibles en una próxima versión.</p>
-                </section>
-              </div>
-            )}
+            {view === 'bancaria' && <ConciliacionBancaria />}
 
             {view === 'calculadora' && (
               <section className="q-panel">

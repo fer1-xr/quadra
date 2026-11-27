@@ -692,6 +692,7 @@
 .q-app .q-num.is-err { color: var(--q-err); font-weight: 500; }
 .q-app .q-row.is-err { background: var(--q-err-bg); }
 
+.q-alert.is-ok { border-color: var(--q-ok-line); color: var(--q-ok); background: var(--q-ok-bg); }
 .q-actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .q-actions .q-btn { flex: 1 1 200px; }
 
