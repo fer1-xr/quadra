@@ -1,0 +1,207 @@
+/* ── Conciliaciones por archivos: dos lados frente a frente ──────────────
+   El libro del usuario a la izquierda, la fuente externa (Marangatu, banco)
+   a la derecha, unidos por un filete con «frente a». Debajo, la barra de
+   ejecución dice qué falta y lleva el botón. */
+
+.q-app .cc { display: grid; gap: 16px; }
+
+.q-app .cc-mesa {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 56px minmax(0, 1fr);
+  align-items: stretch;
+  border: 1px solid var(--q-line);
+  border-radius: 14px;
+  background: var(--q-surface);
+  box-shadow: var(--q-shadow);
+}
+
+/* separador central: filete vertical con la leyenda en el medio */
+.q-app .cc-frente {
+  position: relative;
+  display: grid;
+  place-items: center;
+}
+.q-app .cc-frente::before {
+  content: '';
+  position: absolute;
+  inset: 22px auto 22px 50%;
+  width: 1px;
+  background: var(--q-line-2);
+}
+.q-app .cc-frente span {
+  position: relative;
+  padding: 6px 0;
+  background: var(--q-surface);
+  font-family: var(--q-serif);
+  font-style: italic;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--q-ink-3);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+/* ── un lado ── */
+.q-app .cc-lado {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  padding: 24px 26px 26px;
+}
+
+.q-app .cc-lado__head { display: flex; align-items: flex-start; gap: 12px; }
+
+.q-app .cc-lado__icono {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--q-line);
+  border-radius: 10px;
+  color: var(--q-ink-2);
+  background: var(--q-surface-2);
+}
+.q-app .cc-lado.is-listo .cc-lado__icono { color: var(--q-ok); border-color: var(--q-ok-line); background: var(--q-ok-bg); }
+
+.q-app .cc-lado__copy { flex: 1; min-width: 0; display: grid; gap: 3px; }
+.q-app .cc-lado__titulo { font-size: 15px; font-weight: 600; letter-spacing: -0.012em; line-height: 1.3; color: var(--q-ink); text-wrap: balance; }
+.q-app .cc-lado__origen { font-size: 13px; line-height: 1.45; color: var(--q-ink-3); }
+
+.q-app .cc-estado {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 10px;
+  border: 1px solid var(--q-line);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 550;
+  color: var(--q-ink-3);
+  white-space: nowrap;
+}
+.q-app .cc-estado.is-ok { color: var(--q-ok); border-color: var(--q-ok-line); background: var(--q-ok-bg); }
+
+/* ── zona de carga ── */
+.q-app .cc-drop {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 92px;
+  padding: 18px 18px;
+  border: 1px dashed rgba(11, 27, 51, 0.22);
+  border-radius: 12px;
+  background:
+    linear-gradient(var(--q-grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    linear-gradient(90deg, var(--q-grid) 1px, transparent 1px) 0 0 / 16px 16px,
+    var(--q-surface-2);
+  cursor: pointer;
+  transition: border-color 160ms ease, background-color 160ms ease, transform 220ms var(--q-ease, cubic-bezier(.16, 1, .3, 1));
+}
+.q-app .cc-drop.is-compacto { min-height: 0; padding: 10px 14px; }
+.q-app .cc-drop.is-compacto .cc-drop__tesela { width: 30px; height: 30px; }
+.q-app .cc-drop:hover,
+.q-app .cc-drop.is-over { border-style: solid; border-color: var(--q-brand); }
+.q-app .cc-drop.is-over { background-color: var(--q-accent-bg, #e8eeff); transform: scale(1.01); }
+.q-app .cc-drop:focus-within { outline: 2px solid var(--q-brand); outline-offset: 2px; }
+
+.q-app .cc-drop__tesela {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--q-line);
+  border-radius: 10px;
+  color: var(--q-brand);
+  background: var(--q-surface);
+}
+.q-app .cc-drop__texto { display: grid; gap: 3px; min-width: 0; }
+.q-app .cc-drop__texto strong { font-size: 14px; font-weight: 550; color: var(--q-ink); }
+.q-app .cc-drop__texto small { font-family: var(--q-mono); font-size: 11.5px; color: var(--q-ink-3); }
+.q-app .cc-drop__input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ── archivos cargados ── */
+.q-app .cc-archivos { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.q-app .cc-archivo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 0 6px 0 12px;
+  border: 1px solid var(--q-ok-line);
+  border-radius: 10px;
+  color: var(--q-ok);
+  background: var(--q-ok-bg);
+}
+.q-app .cc-archivo__nombre { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13.5px; font-weight: 550; color: var(--q-ink); }
+.q-app .cc-archivo__peso { flex: none; font-family: var(--q-mono); font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--q-ink-3); }
+.q-app .cc-archivo__quitar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--q-ink-3);
+  background: transparent;
+  cursor: pointer;
+  transition: color 140ms ease, background-color 140ms ease;
+}
+.q-app .cc-archivo__quitar:hover { color: var(--q-err); background: var(--q-err-bg); }
+.q-app .cc-archivo__quitar:focus-visible { outline: 2px solid var(--q-brand); outline-offset: 1px; }
+
+/* ── barra de ejecución ── */
+.q-app .cc-barra {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  padding: 14px 14px 14px 22px;
+  border: 1px solid var(--q-line);
+  border-radius: 14px;
+  background: var(--q-surface);
+}
+.q-app .cc-barra__texto { flex: 1 1 280px; font-size: 13.5px; line-height: 1.5; color: var(--q-ink-2); }
+.q-app .cc-barra__texto strong { font-weight: 600; color: var(--q-ink); }
+.q-app .cc-barra__boton { flex: none; min-width: 240px; }
+
+/* ── estado de cuenta de la conciliación bancaria ── */
+.q-app .cc-estado-cuenta { width: 100%; border-collapse: collapse; font-size: 14px; }
+.q-app .cc-estado-cuenta th { padding: 12px 0; font-weight: 400; text-align: left; color: var(--q-ink-2); }
+.q-app .cc-estado-cuenta td { padding: 12px 0 12px 16px; font-family: var(--q-mono); font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; color: var(--q-ink); }
+.q-app .cc-estado-cuenta td small { margin-left: 10px; font-family: var(--q-sans); font-size: 12px; color: var(--q-ink-3); }
+.q-app .cc-estado-cuenta tr + tr > * { border-top: 1px solid var(--q-line-2); }
+.q-app .cc-estado-cuenta tr.is-saldo > * { font-weight: 600; color: var(--q-ink); }
+.q-app .cc-estado-cuenta tr.is-sub > * { border-top: 1px solid var(--q-rule, rgba(11, 27, 51, 0.16)); }
+.q-app .cc-estado-cuenta tr.is-total > * { border-top: 3px double var(--q-rule, rgba(11, 27, 51, 0.16)); font-weight: 600; }
+.q-app .cc-estado-cuenta tr.is-total.is-err td { color: var(--q-err); }
+
+/* ── oscuro ── */
+:root[data-theme="dark"] .q-app .cc-drop { border-color: rgba(231, 237, 245, 0.2); background-color: rgba(255, 255, 255, 0.02); }
+:root[data-theme="dark"] .q-app .cc-drop:hover,
+:root[data-theme="dark"] .q-app .cc-drop.is-over { border-color: var(--q-mint); }
+:root[data-theme="dark"] .q-app .cc-drop.is-over { background-color: rgba(126, 232, 196, 0.06); }
+:root[data-theme="dark"] .q-app .cc-drop__tesela { color: var(--q-mint); }
+
+/* ── angosto: los lados se apilan y el «frente a» queda horizontal ── */
+@media (max-width: 860px) {
+  .q-app .cc-mesa { grid-template-columns: minmax(0, 1fr); }
+  .q-app .cc-frente { height: 28px; }
+  .q-app .cc-frente::before { inset: 50% 22px auto 22px; width: auto; height: 1px; }
+  .q-app .cc-frente span { padding: 0 10px; writing-mode: horizontal-tb; transform: none; }
+  .q-app .cc-lado { padding: 20px 18px; }
+  .q-app .cc-barra { padding: 14px; }
+  .q-app .cc-barra__boton { flex: 1 1 100%; min-width: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .q-app .cc-drop { transition: none; }
+  .q-app .cc-drop.is-over { transform: none; }
+}

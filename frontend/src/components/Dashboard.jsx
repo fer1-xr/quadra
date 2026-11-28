@@ -10,6 +10,7 @@ import VentaActivoFijo from './VentaActivoFijo'
 import ImportarDocumentos from './ImportarDocumentos'
 import ControlPagos from './ControlPagos'
 import ConciliacionBancaria from './ConciliacionBancaria'
+import ConciliacionCarga from './ConciliacionCarga'
 import TodoDelDia from './TodoDelDia'
 import MetasAnuales from './MetasAnuales'
 import Cotizacion from './Cotizacion'
@@ -63,8 +64,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   const [preseleccion, setPreseleccion] = useState(null)
   const [totalCoincidencias, setTotalCoincidencias] = useState(0)
   const [showChangePassword, setShowChangePassword] = useState(false)
-  const [marangatuInputCount, setMarangatuInputCount] = useState(1)
-  const [monthlyInputCount, setMonthlyInputCount] = useState(1)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [sidebarMode, setSidebarMode] = useState(() => {
     const m = localStorage.getItem(SIDEBAR_MODE_KEY)
@@ -82,34 +81,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   // el plan Auxiliar no incluye el sistema contable
   const conContable = tieneContable(user)
 
-  const handleMarangatuFile = (index, file) => {
-    const newFiles = [...libroFiles]
-    if (file) {
-      newFiles[index] = file
-    } else {
-      newFiles.splice(index, 1)
-    }
-    setLibroFiles(newFiles)
-  }
-
-  const handleMonthlyFile = (index, file) => {
-    const newFiles = [...rg90Files]
-    if (file) {
-      newFiles[index] = file
-    } else {
-      newFiles.splice(index, 1)
-    }
-    setRg90Files(newFiles)
-  }
-
-  const addMarangatuInput = () => {
-    setMarangatuInputCount(prev => prev + 1)
-  }
-
-  const addMonthlyInput = () => {
-    setMonthlyInputCount(prev => prev + 1)
-  }
-
   const readFile = (file) => new Promise((resolve, reject) => {
     const reader = new FileReader()
     if (file.name.endsWith('.csv')) {
@@ -124,7 +95,7 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
   })
 
   const handleReconciliation = async () => {
-    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá el libro compras / ventas de tu sistema y el registro de comprobantes RG 90 de Marangatu'); return }
+    if (rg90Files.length === 0 || libroFiles.length === 0) { setError('Cargá el libro compras / ventas y el registro de comprobantes RG 90 de Marangatu.'); return }
     setLoading(true)
     setError('')
     try {
@@ -319,8 +290,8 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
     {
       group: 'Conciliación',
       items: [
-        { id: 'rg90', title: 'Conciliación Registro de Comprobantes - RG 90/2021', desc: 'Libro compras / ventas de tu sistema frente al registro de comprobantes de Marangatu', icon: BarChart3, sym: '=' },
-        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Libro mayor / bancos de tu sistema contra el extracto del banco en PDF', icon: Wallet, sym: '=' },
+        { id: 'rg90', title: 'Conciliación Registro de Comprobantes - RG 90/2021', desc: 'Libro compras / ventas frente al registro de comprobantes de Marangatu', icon: BarChart3, sym: '=' },
+        { id: 'bancaria', title: 'Conciliación Bancaria', desc: 'Libro mayor / bancos contra el extracto del banco en PDF', icon: Wallet, sym: '=' },
         { id: 'importar-documentos', title: 'Importar Documentos', desc: 'Facturas de proveedores convertidas a planilla', icon: FileText, sym: '→' },
         { id: 'control-pagos', title: 'Control de Pagos', desc: 'Pólizas de seguros y préstamos por cuota', icon: CreditCard, sym: '÷' }
       ]
@@ -542,78 +513,43 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
 
             {view === 'rg90' && (
               <div className="q-sheet">
-              <PageHead
-                title="Conciliación Registro de Comprobantes - RG 90/2021"
-                lede="Libro compras / ventas de tu sistema frente al registro de comprobantes RG 90 descargado de Marangatu."
-                equation={[{ op: 'Σ' }, { v: 'Libro' }, { op: '−' }, { op: 'Σ' }, { v: 'RG90' }, { op: '=' }, { n: '0' }]}
-                caption="tolerancia ± 1,00 por concepto"
-              />
-              <Card className="q-card" shadow="none">
-                <CardBody className="q-card__body">
-                  {error && (
-                    <div className="q-alert" role="alert">
-                      <X size={16} strokeWidth={2} />
-                      {error}
-                    </div>
-                  )}
-
-                  <div className="q-field-group">
-                    <span className="q-label">Libro compras / ventas de tu sistema</span>
-                    <div className="q-drop-grid">
-                      {Array.from({ length: monthlyInputCount }).map((_, index) => (
-                        <label key={index} htmlFor={`monthly-${index}`} className={`q-drop ${rg90Files[index] ? 'is-filled' : ''}`}>
-                          {rg90Files[index] ? <Check size={20} strokeWidth={1.8} /> : <CreditCard size={20} strokeWidth={1.6} />}
-                          <span>{rg90Files[index] ? rg90Files[index].name : 'Seleccionar archivo'}</span>
-                          <small>.csv · .xlsx · .xls</small>
-                          <input
-                            id={`monthly-${index}`}
-                            type="file"
-                            accept=".csv,.xlsx,.xls"
-                            className="hidden"
-                            onChange={(e) => handleMonthlyFile(index, e.target.files[0])}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                    <button type="button" className="q-btn q-btn--line" onClick={addMonthlyInput}>
-                      <Plus size={16} strokeWidth={1.8} /> Agregar libro compras / ventas
-                    </button>
-                  </div>
-
-                  <div className="q-field-group">
-                    <span className="q-label">Registro de Comprobantes RG 90 (Marangatu)</span>
-                    <div className="q-drop-grid">
-                      {Array.from({ length: marangatuInputCount }).map((_, index) => (
-                        <label key={index} htmlFor={`marangatu-${index}`} className={`q-drop ${libroFiles[index] ? 'is-filled' : ''}`}>
-                          {libroFiles[index] ? <Check size={20} strokeWidth={1.8} /> : <FileText size={20} strokeWidth={1.6} />}
-                          <span>{libroFiles[index] ? libroFiles[index].name : 'Seleccionar archivo'}</span>
-                          <small>.csv · .xlsx · .xls</small>
-                          <input
-                            id={`marangatu-${index}`}
-                            type="file"
-                            accept=".csv,.xlsx,.xls"
-                            className="hidden"
-                            onChange={(e) => handleMarangatuFile(index, e.target.files[0])}
-                          />
-                        </label>
-                      ))}
-                    </div>
-                    <button type="button" className="q-btn q-btn--line" onClick={addMarangatuInput}>
-                      <Plus size={16} strokeWidth={1.8} /> Agregar registro RG 90
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="q-btn q-btn--primary q-btn--block"
-                    onClick={handleReconciliation}
-                    disabled={loading || rg90Files.length === 0 || libroFiles.length === 0}
-                  >
-                    {loading ? <Spinner size="sm" color="current" /> : <Play size={16} strokeWidth={1.8} />}
-                    {loading ? 'Procesando...' : 'Ejecutar Conciliación'}
-                  </button>
-                </CardBody>
-              </Card>
+                <PageHead
+                  title="Conciliación Registro de Comprobantes - RG 90/2021"
+                  lede="Compará el libro compras / ventas con el registro de comprobantes que Marangatu tiene del contribuyente. Quadra marca cada comprobante cuyo total o IVA no coincide."
+                />
+                <ConciliacionCarga
+                  error={error}
+                  cargando={loading}
+                  onEjecutar={handleReconciliation}
+                  boton="Ejecutar conciliación"
+                  resultadoDescripcion="Quadra cruza comprobante por comprobante y muestra las diferencias de más de 1,00 en total, IVA 10%, IVA 5% o exenta."
+                  lados={[
+                    {
+                      titulo: 'Libro compras / ventas',
+                      corto: 'el libro compras / ventas',
+                      origen: 'Exportalo desde tu sistema contable: compras, ventas y notas de crédito del período.',
+                      icono: BookOpen,
+                      archivos: rg90Files,
+                      multiple: true,
+                      accept: '.csv,.xlsx,.xls',
+                      formatos: '.xlsx · .xls · .csv',
+                      onAgregar: (fs) => setRg90Files((prev) => [...prev, ...fs]),
+                      onQuitar: (i) => setRg90Files((prev) => prev.filter((_, k) => k !== i))
+                    },
+                    {
+                      titulo: 'Registro de Comprobantes RG 90/2021',
+                      corto: 'el registro de Marangatu',
+                      origen: 'Descargalo de Marangatu: Registro de comprobantes, consulta del período.',
+                      icono: Landmark,
+                      archivos: libroFiles,
+                      multiple: true,
+                      accept: '.csv,.xlsx,.xls',
+                      formatos: '.xlsx · .xls · .csv',
+                      onAgregar: (fs) => setLibroFiles((prev) => [...prev, ...fs]),
+                      onQuitar: (i) => setLibroFiles((prev) => prev.filter((_, k) => k !== i))
+                    }
+                  ]}
+                />
               </div>
             )}
 
@@ -695,8 +631,6 @@ function Dashboard({ user, onLogout, onUserUpdate }) {
                         setDiscrepancies([])
                         setRg90Files([])
                         setLibroFiles([])
-                        setMarangatuInputCount(1)
-                        setMonthlyInputCount(1)
                         setView('rg90')
                       }}
                     >

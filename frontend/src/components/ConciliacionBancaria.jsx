@@ -1,28 +1,13 @@
 import React, { useState } from 'react'
-import { Card, CardBody, Spinner } from '@heroui/react'
-import { BookOpen, Check, Download, FileText, Play, RotateCcw, X } from 'lucide-react'
+import { Card, CardBody } from '@heroui/react'
+import { BookOpen, Check, Download, Landmark, RotateCcw, X } from 'lucide-react'
 import PageHead, { Figures } from './PageHead'
+import ConciliacionCarga from './ConciliacionCarga'
 import { useContribuyente } from '../services/historialService'
 import { conciliar, descargarExcel, leerExtracto, leerLibro } from '../services/conciliacionBancaria'
 
 const fmt = (n) => (Number(n) || 0).toLocaleString('es-PY', { maximumFractionDigits: 2 })
-
-function Zona({ id, archivo, onFile, onChange, icono: Icono, accept, formatos }) {
-  return (
-    <label htmlFor={id} className={`q-drop ${archivo ? 'is-filled' : ''}`}>
-      {archivo ? <Check size={20} strokeWidth={1.8} /> : <Icono size={20} strokeWidth={1.6} />}
-      <span>{archivo ? archivo.name : 'Seleccionar archivo'}</span>
-      <small>{formatos}</small>
-      <input
-        id={id}
-        type="file"
-        accept={accept}
-        className="hidden"
-        onChange={(e) => { onFile(e.target.files[0] || null); onChange(); e.target.value = '' }}
-      />
-    </label>
-  )
-}
+const mov = (n) => `${n} ${n === 1 ? 'movimiento' : 'movimientos'}`
 
 /**
  * Conciliación bancaria por carga de archivos: libro mayor / bancos del sistema
@@ -37,12 +22,12 @@ function ConciliacionBancaria() {
   const [resultado, setResultado] = useState(null)
 
   const opts = { libroNombre: libro?.name, extractoNombre: extracto?.name, cliente: contribuyente?.razonSocial }
+  const limpiar = () => { setResultado(null); setError('') }
 
   const ejecutar = async () => {
-    if (!libro || !extracto) { setError('Cargá el libro mayor / bancos de tu sistema y el extracto bancario en PDF.'); return }
+    if (!libro || !extracto) { setError('Cargá el libro mayor / bancos y el extracto bancario en PDF.'); return }
     setCargando(true)
-    setError('')
-    setResultado(null)
+    limpiar()
     try {
       const [l, b] = await Promise.all([leerLibro(libro), leerExtracto(extracto)])
       const r = conciliar(l, b)
@@ -55,52 +40,51 @@ function ConciliacionBancaria() {
     }
   }
 
-  const limpiar = () => { setResultado(null); setError('') }
-  const reiniciar = () => { setLibro(null); setExtracto(null); setResultado(null); setError('') }
+  const reiniciar = () => { setLibro(null); setExtracto(null); limpiar() }
 
   const r = resultado
   const cierra = r && r.diferencia === 0
+  const avisos = r ? [...r.libro.avisos, ...r.banco.avisos] : []
 
   return (
     <div className="q-sheet">
       <PageHead
         title="Conciliación Bancaria"
-        lede="Compará el libro mayor / bancos de tu sistema con el extracto del banco. Quadra cruza los movimientos y te devuelve un Excel con lo que coincide y lo que falta en cada lado."
+        lede="Compará el libro mayor / bancos con el extracto del banco. Quadra cruza los movimientos y te devuelve un Excel con lo que coincide y lo que falta en cada lado."
       />
-      <Card className="q-card" shadow="none">
-        <CardBody className="q-card__body">
-          {error && (
-            <div className="q-alert" role="alert">
-              <X size={16} strokeWidth={2} />
-              {error}
-            </div>
-          )}
 
-          <div className="q-field-group">
-            <span className="q-label">Libro mayor / bancos de tu sistema</span>
-            <div className="q-drop-grid">
-              <Zona id="cb-libro" archivo={libro} onFile={setLibro} onChange={limpiar} icono={BookOpen} accept=".xlsx,.xls,.csv" formatos=".xlsx · .xls · .csv" />
-            </div>
-          </div>
-
-          <div className="q-field-group">
-            <span className="q-label">Extracto bancario (PDF)</span>
-            <div className="q-drop-grid">
-              <Zona id="cb-extracto" archivo={extracto} onFile={setExtracto} onChange={limpiar} icono={FileText} accept=".pdf,.xlsx,.xls,.csv" formatos=".pdf · también .xlsx o .csv" />
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="q-btn q-btn--primary q-btn--block"
-            onClick={ejecutar}
-            disabled={cargando || !libro || !extracto}
-          >
-            {cargando ? <Spinner size="sm" color="current" /> : <Play size={16} strokeWidth={1.8} />}
-            {cargando ? 'Conciliando...' : 'Conciliar y descargar Excel'}
-          </button>
-        </CardBody>
-      </Card>
+      <ConciliacionCarga
+        error={error}
+        cargando={cargando}
+        cargandoTexto="Conciliando..."
+        onEjecutar={ejecutar}
+        boton="Conciliar y descargar Excel"
+        resultadoDescripcion="El Excel trae el resumen, los movimientos que coinciden y lo que falta en el banco y en el libro."
+        lados={[
+          {
+            titulo: 'Libro mayor / bancos',
+            corto: 'el libro mayor / bancos',
+            origen: 'Exportalo desde tu sistema contable: el mayor de la cuenta del banco, del mes que vas a conciliar.',
+            icono: BookOpen,
+            archivos: libro ? [libro] : [],
+            accept: '.xlsx,.xls,.csv',
+            formatos: '.xlsx · .xls · .csv',
+            onAgregar: ([f]) => { setLibro(f); limpiar() },
+            onQuitar: () => { setLibro(null); limpiar() }
+          },
+          {
+            titulo: 'Extracto bancario',
+            corto: 'el extracto del banco',
+            origen: 'Descargalo de la banca web en PDF, del mismo mes y la misma cuenta.',
+            icono: Landmark,
+            archivos: extracto ? [extracto] : [],
+            accept: '.pdf,.xlsx,.xls,.csv',
+            formatos: '.pdf · .xlsx · .csv',
+            onAgregar: ([f]) => { setExtracto(f); limpiar() },
+            onQuitar: () => { setExtracto(null); limpiar() }
+          }
+        ]}
+      />
 
       {r && (
         <Card className="q-card" shadow="none">
@@ -111,19 +95,34 @@ function ConciliacionBancaria() {
                 ? 'La conciliación cierra. El Excel ya se descargó.'
                 : `Quedan ${fmt(Math.abs(r.diferencia))} sin explicar. El Excel ya se descargó: revisá las hojas «Falta en el banco» y «Falta en el libro».`}
             </div>
+
             <Figures items={[
-              { label: 'Saldo según el banco', value: fmt(r.banco.saldoFinal) },
-              { label: 'Saldo según el libro', value: fmt(r.libro.saldoFinal) },
               { label: 'Coinciden', value: r.pares.length },
               { label: 'Falta en el banco', value: r.depositos.length + r.cheques.length },
               { label: 'Falta en el libro', value: r.creditos.length + r.debitos.length },
-              { label: 'Diferencia sin explicar', value: fmt(r.diferencia), tone: cierra ? 'ok' : 'err' }
+              { label: 'Diferencia sin explicar', value: fmt(r.diferencia), tone: cierra ? undefined : 'err' }
             ]} />
-            {[...r.libro.avisos, ...r.banco.avisos].length > 0 && (
+
+            <table className="cc-estado-cuenta">
+              <caption className="sr-only">Estado de la conciliación</caption>
+              <tbody>
+                <tr className="is-saldo"><th scope="row">Saldo final según el banco</th><td>{fmt(r.banco.saldoFinal)}</td></tr>
+                <tr><th scope="row">Más: depósitos del libro que el banco todavía no acreditó</th><td>{fmt(r.totales.depositos)}<small>{mov(r.depositos.length)}</small></td></tr>
+                <tr><th scope="row">Menos: cheques y pagos del libro que el banco todavía no debitó</th><td>{fmt(r.totales.cheques)}<small>{mov(r.cheques.length)}</small></td></tr>
+                <tr><th scope="row">Menos: créditos del banco que faltan en el libro</th><td>{fmt(r.totales.creditos)}<small>{mov(r.creditos.length)}</small></td></tr>
+                <tr><th scope="row">Más: débitos del banco (comisiones, impuestos) que faltan en el libro</th><td>{fmt(r.totales.debitos)}<small>{mov(r.debitos.length)}</small></td></tr>
+                <tr className="is-saldo is-sub"><th scope="row">Saldo del banco ajustado</th><td>{fmt(r.saldoAjustado)}</td></tr>
+                <tr className="is-saldo"><th scope="row">Saldo final según el libro</th><td>{fmt(r.libro.saldoFinal)}</td></tr>
+                <tr className={`is-total ${cierra ? 'is-ok' : 'is-err'}`}><th scope="row">Diferencia sin explicar</th><td>{fmt(r.diferencia)}</td></tr>
+              </tbody>
+            </table>
+
+            {avisos.length > 0 && (
               <ul className="q-list">
-                {[...r.libro.avisos, ...r.banco.avisos].slice(0, 8).map((a) => <li key={a}>{a}</li>)}
+                {avisos.slice(0, 8).map((a) => <li key={a}>{a}</li>)}
               </ul>
             )}
+
             <div className="q-actions">
               <button type="button" className="q-btn q-btn--line" onClick={() => descargarExcel(r, opts)}>
                 <Download size={16} strokeWidth={1.8} /> Descargar Excel otra vez
